@@ -1,97 +1,387 @@
 <!DOCTYPE>
-
 <html>
 
-	<head>
-		<title>cytoscape-layout-utilities.js demo</title>
+    <head>
+        <title>cytoscape-layout-utilities.js demo</title>
 
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
 
-		<script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+        <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+        <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
 
-		<!-- for testing with local version of cytoscape.js -->
-		<!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+        <!-- for testing with local version of cytoscape.js -->
+        <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+        <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cose-bilkent/2.0.4/cytoscape-cose-bilkent.js"></script>
+        <script src="cytoscape-layout-utilities.js"></script>
 
-		<script src="cytoscape-layout-utilities.js"></script>
+        <style>
+            body {
+                font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
+                font-size: 14px;
+            }
+            #cy {
+                width: 80%;
+                height: 100%;
+                left: 21%;
+                top: 0%;
+                float: left;
+                overflow: hidden;
+                position: fixed;
+            }
+            .topnav {
+                width: 20%;
+                background-color: #e9e9e9;
+                font-weight: bold;
+                border-color: black;
+                border-style: solid;
+                font-size: 16;
+                padding: 10;
+            }
+            .topnav b:hover
+            {
+               background-color:white;
+            }
+            /* Customize the label (the container) */
+            .topnav .container {
 
-		<style>
-			body {
-				font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
-				font-size: 14px;
-			}
+              position: relative;
+              padding: 14px;
+              cursor: pointer;
+              font-size: 15px;
+              left: 5px;
+              -webkit-user-select: none;
+              -moz-user-select: none;         
+              -ms-user-select: none;
+              user-select: none;
+            }
+            /* Hide the browser's default radio button */
+            .topnav .container input {
+              position: absolute;
+              opacity: 0;
+              cursor: pointer;
+              height: 0;
+              width: 0;
+            }
+            /* Create a custom radio button */
+            .topnav .checkmark {
+              position: absolute;
+              top: 17px;
+              left: 0;
+              right: 0px;
+              height: 12px;
+              width: 12px;
+              margin-right: 20px;
+              background-color: #000000;
+              border-radius: 50%;
+            }
+            /* On mouse-over, add a grey background color */
+            .container:hover input ~ .checkmark {
+                    background-color: #000000;
+            }
+            /* When the radio button is checked, add a blue background */
+            .container input:checked ~ .checkmark {
+                    background-color: #000          
+            }
+            /* Create the indicator (the dot/circle - hidden when not checked) */
+            .checkmark:after {
+                    content: "";
+                    position: absolute;
+                    display: none;
+            }
+            /* Show the indicator (dot/circle) when checked */
+            .container input:checked ~ .checkmark:after {
+                    display: block;
+            }
+            /* Style the indicator (dot/circle) */
+            .container .checkmark:after {
+                    position: absolute;
+                    top: 3px;
+                    left: 3px;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: white;
+            }
+        </style>
+        <script>
 
-			#cy {
-				position: absolute;
-				left: 0;
-				top: 0;
-				bottom: 0;
-				right: 0;
-				z-index: 999;
-			}
+            document.addEventListener("DOMContentLoaded", function(){
+                var cy = window.cy = cytoscape({
+                    container: document.getElementById('cy'),
+                    layout: { name: "cose-bilkent" },
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'content': 'data(name)',
+                                'border-color': 'grey',
+                                'border-width': 3,
+                                'background-color': 'lightgrey'
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'target-arrow-shape': 'triangle'
+                            }
+                        },
+                        {
+                            selector: 'edge:selected',
+                            style: {
+                                            'line-color': 'black'
+                            }
+                        },
+                        {
+                            selector: 'node:selected',
+                            style: {
+                                            'border-color': 'black',
+                                            'border-width': '3px',
+                                            'background-color': 'lightgrey'
+                            }
+                        },
+                        {
+                            selector: 'node:parent',
+                            style: {
+                                            'background-color': 'lightgrey'
+                            }
+                        }
+                    ],
 
-			h1 {
-				opacity: 0.5;
-				font-size: 1em;
-				font-weight: bold;
-			}
-		</style>
+                    elements: {
+                        nodes: [
+                            { data: { id: 'n5', name: 'n5' } },
+                            { data: { id: 'n6', name: 'n6' } },
+                            { data: { id: 'n7', name: 'n7' } },
+                            { data: { id: 'n8', name: 'n8' } },
+                            { data: { id: 'n9', name: 'n9' } },
+                            { data: { id: 'n10', name: 'n10' } },
+                            { data: { id: 'n11', name: 'n11' } },
+                            { data: { id: 'n12', name: 'n12' } },
+                            { data: { id: 'n13', name: 'n13' } },
+                            { data: { id: 'n14', name: 'n14' } },
+                            { data: { id: 'n15', name: 'n15' } },
+                            { data: { id: 'n16', name: 'n16' } },
+                            { data: { id: 'n17', name: 'n17' } },
+                            { data: { id: 'n18', name: 'n18' } },
+                            { data: { id: 'n19', name: 'n19' } },
+                            { data: { id: 'n20', name: 'n20' } },
+                            { data: { id: 'n21', name: 'n21' } },
+                        ],
+                        edges: [
+                            { data: { source: "n5", target: "n6" } },
+                            { data: { source: 'n5', target: 'n7' } },
+                            { data: { source: 'n6', target: 'n7' } },
+                            { data: { source: "n7", target: "n8" } },
+                            { data: { source: "n8", target: "n9" } },
+                            { data: { source: 'n7', target: 'n10' } },
+                            { data: { source: 'n6', target: 'n11' } },
+                            { data: { source: "n7", target: "n11" } },
+                            { data: { source: "n9", target: "n10" } },
+                            { data: { source: 'n10', target: 'n11' } },
+                            { data: { source: 'n10', target: 'n12' } },
+                            { data: { source: "n12", target: "n13" } },
+                            { data: { source: "n12", target: "n14" } },
+                            { data: { source: "n12", target: "n15" } },
+                            { data: { source: "n13", target: "n15" } },
+                            { data: { source: 'n15', target: 'n16' } },
+                            { data: { source: 'n15', target: 'n17' } },
+                            { data: { source: "n15", target: "n18" } },
+                            { data: { source: "n17", target: "n19" } },
+                            { data: { source: 'n17', target: 'n20' } },
+                            { data: { source: 'n19', target: 'n20' } },
+                            { data: { source: "n19", target: "n21" } }
+                        ]
+                    }
+                });
 
-		<script>
-			document.addEventListener('DOMContentLoaded', function(){
 
-				var cy = window.cy = cytoscape({
-					container: document.getElementById('cy'),
+                var api = cy.layoutUtilities({
+                    neighbor: function(node){
+                        return node.closedNeighborhood();
+                    },
+                    neighborSelectTime: 1000
+                });
 
-					style: [
-						{
-							selector: 'node',
-							style: {
-								'content': 'data(name)'
-							}
-						},
+                var layout = cy.layout({
+                    name: 'cose-bilkent',
+                    randomize: false,
+                    fit: false
+                });
 
-						{
-							selector: 'edge',
-							style: {
-								'curve-style': 'bezier',
-								'target-arrow-shape': 'triangle'
-							}
-						}
-					],
+                function changeBorder(eles){
+                    eles.forEach(function( ele ){
+                        ele.css("background-color", 'purple');
+                    });
+                    return eles;
+                }
+                function revertBorder(eles){
+                    eles.forEach(function( ele ){
+                        ele.css("background-color", 'lightgrey');
+                  });
+                  return eles;
+                }
 
-					elements: {
-						nodes: [
-							{ data: { id: 'j', name: 'Jerry' } },
-							{ data: { id: 'e', name: 'Elaine' } },
-							{ data: { id: 'k', name: 'Kramer' } },
-							{ data: { id: 'g', name: 'George' } }
-						],
-						edges: [
-							{ data: { source: 'j', target: 'e' } },
-							{ data: { source: 'j', target: 'k' } },
-							{ data: { source: 'j', target: 'g' } },
-							{ data: { source: 'e', target: 'j' } },
-							{ data: { source: 'e', target: 'k' } },
-							{ data: { source: 'k', target: 'j' } },
-							{ data: { source: 'k', target: 'e' } },
-							{ data: { source: 'k', target: 'g' } },
-							{ data: { source: 'g', target: 'j' } }
-						]
-					}
-				});
+                $("#hide").click(function () {
+                    //api.disableMarqueeZoom();
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    //thinBorder(nodesWithHiddenNeighbor);
+                    api.hide(cy.$(":selected"));
+                    nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    changeBorder(nodesWithHiddenNeighbor);
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
 
-				// demo your core ext
-				cy.layout-utilities( /* args... */ );
+                $("#showAll").click(function () {
+                    //api.disableMarqueeZoom();
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    revertBorder(nodesWithHiddenNeighbor);
+                    api.show(cy.elements());
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
 
-			});
-		</script>
-	</head>
+                $("#showHiddenNeighbors").click(function () {
+                   // api.disableMarqueeZoom();
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+					revertBorder(nodesWithHiddenNeighbor);
+					api.closeUpElements(cy.nodes(":selected"), cy.nodes(":selected").neighborhood().nodes(":hidden"));
+                    api.show(cy.nodes(":selected").neighborhood());
+                    nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
 
-	<body>
-		<h1>cytoscape-layout-utilities demo</h1>
+                $("#redolayout").click(function () {
+                    layout.run();
+                });
+                // $('#zoomToSelected').click( function(){
+                //     api.disableMarqueeZoom();
+                //     var selectedEles = cy.$(":selected");
+                //     api.zoomToSelected(selectedEles);
+                //     if(document.getElementById('layout').checked){
+                //       layout.run();
+                //     }
+                // })
 
-		<div id="cy"></div>
+                // $('#marqueeZoom').click( function(){
+                //     api.enableMarqueeZoom();
+                //     if( document.getElementById('layout').checked){
+                //         layout.run();
+                //     }
+                // })
 
-	</body>
+                // var tappedBefore;
+                // cy.on('tap', 'node', function (event) {
+                //     var node = this;
+                //     var tappedNow = node;
+                //     setTimeout(function () {
+                //       tappedBefore = null;
+                //     }, 300);
+                //     if (tappedBefore && tappedBefore.id() === tappedNow.id()) {
+                //       tappedNow.trigger('doubleTap');
+                //       tappedBefore = null;
+                //     } else {
+                //       tappedBefore = tappedNow;
+                //     }
+                // });
+
+                // cy.on('doubleTap', 'node', function (event) {
+                //     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                //     revertBorder(nodesWithHiddenNeighbor);
+                //     api.show(cy.nodes(":selected").neighborhood().union(cy.nodes(":selected").neighborhood().parent()));
+                //     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                //     if(document.getElementById('layout').checked){
+                //       layout.run();
+                //     }
+                // });
+
+                // function chooseHighlightColor(){
+                //     var option = "";
+                //     if(document.getElementById('highlight1').checked)
+                //     {
+                //             option = "highlighted";
+                //     }
+                //     else if(document.getElementById('highlight2').checked)
+                //     {
+                //             option = "highlighted2";
+                //     }
+                //     else if(document.getElementById('highlight3').checked)
+                //     {
+                //             option = "highlighted3";
+                //     }
+                //     else if(document.getElementById('highlight4').checked)
+                //     {
+                //             option = "highlighted4";
+                //     }
+                //     return option;
+                // }
+
+                // $("#highlightNeighbors").click(function () {
+                //     api.disableMarqueeZoom();
+                //     if(cy.$(":selected").length > 0)
+                //       api.highlightNeighbors({eles: cy.$(":selected"), option: chooseHighlightColor()});
+                // });
+
+				// 				$("#highlightElements").click(function () {
+                //     api.disableMarqueeZoom();
+                //     if(cy.$(":selected").length > 0)
+                //       api.highlight({eles: cy.$(":selected"), option: chooseHighlightColor()});
+                // });
+
+				// 				$("#removeSelectedHighlights").click(function () {
+                //     api.disableMarqueeZoom();
+				// 						if(cy.$(":selected").length > 0)
+                //     	api.removeHighlights(cy.$(":selected"));
+                // });
+
+                // $("#removeAllHighlights").click(function () {
+                //     api.disableMarqueeZoom();
+                //     api.removeHighlights();
+                // });
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>cytoscape.js-layout-utilities demo</h1>
+        <div class="topnav">
+            <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b> / <b id="showAll" style="cursor: pointer; color: brown">Show All</b> <br/><br/>
+            <!-- <b id="highlightColor">Choose Highlight Color:</b> <br/><br/> -->
+            <!-- <label class="container"  style="color: #0B9BCD">Blue
+              <input type="radio" name="radiobutton" id="highlight1" value="highlight1">
+              <span class="checkmark"></span>
+            </label> <br/><br/>
+            <label class="container" style="color: green">Green
+              <input type="radio" name="radiobutton" id="highlight2" value="highlight2">
+              <span class="checkmark"></span>
+            </label>  <br/><br/>
+            <label class="container" style="color: #F8C200">Yellow
+              <input type="radio" name="radiobutton" id="highlight3" value="highlight3">
+              <span class="checkmark"></span>
+            </label> <br/><br/>
+            <label class="container" style="color: #BF0603">Red
+              <input type="radio" name="radiobutton" id="highlight4" value="highlight4">
+              <span class="checkmark"></span>
+            </label> <br/><br/> -->
+            <!-- <b id="highlightElements" style="cursor: pointer; color: brown">Highlight Elements</b> <br/><br/>
+            <b id="highlightNeighbors" style="cursor: pointer; color: brown">Highlight Neighbors</b><br/><br/> -->
+            <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show Hidden Neighbors of Selected</b> <br/><br/>
+            <b id="redolayout" style="cursor: pointer; color: brown">Re Do Layout</b> <br/><br/>
+            <!-- <b id="removeSelectedHighlights" style="cursor: pointer; color: brown">Remove Selected Highlights</b> <br/><br/>
+            <b id="removeAllHighlights" style="cursor: pointer; color: brown">Remove All Highlights</b> <br/><br/>
+            <b id="zoomToSelected" style="cursor: pointer; color: brown">Zoom to Selected</b><br/><br/>
+            <b id="marqueeZoom" style="cursor: pointer; color: brown">Marquee Zoom</b> -->
+            <b>Shift + drag</b> to specify region<br/><br/>
+            <b>Shift + taphold</b> to select neighbors<br/><br/>
+            <label for="layout" style="vertical-align:middle;">Rearrange on Hide/Show</label>
+            <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked"><br>
+        </div>
+        <div id="cy"></div>
+
+    </body>
 
 </html>
