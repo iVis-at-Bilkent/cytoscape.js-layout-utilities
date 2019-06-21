@@ -222,9 +222,7 @@
                 }
 
                 $("#hide").click(function () {
-                    //api.disableMarqueeZoom();
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
-                    //thinBorder(nodesWithHiddenNeighbor);
                     api.hide(cy.$(":selected"));
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     changeBorder(nodesWithHiddenNeighbor);
@@ -234,7 +232,6 @@
                 });
 
                 $("#showAll").click(function () {
-                    //api.disableMarqueeZoom();
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     revertBorder(nodesWithHiddenNeighbor);
                     api.show(cy.elements());
@@ -244,10 +241,10 @@
                 });
 
                 $("#showHiddenNeighbors").click(function () {
-                   // api.disableMarqueeZoom();
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
 					revertBorder(nodesWithHiddenNeighbor);
-					api.closeUpElements(cy.nodes(":selected"), cy.nodes(":selected").neighborhood().nodes(":hidden"));
+                    //api.closeUpElements(cy.nodes(":selected"), cy.nodes(":selected").neighborhood().nodes(":hidden"));
+                    api.positionNewNode(cy.nodes(":selected"), cy.nodes(":selected").neighborhood().nodes(":hidden"));
                     api.show(cy.nodes(":selected").neighborhood());
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     if(document.getElementById('layout').checked){
@@ -258,90 +255,6 @@
                 $("#redolayout").click(function () {
                     layout.run();
                 });
-                // $('#zoomToSelected').click( function(){
-                //     api.disableMarqueeZoom();
-                //     var selectedEles = cy.$(":selected");
-                //     api.zoomToSelected(selectedEles);
-                //     if(document.getElementById('layout').checked){
-                //       layout.run();
-                //     }
-                // })
-
-                // $('#marqueeZoom').click( function(){
-                //     api.enableMarqueeZoom();
-                //     if( document.getElementById('layout').checked){
-                //         layout.run();
-                //     }
-                // })
-
-                // var tappedBefore;
-                // cy.on('tap', 'node', function (event) {
-                //     var node = this;
-                //     var tappedNow = node;
-                //     setTimeout(function () {
-                //       tappedBefore = null;
-                //     }, 300);
-                //     if (tappedBefore && tappedBefore.id() === tappedNow.id()) {
-                //       tappedNow.trigger('doubleTap');
-                //       tappedBefore = null;
-                //     } else {
-                //       tappedBefore = tappedNow;
-                //     }
-                // });
-
-                // cy.on('doubleTap', 'node', function (event) {
-                //     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
-                //     revertBorder(nodesWithHiddenNeighbor);
-                //     api.show(cy.nodes(":selected").neighborhood().union(cy.nodes(":selected").neighborhood().parent()));
-                //     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
-                //     if(document.getElementById('layout').checked){
-                //       layout.run();
-                //     }
-                // });
-
-                // function chooseHighlightColor(){
-                //     var option = "";
-                //     if(document.getElementById('highlight1').checked)
-                //     {
-                //             option = "highlighted";
-                //     }
-                //     else if(document.getElementById('highlight2').checked)
-                //     {
-                //             option = "highlighted2";
-                //     }
-                //     else if(document.getElementById('highlight3').checked)
-                //     {
-                //             option = "highlighted3";
-                //     }
-                //     else if(document.getElementById('highlight4').checked)
-                //     {
-                //             option = "highlighted4";
-                //     }
-                //     return option;
-                // }
-
-                // $("#highlightNeighbors").click(function () {
-                //     api.disableMarqueeZoom();
-                //     if(cy.$(":selected").length > 0)
-                //       api.highlightNeighbors({eles: cy.$(":selected"), option: chooseHighlightColor()});
-                // });
-
-				// 				$("#highlightElements").click(function () {
-                //     api.disableMarqueeZoom();
-                //     if(cy.$(":selected").length > 0)
-                //       api.highlight({eles: cy.$(":selected"), option: chooseHighlightColor()});
-                // });
-
-				// 				$("#removeSelectedHighlights").click(function () {
-                //     api.disableMarqueeZoom();
-				// 						if(cy.$(":selected").length > 0)
-                //     	api.removeHighlights(cy.$(":selected"));
-                // });
-
-                // $("#removeAllHighlights").click(function () {
-                //     api.disableMarqueeZoom();
-                //     api.removeHighlights();
-                // });
             });
         </script>
     </head>
@@ -349,32 +262,9 @@
     <body>
         <h1>cytoscape.js-layout-utilities demo</h1>
         <div class="topnav">
-            <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b> / <b id="showAll" style="cursor: pointer; color: brown">Show All</b> <br/><br/>
-            <!-- <b id="highlightColor">Choose Highlight Color:</b> <br/><br/> -->
-            <!-- <label class="container"  style="color: #0B9BCD">Blue
-              <input type="radio" name="radiobutton" id="highlight1" value="highlight1">
-              <span class="checkmark"></span>
-            </label> <br/><br/>
-            <label class="container" style="color: green">Green
-              <input type="radio" name="radiobutton" id="highlight2" value="highlight2">
-              <span class="checkmark"></span>
-            </label>  <br/><br/>
-            <label class="container" style="color: #F8C200">Yellow
-              <input type="radio" name="radiobutton" id="highlight3" value="highlight3">
-              <span class="checkmark"></span>
-            </label> <br/><br/>
-            <label class="container" style="color: #BF0603">Red
-              <input type="radio" name="radiobutton" id="highlight4" value="highlight4">
-              <span class="checkmark"></span>
-            </label> <br/><br/> -->
-            <!-- <b id="highlightElements" style="cursor: pointer; color: brown">Highlight Elements</b> <br/><br/>
-            <b id="highlightNeighbors" style="cursor: pointer; color: brown">Highlight Neighbors</b><br/><br/> -->
+            <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b><br/><br/>
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show Hidden Neighbors of Selected</b> <br/><br/>
             <b id="redolayout" style="cursor: pointer; color: brown">Re Do Layout</b> <br/><br/>
-            <!-- <b id="removeSelectedHighlights" style="cursor: pointer; color: brown">Remove Selected Highlights</b> <br/><br/>
-            <b id="removeAllHighlights" style="cursor: pointer; color: brown">Remove All Highlights</b> <br/><br/>
-            <b id="zoomToSelected" style="cursor: pointer; color: brown">Zoom to Selected</b><br/><br/>
-            <b id="marqueeZoom" style="cursor: pointer; color: brown">Marquee Zoom</b> -->
             <b>Shift + drag</b> to specify region<br/><br/>
             <b>Shift + taphold</b> to select neighbors<br/><br/>
             <label for="layout" style="vertical-align:middle;">Rearrange on Hide/Show</label>

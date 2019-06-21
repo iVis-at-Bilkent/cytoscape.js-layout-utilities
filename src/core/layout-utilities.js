@@ -78,6 +78,30 @@ var layoutUtilities = function (cy, options) {
     return eles;
   };
 
+  instance.positionNewNode = function(mainEle, newEles){
+    newEles.forEach(function(newEle){
+      var neighbors = newEle.neighborhood().nodes(":visible");
+      var x = 0;
+      var y = 0;
+      var count = 0;
+      if (neighbors.length > 1){
+        neighbors.forEach(function(ele){
+          x += ele.position("x");
+          y += ele.position("y");
+          count ++;
+        });
+        x = x / count;
+        y = y / count;
+        newEle.position("x", x);
+        newEle.position("y", y);
+      }
+      else{
+        instance.closeUpElements(mainEle, newEles);
+      }
+    });
+  }
+
+
   instance.closeUpElements = function(mainEle, hiddenEles) {
     var leftX = Number.MAX_VALUE;
     var rightX = Number.MIN_VALUE;
@@ -201,7 +225,6 @@ var layoutUtilities = function (cy, options) {
         mult = val[Math.floor(Math.random()*val.length)];
     return (Math.floor(Math.random() * (max - min + 1)) + min) * mult;
   };
-
 
   instance.checkOccupiedQuadrants = function(mainEle, hiddenEles) {
     // if (instance.elementUtilities.getMapType() == 'PD')

@@ -303,6 +303,28 @@ var layoutUtilities = function layoutUtilities(cy, options) {
         return eles;
     };
 
+    instance.positionNewNode = function (mainEle, newEles) {
+        newEles.forEach(function (newEle) {
+            var neighbors = newEle.neighborhood().nodes(":visible");
+            var x = 0;
+            var y = 0;
+            var count = 0;
+            if (neighbors.length > 1) {
+                neighbors.forEach(function (ele) {
+                    x += ele.position("x");
+                    y += ele.position("y");
+                    count++;
+                });
+                x = x / count;
+                y = y / count;
+                newEle.position("x", x);
+                newEle.position("y", y);
+            } else {
+                instance.closeUpElements(mainEle, newEles);
+            }
+        });
+    };
+
     instance.closeUpElements = function (mainEle, hiddenEles) {
         var leftX = Number.MAX_VALUE;
         var rightX = Number.MIN_VALUE;
@@ -447,9 +469,8 @@ var register = function register(cytoscape) {
   cytoscape('core', 'layoutUtilities', impl); // register with cytoscape.js
 };
 
-// if (typeof cytoscape !== 'undefined') {
-//   // expose to global cytoscape (i.e. window.cytoscape)
-//   register(cytoscape);
+// if( typeof cytoscape !== 'undefined' ){ // expose to global cytoscape (i.e. window.cytoscape)
+//   register( cytoscape );
 // }
 
 module.exports = register;
