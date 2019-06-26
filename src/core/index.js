@@ -16,40 +16,15 @@
           'border-width': 3
         },
 
-        highlighted2: {
-          'border-color': '#04F06A',  //green
-          'border-width': 3
-        },
-        highlighted3: {
-          'border-color': '#F5E663',   //yellow
-          'border-width': 3
-        },
-        highlighted4: {
-          'border-color': '#BF0603',    //red
-          'border-width': 3
-        },
         selected: {
           'border-color': 'black',
           'border-width': 3,
           'background-color': 'lightgrey'
         }
-
       },
       edge: {
         highlighted: {
           'line-color': '#0B9BCD',    //blue
-          'width' : 3
-        },
-        highlighted2: {
-          'line-color': '#04F06A',   //green
-          'width' : 3
-        },
-        highlighted3: {
-          'line-color': '#F5E663',    //yellow
-          'width' : 3
-        },
-        highlighted4: {
-          'line-color': '#BF0603',    //red
           'width' : 3
         },
         selected: {
@@ -60,6 +35,8 @@
       setVisibilityOnHide: false, // whether to set visibility on hide/show
       setDisplayOnHide: true, // whether to set display on hide/show
       zoomAnimationDuration: 1500, //default duration for zoom animation speed
+      idealEdgeLength: 50,
+      offset: 20,
       neighbor: function(node){ // return desired neighbors of tapheld node
         return false;
       },
