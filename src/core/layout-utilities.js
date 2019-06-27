@@ -137,6 +137,10 @@ var layoutUtilities = function (cy, options) {
     return occupiedQuadrants;
   };
 
+  instance.layoutComponents= function(listOfEles){
+    
+  };
+
   // return the instance
   return instance;
 };
