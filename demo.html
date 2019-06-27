@@ -230,7 +230,8 @@
                 $("#showAll").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     revertBorder(nodesWithHiddenNeighbor);
-                    api2.show(cy.elements());
+                    api.layoutHiddenNodes(nodesWithHiddenNeighbor);
+                    api2.show(nodesWithHiddenNeighbor.neighborhood());
                     if(document.getElementById('layout').checked){
                       layout.run();
                     }
@@ -258,6 +259,7 @@
         <h1>cytoscape.js-layout-utilities demo</h1>
         <div class="topnav">
             <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b><br/><br/>
+            <b id="showAll" style="cursor: pointer; color: brown">Show All</b><br/><br/>
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show Hidden Neighbors of Selected</b> <br/><br/>
             <b id="redolayout" style="cursor: pointer; color: brown">Re Do Layout</b> <br/><br/>
             <b>Shift + drag</b> to specify region<br/><br/>
