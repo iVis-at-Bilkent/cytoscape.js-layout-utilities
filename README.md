@@ -1,16 +1,15 @@
 cytoscape-layout-utilities
 ================================================================================
 
-
 ## Description
 
-Package of layput utilities for cytoscape.js ([demo](https://.github.io/cytoscape.js-layout-utilities))
+This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes. 
+
+Here is a ([demo](https://.github.io/cytoscape.js-layout-utilities)).
 
 ## Dependencies
 
- * Cytoscape.js ^3.2.0
- * <List your dependencies here please>
-
+ * Cytoscape.js ^3.7.0
 
 ## Usage instructions
 
@@ -52,7 +51,23 @@ Plain HTML/JS has the extension registered for you automatically, because no `re
 
 ## API
 
-TODO describe the API of the extension here.
+```var instance = cy.layoutUtilities(options)```
+
+Initializes the extension and sets options. This can be used to override default options. 
+
+An instance has a number of functions available:
+
+```instance.layoutHiddenNodes(eles)```
+
+Lays out hidden neighbors of each given element in `eles` according to their degree. If the neighbor is a degree one node, it will be placed to a non-occupied quadrant with respect to the element with a random offset. If the hidden node is connected to multiple nodes in the current shown graph, the geometric center of its neighbors will be calculated and the hidden node will be placed around this center with a random offset. 
+
+
+## Default Options
+
+```
+      idealEdgeLength: 50,
+      offset: 20
+```
 
 
 ## Build targets
@@ -77,3 +92,6 @@ This project is set up to automatically be published to npm and bower.  To publi
 1. Publish to npm: `npm publish .`
 1. If publishing to bower for the first time, you'll need to run `bower register cytoscape-layout-utilities https://github.com//cytoscape.js-layout-utilities.git`
 1. [Make a new release](https://github.com//cytoscape.js-layout-utilities/releases/new) for Zenodo.
+
+## Team
+  * [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
