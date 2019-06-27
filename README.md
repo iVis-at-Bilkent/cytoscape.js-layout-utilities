@@ -5,7 +5,7 @@ cytoscape-layout-utilities
 
 This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes. 
 
-Here is a ([demo](https://.github.io/cytoscape.js-layout-utilities)).
+Here is a ([demo](https://rawcdn.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/62afd4413774714810ac00e0a386bc11b11ecf99/demo.html)).
 
 ## Dependencies
 
