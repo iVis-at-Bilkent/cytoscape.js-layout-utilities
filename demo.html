@@ -4,7 +4,7 @@
     <head>
         <title>cytoscape-layout-utilities.js demo</title>
 
-        <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+       <!--- <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1"> -->
 
         <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
         <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
@@ -228,7 +228,7 @@
                 });
 
                 $("#showAll").click(function () {
-                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
                     revertBorder(nodesWithHiddenNeighbor);
                     api.layoutHiddenNodes(nodesWithHiddenNeighbor);
                     api2.show(nodesWithHiddenNeighbor.neighborhood());
