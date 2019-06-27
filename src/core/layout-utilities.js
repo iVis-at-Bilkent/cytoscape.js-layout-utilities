@@ -2,59 +2,9 @@
     
 var layoutUtilities = function (cy, options) {
 
-  // Set style for highlighted and unhighligthed eles
-  cy
-  .style()
-  .selector("node.highlighted")
-  .css(options.node.highlighted)
-  .selector("node.highlighted:selected")
-  .css(options.node.selected)
-  .selector("edge.highlighted")
-  .css(options.edge.highlighted)
-  .selector("edge.highlighted:selected")
-  .css(options.edge.selected)
-  .update();
-  // the instance to be returned
   var instance = {};
 
-  // Section hide-show
-  // hide given eles
-  instance.hide = function (eles) {
-    eles = eles.filter(":visible");
-    eles = eles.union(eles.connectedEdges());
-
-    eles.unselect();
-
-    if (options.setVisibilityOnHide) {
-      eles.css('visibility', 'hidden');
-    }
-
-    if (options.setDisplayOnHide) {
-      eles.css('display', 'none');
-    }
-
-    return eles;
-  };
-
-  // unhide given eles
-  instance.show = function (eles) {
-    var hiddenEles = eles.filter(':hidden');
-    eles = eles.not(":visible");
-    eles = eles.union(eles.connectedEdges());
-    eles.unselect();
-
-    if (options.setVisibilityOnHide) {
-      eles.css('visibility', 'visible');
-    }
-
-    if (options.setDisplayOnHide) {
-      eles.css('display', 'element');
-    }
-
-    return eles;
-  };
-
-  instance.initialPlacement = function(mainEles){
+  instance.layoutHiddenNodes = function(mainEles){
     mainEles.forEach(function(mainEle){
       var hiddenEles = mainEle.neighborhood().nodes(":hidden");
       hiddenEles.forEach(function(hiddenEle){
@@ -164,7 +114,6 @@ var layoutUtilities = function (cy, options) {
     var val = [-1,1];
     if (mult === 0)
         mult = val[Math.floor(Math.random()*val.length)];
-    console.log(mult);
     return (Math.floor(Math.random() * (max - min + 1)) + min) * mult;
   };
 

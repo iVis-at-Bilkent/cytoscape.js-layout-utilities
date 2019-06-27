@@ -1,54 +1,15 @@
 ;
-// (function () {
-//   'use strict';
-
-//   // registers the extension on a cytoscape lib ref
-//   var register = function (cytoscape, $) {
-
-//     if (!cytoscape || !$) {
-//       return;
-//     } // can't register if cytoscape unspecified
 
     var options = {
-      node: {
-        highlighted: {
-          'border-color': '#0B9BCD',  //blue
-          'border-width': 3
-        },
-
-        selected: {
-          'border-color': 'black',
-          'border-width': 3,
-          'background-color': 'lightgrey'
-        }
-      },
-      edge: {
-        highlighted: {
-          'line-color': '#0B9BCD',    //blue
-          'width' : 3
-        },
-        selected: {
-          'line-color': 'black',
-          'width' : 3
-        }
-      },
-      setVisibilityOnHide: false, // whether to set visibility on hide/show
-      setDisplayOnHide: true, // whether to set display on hide/show
-      zoomAnimationDuration: 1500, //default duration for zoom animation speed
       idealEdgeLength: 50,
       offset: 20,
-      neighbor: function(node){ // return desired neighbors of tapheld node
-        return false;
-      },
-      neighborSelectTime: 500 //ms, time to taphold to select desired neighbors
     };
 
 
     var layoutUtilities = require("./layout-utilities");
-
+    
     cytoscape('core', 'layoutUtilities', function (opts) {
       var cy = this;
-
       // If 'get' is given as the param then return the extension instance
       if (opts === 'get') {
         return getScratch(cy).instance;
@@ -70,11 +31,6 @@
 
         // create a view utilities instance
         var instance = layoutUtilities(cy, options);
-
-        // if (cy.undoRedo) {
-        //   var ur = cy.undoRedo(null, true);
-        //   undoRedo(cy, ur, instance);
-        // }
 
         // set the instance on the scratch pad
         getScratch(cy).instance = instance;

@@ -13,6 +13,7 @@
         <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
         <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cose-bilkent/2.0.4/cytoscape-cose-bilkent.js"></script>
         <script src="cytoscape-layout-utilities.js"></script>
+        <script src="node_modules/cytoscape-view-utilities/cytoscape-view-utilities.js"></script>
 
         <style>
             body {
@@ -194,13 +195,8 @@
                     }
                 });
 
-
-                var api = cy.layoutUtilities({
-                    neighbor: function(node){
-                        return node.closedNeighborhood();
-                    },
-                    neighborSelectTime: 1000
-                });
+                var api = cy.layoutUtilities();
+                var api2 = cy.viewUtilities();
 
                 var layout = cy.layout({
                     name: 'cose-bilkent',
@@ -223,7 +219,7 @@
 
                 $("#hide").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
-                    api.hide(cy.$(":selected"));
+                    api2.hide(cy.$(":selected"));
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     changeBorder(nodesWithHiddenNeighbor);
                     if(document.getElementById('layout').checked){
@@ -234,7 +230,7 @@
                 $("#showAll").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     revertBorder(nodesWithHiddenNeighbor);
-                    api.show(cy.elements());
+                    api2.show(cy.elements());
                     if(document.getElementById('layout').checked){
                       layout.run();
                     }
@@ -243,9 +239,8 @@
                 $("#showHiddenNeighbors").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
 					revertBorder(nodesWithHiddenNeighbor);
-                    //api.closeUpElements(cy.nodes(":selected"), cy.nodes(":selected").neighborhood().nodes(":hidden"));
-                    api.initialPlacement(cy.nodes(":selected"));
-                    api.show(cy.nodes(":selected").neighborhood());
+                    api.layoutHiddenNodes(cy.nodes(":selected"));
+                    api2.show(cy.nodes(":selected").neighborhood());
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     if(document.getElementById('layout').checked){
                       layout.run();
