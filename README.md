@@ -1,18 +1,15 @@
 cytoscape-layout-utilities
 ================================================================================
 
-
 ## Description
 
-This Cytoscape.js extension provides layout utilities in order to manage the placement of the hidden nodes. 
+This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes. 
 
-Package of layout utilities for cytoscape.js ([demo](https://.github.io/cytoscape.js-layout-utilities))
+Here is a ([demo](https://.github.io/cytoscape.js-layout-utilities)).
 
 ## Dependencies
 
  * Cytoscape.js ^3.7.0
- * cytoscape-view-utilities.js ^3.0.0 (only for demo)
-
 
 ## Usage instructions
 
@@ -60,9 +57,9 @@ Initializes the extension and sets options. This can be used to override default
 
 An instance has a number of functions available:
 
-```instance.layoutHiddenNodes(mainEles)```
+```instance.layoutHiddenNodes(eles)```
 
-Layouts hidden neighbors of each given element according to their degree. If the node is a degree one node, it will be placed to a non-occupied quadrant with a random offset. Else, the geometric center of the neighbors will be calculated and the node will be placed around the center with a random offset. 
+Lays out hidden neighbors of each given element in `eles` according to their degree. If the neighbor is a degree one node, it will be placed to a non-occupied quadrant with respect to the element with a random offset. If the hidden node is connected to multiple nodes in the current shown graph, the geometric center of its neighbors will be calculated and the hidden node will be placed around this center with a random offset. 
 
 
 ## Default Options
