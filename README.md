@@ -5,7 +5,13 @@ cytoscape-layout-utilities
 
 This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes. 
 
-Here is a ([demo](https://rawcdn.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/62afd4413774714810ac00e0a386bc11b11ecf99/demo.html)).
+Here is a [demo](https://rawcdn.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/62afd4413774714810ac00e0a386bc11b11ecf99/demo.html).
+
+Please cite the following when you use this extension:
+
+U. Dogrusoz, A. Karacelik, I. Safarli, H. Balci, L. Dervishi, M.C. Siper, "[Efficient methods and readily customizable libraries for managing complexity of large networks](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197238"), PLOS ONE, 13(5):e0197238, 2018.
+
+K. Freivalds, U. Dogrusoz, and P. Kikusts, "[Disconnected Graph Layout and the Polyomino Packing Approach](http://www.springeronline.com/sgw/cda/frontpage/0,10735,5-40109-22-2208018-0,00.html)", LNCS, vol. 2265, pp. 378-391, 2002.
 
 ## Dependencies
 
