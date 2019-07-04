@@ -3,7 +3,17 @@ cytoscape-layout-utilities
 
 ## Description
 
-This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes. 
+This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes without layout information. Sometimes, your graph will have a pre-calculated layout but changes (addition and/or deletion of nodes and edges) will require an *incremental* layout to adjust the existing layout according to these changes. However, often times, the new nodes do not have a good initial position for incremental layout (randomize: false) to produce successful results. Following layout methods try to choose the best position for any node without a previous layout, so that subsequent incremental layout can achieve this. 
+
+When doing so, these methods use the following heuristics:
+
+- If a new node without layout has a *single* neighbor with layout information,  the idea is to split the neighboring space around the single neighbor into quadrants and scoring how crowded each quadrant is, and placing the new node in least crowded quadrant.
+
+- If a new node without layout has *multiple* neighbors with layout information, we chose the position of the new node without layout to be the geometric center of all its neighbors.
+
+- If a new node without layout has *no* neighbors with layout information, then we place it around the periphery of the bounding box of all nodes with pre-calculated layout.
+
+In all of the above cases, we choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases.
 
 Here is a [demo](https://rawcdn.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/62afd4413774714810ac00e0a386bc11b11ecf99/demo.html).
 
@@ -63,10 +73,13 @@ Initializes the extension and sets options. This can be used to override default
 
 An instance has a number of functions available:
 
-```instance.layoutHiddenNodes(eles)```
+```instance.placeHiddenNodes(nodesWithLayout)```
 
-Lays out hidden neighbors of each given element in `eles` according to their degree. If the neighbor is a degree one node, it will be placed to a non-occupied quadrant with respect to the element with a random offset. If the hidden node is connected to multiple nodes in the current shown graph, the geometric center of its neighbors will be calculated and the hidden node will be placed around this center with a random offset. 
+Places hidden neighbors of each given node. It is assumed that the given nodes have pre-calculated layout, and with this method, proper initial positions are calculated for their hidden neighbors to prepare them for a successful incremental layout.
 
+```instance.placeNewNodes(nodesWithoutLayout)```
+
+Places each given node. It is assumed that the remaining nodes in the graph already have pre-calculated layout, whereas given nodes do not. With this method, given nodes are positioned with respect to their already laid out neighbors so that a following incremental layout produce a good layout for the entire graph. 
 
 ## Default Options
 
