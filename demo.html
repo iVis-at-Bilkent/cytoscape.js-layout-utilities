@@ -229,9 +229,11 @@
 
                 $("#showAll").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
+                    var hiddenNodes = cy.nodes(":hidden");
                     revertBorder(nodesWithHiddenNeighbor);
-                    api.layoutHiddenNodes(nodesWithHiddenNeighbor);
-                    api2.show(nodesWithHiddenNeighbor.neighborhood());
+                    api.placeHiddenNodes(nodesWithHiddenNeighbor);
+                    //api.placeNewNodes(cy.nodes(":visible"), hiddenNodes);
+                    api2.show(hiddenNodes);
                     if(document.getElementById('layout').checked){
                       layout.run();
                     }
@@ -240,16 +242,13 @@
                 $("#showHiddenNeighbors").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
 					revertBorder(nodesWithHiddenNeighbor);
-                    api.layoutHiddenNodes(cy.nodes(":selected"));
+                    api.placeHiddenNodes(cy.nodes(":selected"));
                     api2.show(cy.nodes(":selected").neighborhood());
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    changeBorder(nodesWithHiddenNeighbor);
                     if(document.getElementById('layout').checked){
                       layout.run();
                     }
-                });
-
-                $("#redolayout").click(function () {
-                    layout.run();
                 });
             });
         </script>
@@ -261,7 +260,6 @@
             <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b><br/><br/>
             <b id="showAll" style="cursor: pointer; color: brown">Show All</b><br/><br/>
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show Hidden Neighbors of Selected</b> <br/><br/>
-            <b id="redolayout" style="cursor: pointer; color: brown">Re Do Layout</b> <br/><br/>
             <b>Shift + drag</b> to specify region<br/><br/>
             <b>Shift + taphold</b> to select neighbors<br/><br/>
             <label for="layout" style="vertical-align:middle;">Rearrange on Hide/Show</label>

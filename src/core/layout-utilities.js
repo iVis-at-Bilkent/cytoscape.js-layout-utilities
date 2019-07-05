@@ -1,23 +1,85 @@
 
     
+// class Ploynomino {
+//   constructor(name, level) {
+//       this.name = name;
+//       this.level = level;
+//   }
+// }
+
+
 var layoutUtilities = function (cy, options) {
 
   var instance = {};
 
-  instance.layoutHiddenNodes = function(mainEles){
-    mainEles.forEach(function(mainEle){
+  instance.placeHiddenNodes = function (mainEles) {
+    mainEles.forEach(function (mainEle) {
       var hiddenEles = mainEle.neighborhood().nodes(":hidden");
-      hiddenEles.forEach(function(hiddenEle){
+      hiddenEles.forEach(function (hiddenEle) {
         var neighbors = hiddenEle.neighborhood().nodes(":visible");
-        if(neighbors.length > 1){
+        if (neighbors.length > 1) {
           instance.nodeWithMultipleNeighbors(hiddenEle);
-        }
-        else
-          instance.nodeWithOneNeighbor(mainEle, hiddenEle);
-      })
-      
-    })
+        } else instance.nodeWithOneNeighbor(mainEle, hiddenEle);
+      });
+    });
+  };
+
+  instance.placeNewNodes = function (currentNodes, eles){
+    var disconnectedNodes = [];
+    eles.forEach(function (ele){
+      var neighbors = ele.neighborhood().nodes(":visible");
+      if(neighbors.length > 1){
+        instance.nodeWithMultipleNeighbors(ele);
+      }
+      else if (neighbors.length == 1){
+        instance.nodeWithOneNeighbor(neighbors[0], ele);
+      }
+      else{
+        disconnectedNodes.push(ele)
+      }
+    });
+    if(disconnectedNodes.length >= 1){
+      console.log("leleleele");
+      instance.disconnectedNodes(currentNodes, disconnectedNodes);
+    }
   }
+
+  instance.disconnectedNodes = function(currentNodes, newEles){
+    var leftX = Number.MAX_VALUE;
+    var rightX = Number.MIN_VALUE;
+    var topY = Number.MAX_VALUE;
+    var bottomY = Number.MIN_VALUE;
+    // Check the x and y limits of all hidden elements and store them in the variables above
+    currentNodes.forEach(function(node){
+      var halfWidth = node.outerWidth()/2;
+      var halfHeight = node.outerHeight()/2;
+      if (node.position("x") - halfWidth < leftX)
+        leftX = node.position("x") - halfWidth;
+      if (node.position("x") + halfWidth > rightX)
+        rightX = node.position("x") + halfWidth;
+      if (node.position("y") - halfHeight < topY)
+        topY = node.position("y") - halfHeight;
+      if (node.position("y") + halfHeight > bottomY)
+        bottomY = node.position("y") + halfHeight;
+    });
+ 
+    //var numOfPieces = eles.length;
+    //var angle = 360 / len;
+    var radiusy = topY - bottomY;
+    var radiusx = rightX - leftX;
+    var radius = Math.sqrt(radiusx * radiusx + radiusy * radiusy);
+    var centerX = (leftX + rightX)/2;
+    var centerY = (topY + bottomY)/2;
+    
+    newEles.forEach(function(newEle){
+      console.log("insideforeach")
+      var offsetX = instance.generateRandom(radius/2, radius/2 + options.offset, 0);
+      var offsetY = instance.generateRandom(radius/2, radius/2 + options.offset, 0);
+      newEle.position("x", centerX + offsetX);
+      newEle.position("y", centerY + offsetY);
+    });
+    
+  };
 
   instance.nodeWithOneNeighbor = function(mainEle, hiddenEle) {
     var quadrants = instance.checkOccupiedQuadrants(mainEle, hiddenEle);
@@ -137,9 +199,14 @@ var layoutUtilities = function (cy, options) {
     return occupiedQuadrants;
   };
 
-  instance.layoutComponents= function(listOfEles){
-    
-  };
+  // instance.layoutComponents= function(listOfEles){
+  //   for(var i = 0; i < listOfEles.length ; i++){
+  //     var disconnectedPolys;
+  //     for(var j = 0; j < listOfEles[i].length; j++){
+      
+  //     }
+  //   }
+  // };
 
   // return the instance
   return instance;
