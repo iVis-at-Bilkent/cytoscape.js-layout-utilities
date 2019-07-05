@@ -15,7 +15,7 @@ When doing so, these methods use the following heuristics:
 
 In all of the above cases, we choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases.
 
-Here is a [demo](https://rawcdn.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/6b8c3a0d2bddde43cb79d3e45b7b73a753b29405/demo.html).
+Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
 Please cite the following when you use this extension:
 
