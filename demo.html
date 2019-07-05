@@ -192,7 +192,8 @@
                             { data: { source: 'n19', target: 'n20' } },
                             { data: { source: "n19", target: "n21" } }
                         ]
-                    }
+                    },
+                    wheelSensitivity: 0.2
                 });
 
                 var api = cy.layoutUtilities();
@@ -257,12 +258,12 @@
     <body>
         <h1>cytoscape.js-layout-utilities demo</h1>
         <div class="topnav">
-            <b id="hide" style="cursor: pointer; color: brown">Hide Selected</b><br/><br/>
-            <b id="showAll" style="cursor: pointer; color: brown">Show All</b><br/><br/>
-            <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show Hidden Neighbors of Selected</b> <br/><br/>
+            <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
+            <b id="showAll" style="cursor: pointer; color: brown">Show all</b><br/><br/>
+            <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
             <b>Shift + drag</b> to specify region<br/><br/>
             <b>Shift + taphold</b> to select neighbors<br/><br/>
-            <label for="layout" style="vertical-align:middle;">Rearrange on Hide/Show</label>
+            <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
             <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked"><br>
         </div>
         <div id="cy"></div>
