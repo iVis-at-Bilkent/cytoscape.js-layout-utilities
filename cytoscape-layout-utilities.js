@@ -166,6 +166,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
   instance.placeNewNodes = function (eles) {
     var disconnectedNodes = [];
+    var placeLater = [];
     eles.forEach(function (ele) {
       var neighbors = ele.neighborhood().nodes(":visible");
       if (neighbors.length > 1) {
@@ -199,7 +200,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     var radiusy = topY - bottomY;
     var radiusx = rightX - leftX;
     var innerRadius = Math.sqrt(radiusx * radiusx + radiusy * radiusy) / 2;
-    var outerRadius = innerRadius + options.offset;
     var centerX = (leftX + rightX) / 2;
     var centerY = (topY + bottomY) / 2;
     var components = this.findComponents(newEles);
@@ -207,26 +207,15 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     var angle = 360 / numOfComponents;
     var count = 1;
 
-    // while(count<=numOfComponents){
-    //   var distFromCenter = innerRadius + Math.random() * (outerRadius - innerRadius);
-    //   var curAngle = angle * count;
-    //   var x = distFromCenter * Math.cos(curAngle);
-    //   var y = distFromCenter * Math.sin(curAngle);
-    //   count++;
-
-    // }
-
+    //console.log(angle);
 
     components.forEach(function (component) {
-      // var horizontalParam = instance.generateRandom(200, 250 , 0);
-      // var verticalParam = instance.generateRandom(200, 250, 0);
-      // var newCenterX = centerX  + horizontalParam;
-      // var newCenterY = centerY + verticalParam;
 
-      var distFromCenter = innerRadius + Math.random() * (outerRadius - innerRadius);
+      var distFromCenter = instance.generateRandom(innerRadius + options.offset * 2, innerRadius + options.offset * 4, 1);
       var curAngle = angle * count;
-      var x = distFromCenter * Math.cos(curAngle);
-      var y = distFromCenter * Math.sin(curAngle);
+      var angleInRadians = curAngle * Math.PI / 180;
+      var x = centerX + distFromCenter * Math.cos(angleInRadians);
+      var y = centerY + distFromCenter * Math.sin(angleInRadians);
 
       if (component.length == 1) {
         component[0].position("x", x);
@@ -281,8 +270,10 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       var neighbors = ele.neighborhood().nodes();
       var listOfIndexes = [];
       neighbors.forEach(function (neigbor) {
-        var index = newEles.indexOf(neigbor);
-        listOfIndexes.push(index);
+        if (newEles.includes(neigbor)) {
+          var index = newEles.indexOf(neigbor);
+          listOfIndexes.push(index);
+        }
       });
       adjListArray.push(listOfIndexes);
     });

@@ -232,8 +232,8 @@
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
                     var hiddenNodes = cy.nodes(":hidden");
                     revertBorder(nodesWithHiddenNeighbor);
-                    api.placeHiddenNodes(nodesWithHiddenNeighbor);
-                    //api.placeNewNodes(hiddenNodes);
+                    //api.placeHiddenNodes(nodesWithHiddenNeighbor);
+                    api.placeNewNodes(hiddenNodes);
                     api2.show(hiddenNodes);
                     if(document.getElementById('layout').checked){
                       layout.run();
