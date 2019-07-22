@@ -165,24 +165,90 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   };
 
   instance.placeNewNodes = function (eles) {
-    var disconnectedNodes = [];
-    var placeLater = [];
-    eles.forEach(function (ele) {
-      var neighbors = ele.neighborhood().nodes(":visible");
-      if (neighbors.length > 1) {
-        instance.nodeWithMultipleNeighbors(ele);
-      } else if (neighbors.length == 1) {
-        instance.nodeWithOneNeighbor(neighbors[0], ele);
-      } else {
-        disconnectedNodes.push(ele);
+    var components = this.findComponents(eles);
+    var disconnectedComp = [];
+    for (var i = 0; i < components.length; i++) {
+      var oneNeig = false;
+      var multNeig = false;
+      var mainEle;
+      var multneighbors = [];
+      var positioned = [];
+      var x = 0;
+      var y = 0;
+      var isPositioned = false;
+      for (var j = 0; j < components[i].length; j++) {
+        var neighbors = components[i][j].neighborhood().nodes().difference(eles);
+        positioned.push(false);
+        if (neighbors.length > 1 && !isPositioned) {
+          multNeig = true;
+          positioned[j] = true;
+          multneighbors = neighbors;
+          instance.nodeWithMultipleNeighbors(components[i][j], multneighbors);
+          x = components[i][j].position("x");
+          y = components[i][j].position("y");
+          isPositioned = true;
+        } else if (neighbors.length == 1 && !isPositioned) {
+          oneNeig = true;
+          mainEle = neighbors[0];
+          positioned[j] = true;
+          instance.nodeWithOneNeighbor(mainEle, components[i][j]);
+          x = components[i][j].position("x");
+          y = components[i][j].position("y");
+          isPositioned = true;
+        }
       }
-    });
-    if (disconnectedNodes.length >= 1) {
-      instance.disconnectedNodes(disconnectedNodes);
+
+      if (oneNeig || multNeig) {
+        for (var j = 0; j < components[i].length; j++) {
+          if (positioned[j] == false) {
+            var neighbors = components[i][j].neighborhood().nodes();
+            var positionedNeigbors = [];
+            var curr = components[i][j].neighborhood().nodes().difference(eles);
+            curr.forEach(function (ele) {
+              positionedNeigbors.push(ele);
+            });
+
+            for (var k = 0; k < neighbors.length; k++) {
+              if (positioned[components[i].indexOf(neighbors[k])]) {
+                positionedNeigbors.push(neighbors[k]);
+              }
+            }
+            if (positionedNeigbors.length > 1) {
+              instance.nodeWithMultipleNeighbors(components[i][j], positionedNeigbors);
+            } else if (positionedNeigbors.length == 1) instance.nodeWithOneNeighbor(positionedNeigbors[0], components[i][j]);else {
+              var horizontalP = instance.generateRandom(options.offset, options.offset * 2, 0);
+              var verticalP = instance.generateRandom(options.offset, options.offset * 2, 0);
+              components[i][j].position("x", x + horizontalP);
+              components[i][j].position("y", y + verticalP);
+            }
+            positioned[j] = true;
+          }
+        }
+      } else {
+        disconnectedComp.push(components[i]);
+      }
     }
+
+    if (disconnectedComp.length >= 1) {
+      instance.disconnectedNodes(disconnectedComp);
+    }
+    // eles.forEach(function (ele){
+    //   var neighbors = ele.neighborhood().nodes(":visible");
+    //   if(neighbors.length > 1){
+    //     instance.nodeWithMultipleNeighbors(ele);
+    //   }
+    //   else if (neighbors.length == 1){
+    //     instance.nodeWithOneNeighbor(neighbors[0], ele);
+    //   }
+    //   else{
+    //     disconnectedNodes.push(ele);
+    //   }
+    // });
+    // if(disconnectedNodes.length >= 1){
+    //   instance.disconnectedNodes(disconnectedNodes);
   };
 
-  instance.disconnectedNodes = function (newEles) {
+  instance.disconnectedNodes = function (components) {
     var leftX = Number.MAX_VALUE;
     var rightX = Number.MIN_VALUE;
     var topY = Number.MAX_VALUE;
@@ -202,16 +268,14 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     var innerRadius = Math.sqrt(radiusx * radiusx + radiusy * radiusy) / 2;
     var centerX = (leftX + rightX) / 2;
     var centerY = (topY + bottomY) / 2;
-    var components = this.findComponents(newEles);
+    //var components = this.findComponents(newEles);
     var numOfComponents = components.length;
     var angle = 360 / numOfComponents;
     var count = 1;
 
-    //console.log(angle);
-
     components.forEach(function (component) {
 
-      var distFromCenter = instance.generateRandom(innerRadius + options.offset * 2, innerRadius + options.offset * 4, 1);
+      var distFromCenter = instance.generateRandom(innerRadius + options.offset * 6, innerRadius + options.offset * 8, 1);
       var curAngle = angle * count;
       var angleInRadians = curAngle * Math.PI / 180;
       var x = centerX + distFromCenter * Math.cos(angleInRadians);
@@ -226,34 +290,27 @@ var layoutUtilities = function layoutUtilities(cy, options) {
         var positioned = [];
         for (var i = 0; i < component.length; i++) {
           positioned.push(false);
-          var neighbors = component[i].neighborhood().nodes();
-          if (neighbors.length > max) {
-            max = neighbors.length;
-            index = i;
-          }
         }
 
-        positioned[index] = true;
-        component[index].position("x", x);
-        component[index].position("y", y);
+        positioned[0] = true;
+        component[0].position("x", x);
+        component[0].position("y", y);
 
-        for (var i = 0; i < component.length; i++) {
-          if (i != index) {
-            var neighbors = component[i].neighborhood().nodes();
-            var positionedNeigbors = [];
-            for (var j = 0; j < neighbors.length; j++) {
-              if (positioned[component.indexOf(neighbors[j])]) {
-                positionedNeigbors.push(neighbors[j]);
-              }
+        for (var i = 1; i < component.length; i++) {
+          var neighbors = component[i].neighborhood().nodes();
+          var positionedNeigbors = [];
+          for (var j = 0; j < neighbors.length; j++) {
+            if (positioned[component.indexOf(neighbors[j])]) {
+              positionedNeigbors.push(neighbors[j]);
             }
-            if (positionedNeigbors.length > 1) {
-              instance.nodeWithMultipleNeighbors(component[i], positionedNeigbors);
-            } else if (positionedNeigbors.length == 1) instance.nodeWithOneNeighbor(positionedNeigbors[0], component[i]);else {
-              var horizontalP = instance.generateRandom(20, 60, 0);
-              var verticalP = instance.generateRandom(20, 60, 0);
-              component[i].position("x", x + horizontalP);
-              component[i].position("y", y + verticalP);
-            }
+          }
+          if (positionedNeigbors.length > 1) {
+            instance.nodeWithMultipleNeighbors(component[i], positionedNeigbors);
+          } else if (positionedNeigbors.length == 1) instance.nodeWithOneNeighbor(positionedNeigbors[0], component[i]);else {
+            var horizontalP = instance.generateRandom(options.offset, options.offset * 2, 0);
+            var verticalP = instance.generateRandom(options.offset, options.offset * 2, 0);
+            component[i].position("x", x + horizontalP);
+            component[i].position("y", y + verticalP);
           }
           positioned[i] = true;
         }
@@ -265,15 +322,13 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   instance.findComponents = function (newEles) {
 
     var adjListArray = [];
-
+    var current = cy.nodes().difference(newEles);
     newEles.forEach(function (ele) {
-      var neighbors = ele.neighborhood().nodes();
+      var neighbors = ele.neighborhood().nodes().difference(current);
       var listOfIndexes = [];
       neighbors.forEach(function (neigbor) {
-        if (newEles.includes(neigbor)) {
-          var index = newEles.indexOf(neigbor);
-          listOfIndexes.push(index);
-        }
+        var index = newEles.indexOf(neigbor);
+        listOfIndexes.push(index);
       });
       adjListArray.push(listOfIndexes);
     });
