@@ -10,7 +10,7 @@ const PROD = NODE_ENV === 'production';
 
 let config = {
   devtool: PROD ? false : 'inline-source-map',
-  entry: './src/index.js',
+  entry: './src/core/index.js',
   output: {
     path: path.join( __dirname ),
     filename: pkg.name + '.js',
