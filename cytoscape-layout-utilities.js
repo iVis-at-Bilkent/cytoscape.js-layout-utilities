@@ -167,20 +167,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     if (disconnectedComp.length >= 1) {
       instance.disconnectedNodes(disconnectedComp);
     }
-    // eles.forEach(function (ele){
-    //   var neighbors = ele.neighborhood().nodes(":visible");
-    //   if(neighbors.length > 1){
-    //     instance.nodeWithMultipleNeighbors(ele);
-    //   }
-    //   else if (neighbors.length == 1){
-    //     instance.nodeWithOneNeighbor(neighbors[0], ele);
-    //   }
-    //   else{
-    //     disconnectedNodes.push(ele);
-    //   }
-    // });
-    // if(disconnectedNodes.length >= 1){
-    //   instance.disconnectedNodes(disconnectedNodes);
   };
 
   instance.disconnectedNodes = function (components) {
@@ -257,7 +243,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   instance.findComponents = function (newEles) {
 
     var adjListArray = [];
-    var current = cy.nodes().difference(newEles).nodes();
+    var current = cy.nodes().difference(newEles);
     newEles.forEach(function (ele) {
       var neighbors = ele.neighborhood().nodes().difference(current);
       var listOfIndexes = [];
@@ -357,7 +343,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   };
 
   instance.nodeWithMultipleNeighbors = function (ele, neighbors) {
-    ///var neighbors = ele.neighborhood().nodes(":visible");
     if (neighbors == null) {
       var neighbors = ele.neighborhood().nodes(":visible");
     }
