@@ -522,7 +522,13 @@ var layoutUtilities = function (cy, options) {
                 }
               }else  if(options.utilityFunction == 2){
                 var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
-                if( aspectRatioDiff   <  minAspectRatioDiff){
+                var weightedUtility = (utilityValue.fullness * .5) + ((1- aspectRatioDiff/Math.max(utilityValue.actualAspectRatio,options.desiredAspectRatio) * .5))
+                if(weightedUtility > weigthFullnessAspectRatio){
+                  weigthFullnessAspectRatio = weightedUtility;
+                  resultLocation.x = cell.x;
+                  resultLocation.y = cell.y;
+                }
+               /*  if( aspectRatioDiff   <  minAspectRatioDiff){
                   minAspectRatioDiff= aspectRatioDiff;
                   adjustedFullnessMax = utilityValue.adjustedFullness;
                   resultLocation.x = cell.x;
@@ -535,7 +541,7 @@ var layoutUtilities = function (cy, options) {
                     resultLocation.y = cell.y;
                   }
                  
-                }
+                } */
               }
               
               utilityValues.push({fullness: utilityValue.fullness, adjustedFullness: utilityValue.adjustedFullness,actualAspectRatio: utilityValue.actualAspectRatio, x:cell.x,y:cell.y});             

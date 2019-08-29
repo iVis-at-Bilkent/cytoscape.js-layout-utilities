@@ -903,19 +903,26 @@ var layoutUtilities = function layoutUtilities(cy, options) {
               }
             } else if (options.utilityFunction == 2) {
               var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
-              if (aspectRatioDiff < minAspectRatioDiff) {
-                minAspectRatioDiff = aspectRatioDiff;
-                adjustedFullnessMax = utilityValue.adjustedFullness;
+              var weightedUtility = utilityValue.fullness * .5 + (1 - aspectRatioDiff / Math.max(utilityValue.actualAspectRatio, options.desiredAspectRatio) * .5);
+              if (weightedUtility > weigthFullnessAspectRatio) {
+                weigthFullnessAspectRatio = weightedUtility;
                 resultLocation.x = cell.x;
                 resultLocation.y = cell.y;
-              } else if (aspectRatioDiff = minAspectRatioDiff) {
-                if (utilityValue.adjustedFullness > adjustedFullnessMax) {
-                  minAspectRatioDiff = aspectRatioDiff;
-                  adjustedFullnessMax = utilityValue.adjustedFullness;
-                  resultLocation.x = cell.x;
-                  resultLocation.y = cell.y;
-                }
               }
+              /*  if( aspectRatioDiff   <  minAspectRatioDiff){
+                 minAspectRatioDiff= aspectRatioDiff;
+                 adjustedFullnessMax = utilityValue.adjustedFullness;
+                 resultLocation.x = cell.x;
+                 resultLocation.y = cell.y;
+               }else if( aspectRatioDiff   =  minAspectRatioDiff){
+                 if(utilityValue.adjustedFullness > adjustedFullnessMax){
+                   minAspectRatioDiff= aspectRatioDiff;
+                   adjustedFullnessMax = utilityValue.adjustedFullness;
+                   resultLocation.x = cell.x;
+                   resultLocation.y = cell.y;
+                 }
+                
+               } */
             }
 
             utilityValues.push({ fullness: utilityValue.fullness, adjustedFullness: utilityValue.adjustedFullness, actualAspectRatio: utilityValue.actualAspectRatio, x: cell.x, y: cell.y });
@@ -984,7 +991,10 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
 
     var options = {
       idealEdgeLength: 50,
-      offset: 20
+      offset: 20,
+      desiredAspectRatio: 1,
+      polyominoGridSizeFactor: 1,
+      utilityFunction: 1 // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
     };
 
     var layoutUtilities = __webpack_require__(2);

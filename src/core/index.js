@@ -11,7 +11,10 @@
 
     var options = {
       idealEdgeLength: 50,
-      offset: 20
+      offset: 20,
+      desiredAspectRatio: 1,
+      polyominoGridSizeFactor: 1,
+      utilityFunction: 1  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
     };
 
 
