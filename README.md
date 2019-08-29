@@ -3,9 +3,11 @@ cytoscape-layout-utilities
 
 ## Description
 
-This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes without layout information. Sometimes, your graph will have a pre-calculated layout but changes (addition and/or deletion of nodes and edges) will require an *incremental* layout to adjust the existing layout according to these changes. However, often times, the new nodes do not have a good initial position for incremental layout (randomize: false) to produce successful results. Following layout methods try to choose the best position for any node without a previous layout, so that subsequent incremental layout can achieve this. 
+This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes or components without layout information. 
 
-When doing so, these methods use the following heuristics:
+Sometimes, your graph will have a pre-calculated layout but changes (addition and/or deletion of nodes and edges) will require an *incremental* layout to adjust the existing layout according to these changes. However, often times, the new nodes do not have a good initial position for incremental layout (randomize: false) to produce successful results. Some utility methods in this library try to choose the best position for any node without a previous layout, so that subsequent incremental layout can achieve this. 
+
+When doing so, these methods use the following heuristics [1]:
 
 - If a new node without layout has a *single* neighbor with layout information,  the idea is to split the neighboring space around the single neighbor into quadrants and scoring how crowded each quadrant is, and placing the new node in least crowded quadrant.
 
@@ -15,13 +17,21 @@ When doing so, these methods use the following heuristics:
 
 In all of the above cases, we choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases.
 
+Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. This library uses a polyomino packing based algorithm to achieve this. A polyomino is a geometric figure composed of unit squares joined at their edges. Each components is represented with a polyomino and these polyominoes are packed by a greedy algorithm described in [2].
+
+<p align="center">
+  <img src="assets/polyomino-example.png" width="440"/>
+</p>
+
+One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in each component needs to be relocated*. The utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio while minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time.
+
 Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
 Please cite the following when you use this extension:
 
-U. Dogrusoz, A. Karacelik, I. Safarli, H. Balci, L. Dervishi, M.C. Siper, "[Efficient methods and readily customizable libraries for managing complexity of large networks](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197238)", PLOS ONE, 13(5):e0197238, 2018.
+[1] U. Dogrusoz, A. Karacelik, I. Safarli, H. Balci, L. Dervishi, M.C. Siper, "[Efficient methods and readily customizable libraries for managing complexity of large networks](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0197238)", PLOS ONE, 13(5):e0197238, 2018.
 
-K. Freivalds, U. Dogrusoz, and P. Kikusts, "[Disconnected Graph Layout and the Polyomino Packing Approach](http://www.springeronline.com/sgw/cda/frontpage/0,10735,5-40109-22-2208018-0,00.html)", LNCS, vol. 2265, pp. 378-391, 2002.
+[2] K. Freivalds, U. Dogrusoz, and P. Kikusts, "[Disconnected Graph Layout and the Polyomino Packing Approach](http://www.springeronline.com/sgw/cda/frontpage/0,10735,5-40109-22-2208018-0,00.html)", LNCS, vol. 2265, pp. 378-391, 2002.
 
 ## Dependencies
 
@@ -113,4 +123,4 @@ This project is set up to automatically be published to npm and bower.  To publi
 1. [Make a new release](https://github.com//cytoscape.js-layout-utilities/releases/new) for Zenodo.
 
 ## Team
-  * [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
+  * [Nasim Saleh](https://github.com/nasimsaleh), [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
