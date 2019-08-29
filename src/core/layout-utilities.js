@@ -1,7 +1,31 @@
 
-
+var generalUtils = require('./general-utils.js');
+var polyominoPacking = require('./polyomino-packing');
 var layoutUtilities = function (cy, options) {
 
+ /*  var defaults = {
+    idealEdgeLength : 50,
+    offset : 20,
+    desiredAspectRatio : 1,
+    polyominoGridSizeFactor : 1,
+    utilityFunction : 1
+  };
+
+  function extend(defaults, options) {
+    var obj = {};
+
+    for (var i in defaults) {
+      obj[i] = defaults[i];
+    }
+
+    for (var i in options) {      
+      obj[i] = options[i];
+    }
+
+    return obj;
+  };
+
+  options = extend(defaults, options); */
   var instance = {};
 
   instance.placeHiddenNodes = function (mainEles) {
@@ -334,6 +358,227 @@ var layoutUtilities = function (cy, options) {
     });
     return occupiedQuadrants;
   };
+
+ 
+  instance.perfromPolyominoPacking = function(subgraphs){
+
+    var gridStep = 0;
+    var totalNodes = 0;
+    subgraphs.forEach(function(graph){
+      totalNodes += graph.nodes.length;
+      graph.nodes.forEach(function(node){
+        gridStep += node.width + node.height;
+      }); 
+    });
+
+    gridStep = gridStep / (2 * totalNodes);
+    gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+    var gridWidth = 0, gridHeight = 0;
+    var polyominos = [];
+    var globalX1 = 10000, globalX2=0,globalY1= 10000,globalY2=0 ;
+    //create polyominos for subgraphs
+    subgraphs.forEach(function(graph,index){
+      var x1 = 10000, x2= 0,y1 = 10000,y2=0;
+      graph.nodes.forEach(function(node){
+        if(node.x <= x1) x1 = node.x;
+        if(node.y <= y1) y1 = node.y;
+        if(node.x + node.width >= x2) x2 = node.x + node.width;
+        if(node.y + node.height >= y2) y2 = node.y + node.height;         
+      }); 
+
+      graph.edges.forEach(function(edge){
+        if(edge.startX<= x1) x1 = edge.startX;
+        if(edge.startY <= y1) y1 = edge.startY;
+        if(edge.endX >= x2) x2 = edge.endX;
+        if(edge.endY >= y2) y2 = edge.endY;         
+      }); 
+
+      if(x1<globalX1) globalX1 = x1;
+      if(x2>globalX2) globalX2 = x2;
+      if(y1<globalY1) globalY1 = y1;
+      if(y2>globalY2) globalY2 = y2;    
+
+      gridWidth += (x2-x1);
+      gridHeight += (y2-y1);
+      var graphWidth = Math.floor((x2-x1)/ gridStep) + 1;
+      var graphHeight = Math.floor((y2-y1)/ gridStep) + 1;
+
+      var graphPolyomino = new polyominoPacking.Polyomino(graphWidth,graphHeight,index,x1,y1);
+
+      //fill nodes to polyomino cells
+      graph.nodes.forEach(function(node){
+        //top left cell of a node
+       var topLeftX = Math.floor((node.x - x1 ) / gridStep);
+       var topLeftY = Math.floor((node.y - y1) / gridStep);     
+
+       //bottom right cell of a node
+       var bottomRightX = Math.floor((node.x + node.width - x1)/ gridStep);
+       var bottomRightY = Math.floor((node.y+ node.height - y1)/ gridStep);
+
+       //all cells between topleft cell and bottom right cell should be occupied
+       for(var i = topLeftX ; i <= bottomRightX ; i++){
+         for(var j = topLeftY; j <= bottomRightY ; j++){
+           graphPolyomino.grid[i][j] = true;
+           
+         }
+       }
+      }); 
+
+      //fill cells where edges pass 
+      graph.edges.forEach(function(edge){
+         var p0 = {} , p1 = {};
+         p0.x = (edge.startX - x1 ) / gridStep;
+         p0.y = (edge.startY - y1) / gridStep;
+         p1.x = (edge.endX - x1) / gridStep;
+         p1.y = (edge.endY - y1) / gridStep;
+         //for every edge calculate the super cover 
+        var points = generalUtils.LineSuperCover(p0,p1)        
+        points.forEach(function(point){          
+          var indexX = Math.floor(point.x);
+          var indexY = Math.floor(point.y)
+          if(indexX >= 0 && indexX < graphPolyomino.width && indexY >=0 && indexY < graphPolyomino.height){
+            graphPolyomino.grid[Math.floor(point.x)][Math.floor(point.y)] = true;
+          }
+        });
+      });
+
+      //update number of occupied cells in polyomino
+      for(var i = 0 ; i <graphPolyomino.width ; i++){
+        for(var j = 0; j < graphPolyomino.height ; j++){
+          if(graphPolyomino.grid[i][j]) graphPolyomino.numberOfOccupiredCells++;
+          
+        }
+      }      
+      polyominos.push(graphPolyomino);       
+    });
+
+    var graphsCenter = new polyominoPacking.Point((globalX1+globalX2)/2, (globalY1+globalY2)/2);
+    var graphsCenteronGrid = new polyominoPacking.Point(Math.floor(graphsCenter.x/gridStep), Math.floor(graphsCenter.y/gridStep));
+    //order plyominos non-increasing order
+    polyominos.sort(function(a,b){
+        var aSize = a.width*a.height;
+        var bSize = b.width*b.height;
+        // a should come before b in the sorted order
+        if(aSize > bSize){
+          return -1;
+        // a should come after b in the sorted order
+        }else if(aSize < bSize){
+          return 1;
+        // a and b are the same
+        }else{
+          return 0;
+        }
+    });  
+
+    //main grid width and height is two the times the sum of all components widths and heights (worst case scenario)
+    gridWidth = Math.ceil(gridWidth*2/gridStep);
+    gridHeight = Math.ceil(gridHeight*2/gridStep);
+    
+    //intialize the grid
+    var mainGrid = new polyominoPacking.Grid(gridWidth,gridHeight);
+
+    //place first (biggest) polyomino in the center
+    mainGrid.placePolyomino(polyominos[0], mainGrid.center.x,mainGrid.center.y);
+    
+
+   
+    //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
+    for(var i = 1 ; i< polyominos.length;i++){
+
+      var adjustedFullnessMax = 0;
+      
+      var equalFullness = [];
+      var weigthFullnessAspectRatio = 0;
+      var minAspectRatioDiff = 1000000;
+      var placementFound = false;
+      var cells = [];
+      var resultLocation = {};
+      var utilityValues = [];
+      while(!placementFound){
+        cells = mainGrid.getDirectNeighbors(cells);
+        cells.forEach(function(cell){
+            if(mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)){
+              placementFound = true;
+              var utilityValue = mainGrid.calculateUtilityOfPlacing(polyominos[i],cell.x,cell.y, options.desiredAspectRatio); 
+
+            /*   if( Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio)  < minAspectRatioDiff){
+                minAspectRatioDiff= Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                resultLocation.x = cell.x;
+                resultLocation.y = cell.y;
+              } */
+              if(options.utilityFunction == 1){
+                if( utilityValue.adjustedFullness   > adjustedFullnessMax){
+                  adjustedFullnessMax= utilityValue.adjustedFullness;
+                  minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio)
+                  resultLocation.x = cell.x;
+                  resultLocation.y = cell.y;
+                }else if(utilityValue.adjustedFullness == adjustedFullnessMax){
+                  if(Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio) <= minAspectRatioDiff){
+                    adjustedFullnessMax= utilityValue.adjustedFullness;
+                    minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio)
+                    resultLocation.x = cell.x;
+                    resultLocation.y = cell.y;
+                  }
+                }
+              }else  if(options.utilityFunction == 2){
+                var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                if( aspectRatioDiff   <  minAspectRatioDiff){
+                  minAspectRatioDiff= aspectRatioDiff;
+                  adjustedFullnessMax = utilityValue.adjustedFullness;
+                  resultLocation.x = cell.x;
+                  resultLocation.y = cell.y;
+                }else if( aspectRatioDiff   =  minAspectRatioDiff){
+                  if(utilityValue.adjustedFullness > adjustedFullnessMax){
+                    minAspectRatioDiff= aspectRatioDiff;
+                    adjustedFullnessMax = utilityValue.adjustedFullness;
+                    resultLocation.x = cell.x;
+                    resultLocation.y = cell.y;
+                  }
+                 
+                }
+              }
+              
+              utilityValues.push({fullness: utilityValue.fullness, adjustedFullness: utilityValue.adjustedFullness,actualAspectRatio: utilityValue.actualAspectRatio, x:cell.x,y:cell.y});             
+            }
+        });
+      }
+      
+      utilityValues.forEach(function(utilityValue){
+        
+      });
+      mainGrid.placePolyomino(polyominos[i],resultLocation.x,resultLocation.y);
+      console.log(utilityValues);       
+    }  
+
+    //sort polyominos according to index of input to return correct output order
+    polyominos.sort(function(a,b){
+      if(a.index < b.index){
+        return -1;
+      }else if(a.index > b.index){
+        return 1;
+      }else{
+        return 0;
+      }
+  });  
+    
+  var packingResult = [];
+  
+  var shiftX = graphsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
+  var shiftY = graphsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
+  var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
+  var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2);
+
+    polyominos.forEach(function(pol){
+      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord ;//+shiftX;
+      var dy = (pol.location.y -pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord;// + shiftY;
+      //var dx = (pol.location.x -occupiedCenterX) * gridStep + graphsCenter.x- pol.leftMostCoord;//+shiftX;
+      //var dy = (pol.location.y -occupiedCenterY) * gridStep + graphsCenter.y-pol.topMostCoord;// + shiftY;
+      packingResult.push({dx: dx, dy: dy});
+    });
+    $("#resultAspectRatio").text((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1)/(mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1));
+    $("#resultFullness").text((mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1)*(mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)))*100)
+    return packingResult;
+  }
 
   return instance;
 };

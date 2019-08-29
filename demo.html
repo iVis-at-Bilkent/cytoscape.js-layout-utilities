@@ -13,6 +13,7 @@
         <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
         <script src="https://cdn.rawgit.com/cytoscape/cytoscape.js-cose-bilkent/2.0.4/cytoscape-cose-bilkent.js"></script>
         <script src="cytoscape-layout-utilities.js"></script>
+        
         <script src="https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-view-utilities/master/cytoscape-view-utilities.js"></script>
 
         <style>
@@ -20,6 +21,11 @@
                 font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
                 font-size: 14px;
             }
+            form  { display: table;      }
+            p     { display: table-row;  }
+            label { display: table-cell; font-size:14; }
+            select {display: table-cell;}
+            input { display: table-cell; margin-left: 5px;}
             #cy {
                 width: 80%;
                 height: 100%;
@@ -28,11 +34,12 @@
                 float: left;
                 overflow: hidden;
                 position: fixed;
+              
             }
             .topnav {
                 width: 20%;
                 background-color: #e9e9e9;
-                font-weight: bold;
+               /* font-weight: bold;*/
                 border-color: black;
                 border-style: solid;
                 font-size: 16;
@@ -167,6 +174,15 @@
                             { data: { id: 'n19', name: 'n19' } },
                             { data: { id: 'n20', name: 'n20' } },
                             { data: { id: 'n21', name: 'n21' } },
+
+                            { data: { id: 'a', name: 'a' } },
+                            { data: { id: 'b', name: 'b' } },
+                            { data: { id: 'c', name: 'c' } },
+                            { data: { id: 'd', name: 'd' } },
+                            { data: { id: 'e', name: 'e' } },
+                            { data: { id: 'f', name: 'f' } },
+                            { data: { id: 'g', name: 'g' } },
+
                         ],
                         edges: [
                             { data: { source: "n5", target: "n6" } },
@@ -190,14 +206,24 @@
                             { data: { source: "n17", target: "n19" } },
                             { data: { source: 'n17', target: 'n20' } },
                             { data: { source: 'n19', target: 'n20' } },
+
+                            { data: { source: 'a', target: 'b'  ,id:'ab'} },
+                            { data: { source: 'a', target: 'c' ,id:'ac'} },
+                            { data: { source: 'c', target: 'b',id:'cb' } },
+                            { data: { source: 'd', target: 'e', id:'de'} },
+                            { data: { source: 'e', target: 'f',id:'ef'} },
+
                             //{ data: { source: "n19", target: "n21" } }
                         ]
                     },
                     wheelSensitivity: 0.2
                 });
 
-                var api = cy.layoutUtilities();
+               
+                var api = cy.layoutUtilities({desiredAspectRatio:2 });                
                 var api2 = cy.viewUtilities();
+
+               
 
                 var layout = cy.layout({
                     name: 'cose-bilkent',
@@ -218,6 +244,42 @@
                   return eles;
                 }
 
+                $("#polyominoPack").click(function () {
+                    var packingApi = cy.layoutUtilities({desiredAspectRatio:$('#desiredAspectRatio').val() ,polyominoGridSizeFactor:$('#gridSizeFactor').val(), utilityFunction: $('#utilityFunctionType').val()}); 
+                    var components = cy.elements(":visible").components();
+                    var subgraphs = [];
+                    components.forEach(function(component){
+                        var subgraph = {};
+                        subgraph.nodes = [];
+                        subgraph.edges = [];
+
+                        component.edges().forEach(function(edge){
+                            var boundingBox = edge.boundingBox();
+                            subgraph.edges.push({startX: boundingBox.x1,startY:boundingBox.y1,endX:boundingBox.x2,endY:boundingBox.y2});
+                        });
+                        component.nodes().forEach(function(node){
+                            var boundingBox = node.boundingBox();
+                                subgraph.nodes.push({x: boundingBox.x1,y:boundingBox.y1,width:boundingBox.w,height:boundingBox.h});
+                        });
+                      
+                        subgraphs.push(subgraph);
+                    });
+                    var result = packingApi.perfromPolyominoPacking(subgraphs);
+                    components.forEach(function(component, index){
+                        component.nodes().layout({
+                            name: 'preset',
+                            animate: true,
+                            fit: false,
+                            transform: (node) => {
+                                let position = {};
+                                position.x = node.position('x') + result[index].dx;
+                                position.y = node.position('y') + result[index].dy;
+                                return position;
+                            }
+                        }).run();                   
+                    });                  
+                    
+                });
                 $("#hide").click(function () {
                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     api2.hide(cy.$(":selected"));
@@ -258,13 +320,57 @@
     <body>
         <h1>cytoscape.js-layout-utilities demo</h1>
         <div class="topnav">
+            
+
             <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
+
             <b id="showAll" style="cursor: pointer; color: brown">Show all</b><br/><br/>
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
+           
+            <form>
+                <p>
+                    <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
+                    <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked">
+                </p>
+            </form>
+           
+            
+        </div>
+        <div class="topnav">            
+
+            <b id="polyominoPack" style="cursor: pointer; color: brown">Pack Components</b><br/><br/>
+            <form>
+                <p><label>Select Utility function</label></p>
+                <p>
+                    <select id="utilityFunctionType" style="margin-top:10px;">
+                    <option value = "1">Adjusted Fullness</option>
+                    <option value="2"> Aspect Ratio (on equality Max fullness)</option>
+                    </select>
+                </p>
+            </form>
+            <form>
+                <p>
+                  <label for="desiredAspectRatio">Desired Aspect Ratio</label>
+                  <input id="desiredAspectRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25" min="0" value="1">
+                </p>
+                <p>
+                  <label for="gridSizeFactor">polyomino grid size factor</label>
+                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = "0.5" value="1" step="0.5">
+                </p>
+               
+
+              </form>
+            
+        </div>
+        <br>
+        <div>
             <b>Shift + drag</b> to specify region<br/><br/>
             <b>Shift + taphold</b> to select neighbors<br/><br/>
-            <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
-            <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked"><br>
+        </div>
+        <div>
+            <b>Result Aspect Ratio : <span id=resultAspectRatio style="color:green;"> </span><br/><br/>
+            <b>Result Fullness : <span id=resultFullness style="color:green;""> </span>%<br/><br/>
+
         </div>
         <div id="cy"></div>
 

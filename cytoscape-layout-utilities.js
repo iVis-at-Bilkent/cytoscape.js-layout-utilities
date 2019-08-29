@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,8 +83,365 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var generalUtils = {};
+var polyominoPacking = __webpack_require__(1);
+
+//a function to remove duplicate object in array
+generalUtils.uniqueArray = function (ar) {
+    var j = {};
+    ar.forEach(function (v) {
+        j[v + '::' + (typeof v === 'undefined' ? 'undefined' : _typeof(v))] = v;
+    });
+    return Object.keys(j).map(function (v) {
+        return j[v];
+    });
+};
+
+//a function to determine the grid cells where a line between point p0 and p1 pass through
+generalUtils.LineSuperCover = function (p0, p1) {
+    var dx = p1.x - p0.x,
+        dy = p1.y - p0.y;
+    var nx = Math.abs(dx),
+        ny = Math.abs(dy);
+    var sign_x = dx > 0 ? 1 : -1,
+        sign_y = dy > 0 ? 1 : -1;
+
+    var p = new polyominoPacking.Point(p0.x, p0.y);
+    var points = [new polyominoPacking.Point(p.x, p.y)];
+    for (var ix = 0, iy = 0; ix < nx || iy < ny;) {
+        if ((0.5 + ix) / nx == (0.5 + iy) / ny) {
+            // next step is diagonal
+            p.x += sign_x;
+            p.y += sign_y;
+            ix++;
+            iy++;
+        } else if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
+            // next step is horizontal
+            p.x += sign_x;
+            ix++;
+        } else {
+            // next step is vertical
+            p.y += sign_y;
+            iy++;
+        }
+        points.push(new polyominoPacking.Point(p.x, p.y));
+    }
+    return points;
+};
+
+module.exports = generalUtils;
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var generalUtils = __webpack_require__(0);
+
+var Polyomino = function Polyomino(width, height, index, leftMostCoord, topMostCoord) {
+    _classCallCheck(this, Polyomino);
+
+    this.grid = new Array(width);
+    for (var i = 0; i < width; i++) {
+        this.grid[i] = new Array(height);
+        for (var j = 0; j < height; j++) {
+            this.grid[i][j] = false;
+        }
+    }
+    this.index = index; //index of polyomino in the input of the packing function
+    this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
+    this.topMostCoord = topMostCoord; //kept to determine the amount of shift in the output
+    this.width = width;
+    this.height = height;
+    this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
+    this.center = new Point(Math.floor(width / 2), Math.floor(height / 2)); // center of polyomino
+    this.numberOfOccupiredCells = 0;
+};
+
+var Point = function Point(x, y) {
+    _classCallCheck(this, Point);
+
+    this.x = x;
+    this.y = y;
+};
+
+var BoundingRectangle = function BoundingRectangle(x1, y1, x2, y2) {
+    _classCallCheck(this, BoundingRectangle);
+
+    this.x1 = x1;
+    this.x2 = x2;
+    this.y1 = y1;
+    this.y2 = y2;
+};
+
+var Cell = function Cell(occupied, visited) {
+    _classCallCheck(this, Cell);
+
+    this.occupied = occupied; //boolean to determine if the cell is occupied
+    this.visited = visited; //boolean to determine if the cell was visited before while traversing the cells
+};
+
+var Grid = function () {
+    function Grid(width, height) {
+        _classCallCheck(this, Grid);
+
+        this.width = width;
+        this.height = height;
+        //create and intialize the grid
+        this.grid = new Array(width);
+        for (var i = 0; i < width; i++) {
+            this.grid[i] = new Array(height);
+            for (var j = 0; j < height; j++) {
+                this.grid[i][j] = new Cell(false, false);
+            }
+        }
+        this.center = new Point(Math.floor(width / 2), Math.floor(height / 2));
+        this.occupiedRectangle = new BoundingRectangle(0, 0, 0, 0); // the bounding rectanble of the occupied cells in the grid
+        this.numberOfOccupiredCells = 0;
+    }
+
+    //function given a list of cells it returns the direct unvisited unoccupied neighboring cells 
+
+
+    _createClass(Grid, [{
+        key: 'getDirectNeighbors',
+        value: function getDirectNeighbors(cells) {
+            var resultPoints = [];
+            if (cells.length == 0) {
+                for (var i = 0; i < this.width; i++) {
+                    for (var j = 0; j < this.height; j++) {
+                        if (this.grid[i][j].occupied) {
+                            resultPoints = resultPoints.concat(this.getCellNeighbors(i, j));
+                        }
+                    }
+                }
+            } else {
+                cells.forEach(function (cell) {
+                    resultPoints = resultPoints.concat(this.getCellNeighbors(cell.x, cell.y));
+                }.bind(this));
+            }
+            return resultPoints;
+        }
+
+        //given a cell at locatoin i,j get the unvistied unoccupied neighboring cell
+
+    }, {
+        key: 'getCellNeighbors',
+        value: function getCellNeighbors(i, j) {
+            var resultPoints = [];
+            //check all the 8 surrounding cells 
+            if (i - 1 >= 0) {
+                if (!this.grid[i - 1][j].occupied && !this.grid[i - 1][j].visited) {
+                    resultPoints.push({ x: i - 1, y: j });
+                    this.grid[i - 1][j].visited = true;
+                }
+            }
+            if (i + 1 < this.width) {
+                if (!this.grid[i + 1][j].occupied && !this.grid[i + 1][j].visited) {
+                    resultPoints.push({ x: i + 1, y: j });
+                    this.grid[i + 1][j].visited = true;
+                }
+            }
+            if (j - 1 >= 0) {
+                if (!this.grid[i][j - 1].occupied && !this.grid[i][j - 1].visited) {
+                    resultPoints.push({ x: i, y: j - 1 });
+                    this.grid[i][j - 1].visited = true;
+                }
+            }
+            if (j + 1 < this.height) {
+                if (!this.grid[i][j + 1].occupied && !this.grid[i][j + 1].visited) {
+                    resultPoints.push({ x: i, y: j + 1 });
+                    this.grid[i][j + 1].visited = true;
+                }
+            }
+            if (i - 1 >= 0) {
+                if (!this.grid[i - 1][j].occupied && !this.grid[i - 1][j].visited) {
+                    resultPoints.push({ x: i - 1, y: j });
+                    this.grid[i - 1][j].visited = true;
+                }
+            }
+            if (i - 1 >= 0 && j - 1 >= 0) {
+                if (!this.grid[i - 1][j - 1].occupied && !this.grid[i - 1][j - 1].visited) {
+                    resultPoints.push({ x: i - 1, y: j - 1 });
+                    this.grid[i - 1][j - 1].visited = true;
+                }
+            }
+
+            if (i + 1 < this.width && j - 1 >= 0) {
+                if (!this.grid[i + 1][j - 1].occupied && !this.grid[i + 1][j - 1].visited) {
+                    resultPoints.push({ x: i + 1, y: j - 1 });
+                    this.grid[i + 1][j - 1].visited = true;
+                }
+            }
+
+            if (i - 1 >= 0 && j + 1 < this.height) {
+                if (!this.grid[i - 1][j + 1].occupied && !this.grid[i - 1][j + 1].visited) {
+                    resultPoints.push({ x: i - 1, y: j + 1 });
+                    this.grid[i - 1][j + 1].visited = true;
+                }
+            }
+            if (i + 1 < this.width && j + 1 < this.height) {
+                if (!this.grid[i + 1][j + 1].occupied && !this.grid[i + 1][j + 1].visited) {
+                    resultPoints.push({ x: i + 1, y: j + 1 });
+                    this.grid[i + 1][j + 1].visited = true;
+                }
+            }
+
+            return resultPoints;
+        }
+
+        // a function to place a given polyomino in the cell i j on the grid
+
+    }, {
+        key: 'placePolyomino',
+        value: function placePolyomino(polyomino, i, j) {
+            polyomino.location.x = i;
+            polyomino.location.y = j;
+            for (var k = 0; k < polyomino.width; k++) {
+                for (var l = 0; l < polyomino.height; l++) {
+                    if (polyomino.grid[k][l]) {
+                        //if [k] [l] cell is occupied in polyomino
+                        this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
+                    }
+                }
+            }
+            //update number of occupired cells
+            this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
+
+            //update bounding rectangle and reset visited cells to none
+            var x1 = 10000,
+                x2 = 0,
+                y1 = 10000,
+                y2 = 0;
+            for (var x = 0; x < this.width; x++) {
+                for (var y = 0; y < this.height; y++) {
+                    this.grid[x][y].visited = false;
+                    if (this.grid[x][y].occupied) {
+                        if (x <= x1) x1 = x;
+                        if (y <= y1) y1 = y;
+                        if (x >= x2) x2 = x;
+                        if (y >= y2) y2 = y;
+                    }
+                }
+            }
+            this.occupiedRectangle.x1 = x1, this.occupiedRectangle.y1 = y1;
+            this.occupiedRectangle.x2 = x2;
+            this.occupiedRectangle.y2 = y2;
+        }
+
+        // a function to determine if a polyomino can be placed on the given cell i,j
+
+    }, {
+        key: 'tryPlacingPolyomino',
+        value: function tryPlacingPolyomino(polyomino, i, j) {
+            for (var k = 0; k < polyomino.width; k++) {
+                for (var l = 0; l < polyomino.height; l++) {
+                    //return false if polyomino goes outside the grid when placed on i,j
+                    if (k - polyomino.center.x + i >= this.width || k - polyomino.center.x + i < 0 || l - polyomino.center.y + j >= this.height || l - polyomino.center.y + j < 0) {
+                        return false;
+                    }
+                    //return false if the  polymino cell and the corrosponding main grid cell are both occupied
+                    if (polyomino.grid[k][l] && this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        //calculates the value of the utility (aspect ratio) of placing a polyomino on cell i,j
+
+    }, {
+        key: 'calculateUtilityOfPlacing',
+        value: function calculateUtilityOfPlacing(polyomino, i, j, desiredAspectRatio) {
+            var result = {};
+            var actualAspectRatio = 1;
+            var fullness = 1;
+            var adjustedFullness = 1;
+            var x1 = this.occupiedRectangle.x1;
+            var x2 = this.occupiedRectangle.x2;
+            var y1 = this.occupiedRectangle.y1;
+            var y2 = this.occupiedRectangle.y2;
+            if (i - polyomino.center.x < x1) x1 = i - polyomino.center.x;
+            if (j - polyomino.center.y < y1) y1 = j - polyomino.center.y;
+            if (polyomino.width - 1 - polyomino.center.x + i > x2) x2 = polyomino.width - 1 - polyomino.center.x + i;
+            if (polyomino.height - 1 - polyomino.center.y + j > y2) y2 = polyomino.height - 1 - polyomino.center.y + j;
+            var width = x2 - x1 + 1;
+            var height = y2 - y1 + 1;
+            actualAspectRatio = width / height;
+            fullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (width * height);
+
+            if (actualAspectRatio > desiredAspectRatio) {
+                adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (width * (width / desiredAspectRatio));
+                // height = width / desiredAspectRatio;
+            } else {
+
+                adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (height * desiredAspectRatio * height);
+
+                // width = height * desiredAspectRatio;
+            }
+
+            result.actualAspectRatio = actualAspectRatio;
+            result.fullness = fullness;
+            result.adjustedFullness = adjustedFullness;
+
+            return result;
+        }
+    }]);
+
+    return Grid;
+}();
+
+module.exports = {
+    Grid: Grid,
+    Polyomino: Polyomino,
+    BoundingRectangle: BoundingRectangle,
+    Point: Point
+
+};
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var generalUtils = __webpack_require__(0);
+var polyominoPacking = __webpack_require__(1);
 var layoutUtilities = function layoutUtilities(cy, options) {
 
+  /*  var defaults = {
+     idealEdgeLength : 50,
+     offset : 20,
+     desiredAspectRatio : 1,
+     polyominoGridSizeFactor : 1,
+     utilityFunction : 1
+   };
+  
+   function extend(defaults, options) {
+     var obj = {};
+  
+     for (var i in defaults) {
+       obj[i] = defaults[i];
+     }
+  
+     for (var i in options) {      
+       obj[i] = options[i];
+     }
+  
+     return obj;
+   };
+  
+   options = extend(defaults, options); */
   var instance = {};
 
   instance.placeHiddenNodes = function (mainEles) {
@@ -380,13 +737,234 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     return occupiedQuadrants;
   };
 
+  instance.perfromPolyominoPacking = function (subgraphs) {
+
+    var gridStep = 0;
+    var totalNodes = 0;
+    subgraphs.forEach(function (graph) {
+      totalNodes += graph.nodes.length;
+      graph.nodes.forEach(function (node) {
+        gridStep += node.width + node.height;
+      });
+    });
+
+    gridStep = gridStep / (2 * totalNodes);
+    gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+    var gridWidth = 0,
+        gridHeight = 0;
+    var polyominos = [];
+    var globalX1 = 10000,
+        globalX2 = 0,
+        globalY1 = 10000,
+        globalY2 = 0;
+    //create polyominos for subgraphs
+    subgraphs.forEach(function (graph, index) {
+      var x1 = 10000,
+          x2 = 0,
+          y1 = 10000,
+          y2 = 0;
+      graph.nodes.forEach(function (node) {
+        if (node.x <= x1) x1 = node.x;
+        if (node.y <= y1) y1 = node.y;
+        if (node.x + node.width >= x2) x2 = node.x + node.width;
+        if (node.y + node.height >= y2) y2 = node.y + node.height;
+      });
+
+      graph.edges.forEach(function (edge) {
+        if (edge.startX <= x1) x1 = edge.startX;
+        if (edge.startY <= y1) y1 = edge.startY;
+        if (edge.endX >= x2) x2 = edge.endX;
+        if (edge.endY >= y2) y2 = edge.endY;
+      });
+
+      if (x1 < globalX1) globalX1 = x1;
+      if (x2 > globalX2) globalX2 = x2;
+      if (y1 < globalY1) globalY1 = y1;
+      if (y2 > globalY2) globalY2 = y2;
+
+      gridWidth += x2 - x1;
+      gridHeight += y2 - y1;
+      var graphWidth = Math.floor((x2 - x1) / gridStep) + 1;
+      var graphHeight = Math.floor((y2 - y1) / gridStep) + 1;
+
+      var graphPolyomino = new polyominoPacking.Polyomino(graphWidth, graphHeight, index, x1, y1);
+
+      //fill nodes to polyomino cells
+      graph.nodes.forEach(function (node) {
+        //top left cell of a node
+        var topLeftX = Math.floor((node.x - x1) / gridStep);
+        var topLeftY = Math.floor((node.y - y1) / gridStep);
+
+        //bottom right cell of a node
+        var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
+        var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
+
+        //all cells between topleft cell and bottom right cell should be occupied
+        for (var i = topLeftX; i <= bottomRightX; i++) {
+          for (var j = topLeftY; j <= bottomRightY; j++) {
+            graphPolyomino.grid[i][j] = true;
+          }
+        }
+      });
+
+      //fill cells where edges pass 
+      graph.edges.forEach(function (edge) {
+        var p0 = {},
+            p1 = {};
+        p0.x = (edge.startX - x1) / gridStep;
+        p0.y = (edge.startY - y1) / gridStep;
+        p1.x = (edge.endX - x1) / gridStep;
+        p1.y = (edge.endY - y1) / gridStep;
+        //for every edge calculate the super cover 
+        var points = generalUtils.LineSuperCover(p0, p1);
+        points.forEach(function (point) {
+          var indexX = Math.floor(point.x);
+          var indexY = Math.floor(point.y);
+          if (indexX >= 0 && indexX < graphPolyomino.width && indexY >= 0 && indexY < graphPolyomino.height) {
+            graphPolyomino.grid[Math.floor(point.x)][Math.floor(point.y)] = true;
+          }
+        });
+      });
+
+      //update number of occupied cells in polyomino
+      for (var i = 0; i < graphPolyomino.width; i++) {
+        for (var j = 0; j < graphPolyomino.height; j++) {
+          if (graphPolyomino.grid[i][j]) graphPolyomino.numberOfOccupiredCells++;
+        }
+      }
+      polyominos.push(graphPolyomino);
+    });
+
+    var graphsCenter = new polyominoPacking.Point((globalX1 + globalX2) / 2, (globalY1 + globalY2) / 2);
+    var graphsCenteronGrid = new polyominoPacking.Point(Math.floor(graphsCenter.x / gridStep), Math.floor(graphsCenter.y / gridStep));
+    //order plyominos non-increasing order
+    polyominos.sort(function (a, b) {
+      var aSize = a.width * a.height;
+      var bSize = b.width * b.height;
+      // a should come before b in the sorted order
+      if (aSize > bSize) {
+        return -1;
+        // a should come after b in the sorted order
+      } else if (aSize < bSize) {
+        return 1;
+        // a and b are the same
+      } else {
+        return 0;
+      }
+    });
+
+    //main grid width and height is two the times the sum of all components widths and heights (worst case scenario)
+    gridWidth = Math.ceil(gridWidth * 2 / gridStep);
+    gridHeight = Math.ceil(gridHeight * 2 / gridStep);
+
+    //intialize the grid
+    var mainGrid = new polyominoPacking.Grid(gridWidth, gridHeight);
+
+    //place first (biggest) polyomino in the center
+    mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y);
+
+    //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
+    for (var i = 1; i < polyominos.length; i++) {
+
+      var adjustedFullnessMax = 0;
+
+      var equalFullness = [];
+      var weigthFullnessAspectRatio = 0;
+      var minAspectRatioDiff = 1000000;
+      var placementFound = false;
+      var cells = [];
+      var resultLocation = {};
+      var utilityValues = [];
+      while (!placementFound) {
+        cells = mainGrid.getDirectNeighbors(cells);
+        cells.forEach(function (cell) {
+          if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
+            placementFound = true;
+            var utilityValue = mainGrid.calculateUtilityOfPlacing(polyominos[i], cell.x, cell.y, options.desiredAspectRatio);
+
+            /*   if( Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio)  < minAspectRatioDiff){
+                minAspectRatioDiff= Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                resultLocation.x = cell.x;
+                resultLocation.y = cell.y;
+              } */
+            if (options.utilityFunction == 1) {
+              if (utilityValue.adjustedFullness > adjustedFullnessMax) {
+                adjustedFullnessMax = utilityValue.adjustedFullness;
+                minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                resultLocation.x = cell.x;
+                resultLocation.y = cell.y;
+              } else if (utilityValue.adjustedFullness == adjustedFullnessMax) {
+                if (Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio) <= minAspectRatioDiff) {
+                  adjustedFullnessMax = utilityValue.adjustedFullness;
+                  minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                  resultLocation.x = cell.x;
+                  resultLocation.y = cell.y;
+                }
+              }
+            } else if (options.utilityFunction == 2) {
+              var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+              if (aspectRatioDiff < minAspectRatioDiff) {
+                minAspectRatioDiff = aspectRatioDiff;
+                adjustedFullnessMax = utilityValue.adjustedFullness;
+                resultLocation.x = cell.x;
+                resultLocation.y = cell.y;
+              } else if (aspectRatioDiff = minAspectRatioDiff) {
+                if (utilityValue.adjustedFullness > adjustedFullnessMax) {
+                  minAspectRatioDiff = aspectRatioDiff;
+                  adjustedFullnessMax = utilityValue.adjustedFullness;
+                  resultLocation.x = cell.x;
+                  resultLocation.y = cell.y;
+                }
+              }
+            }
+
+            utilityValues.push({ fullness: utilityValue.fullness, adjustedFullness: utilityValue.adjustedFullness, actualAspectRatio: utilityValue.actualAspectRatio, x: cell.x, y: cell.y });
+          }
+        });
+      }
+
+      utilityValues.forEach(function (utilityValue) {});
+      mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y);
+      console.log(utilityValues);
+    }
+
+    //sort polyominos according to index of input to return correct output order
+    polyominos.sort(function (a, b) {
+      if (a.index < b.index) {
+        return -1;
+      } else if (a.index > b.index) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    var packingResult = [];
+
+    var shiftX = graphsCenter.x - (mainGrid.center.x - mainGrid.occupiedRectangle.x1) * gridStep;
+    var shiftY = graphsCenter.y - (mainGrid.center.y - mainGrid.occupiedRectangle.y1) * gridStep;
+    var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2) / 2);
+    var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2) / 2);
+
+    polyominos.forEach(function (pol) {
+      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord; //+shiftX;
+      var dy = (pol.location.y - pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord; // + shiftY;
+      //var dx = (pol.location.x -occupiedCenterX) * gridStep + graphsCenter.x- pol.leftMostCoord;//+shiftX;
+      //var dy = (pol.location.y -occupiedCenterY) * gridStep + graphsCenter.y-pol.topMostCoord;// + shiftY;
+      packingResult.push({ dx: dx, dy: dy });
+    });
+    $("#resultAspectRatio").text((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1));
+    $("#resultFullness").text(mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) * (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 100);
+    return packingResult;
+  };
+
   return instance;
 };
 
 module.exports = layoutUtilities;
 
 /***/ }),
-/* 1 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -409,7 +987,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
       offset: 20
     };
 
-    var layoutUtilities = __webpack_require__(0);
+    var layoutUtilities = __webpack_require__(2);
 
     cytoscape('core', 'layoutUtilities', function (opts) {
       var cy = this;
