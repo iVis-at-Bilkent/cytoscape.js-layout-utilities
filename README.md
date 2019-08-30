@@ -32,6 +32,8 @@ This library uses a polyomino packing based algorithm to achieve this. A polyomi
 
 One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in a component needs to be relocated*. The utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio, minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time.
 
+Recommended usage of packing utility for disconnected graphs for a layout extension is as follows. The layout should first detect components of a given graph using [`eles.components()`](http://js.cytoscape.org/#eles.components). Then for each component a separate, independent layout should be calculated. The resulting graph will have a layout where components might overlap or might be very far from each other. A call to this extension with those components will return the amount of relocation needed for each component so that the resulting final layout for the disconnected graph is rather tight.
+
 Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
 Please cite the following when you use this extension:
