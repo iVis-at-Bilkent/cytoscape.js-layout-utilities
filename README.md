@@ -19,9 +19,9 @@ In all of the above cases, we try to choose a position which is an *ideal edge l
 
 Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. Below is an example where [a layout algorithm]() works by laying out a disconnected graph normally (left) and uses this extension to pack components after layout (right).
 <p align="center">
-  <img src="packing-example-before.png" width="320"/>
+  <img src="packing-example-before.jpg" width="320"/>
   &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-  <img src="packing-example-after.png" width="180"/>
+  <img src="packing-example-after.jpg" width="180"/>
 </p>
 
 This library uses a polyomino packing based algorithm to achieve this. A polyomino is a geometric figure composed of unit squares joined at their edges. Each component is represented with a polyomino and these polyominoes are packed by a greedy algorithm described in [2].
