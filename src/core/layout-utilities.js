@@ -492,7 +492,8 @@ var layoutUtilities = function (cy, options) {
       var cells = [];
       var resultLocation = {};
       while(!placementFound){
-        cells = mainGrid.getDirectNeighbors(cells);
+
+        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width,polyominos[i].height) / 2));
         cells.forEach(function(cell){
             if(mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)){
               placementFound = true;

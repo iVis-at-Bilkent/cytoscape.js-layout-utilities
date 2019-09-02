@@ -61,7 +61,7 @@ class Grid{
     }
 
     //function given a list of cells it returns the direct unvisited unoccupied neighboring cells 
-    getDirectNeighbors(cells){
+    getDirectNeighbors(cells, level){
         var resultPoints = [];
         if(cells.length == 0){
             for(var i = 0 ; i< this.width;i++){
@@ -71,6 +71,22 @@ class Grid{
                     }
                 }
             }
+            var startIndex = 0 ;
+            var endIndex = resultPoints.length -1 ;
+            
+            for(var i = 2 ; i<=level ; i++){
+               
+                if(endIndex >= startIndex){
+                    for(var j = startIndex ; j<= endIndex ; j++){
+                        resultPoints = resultPoints.concat(this.getCellNeighbors(resultPoints[j].x,resultPoints[j].y));
+                    }
+                }             
+                
+                startIndex = endIndex +1;
+                endIndex = resultPoints.length - 1;
+
+            }
+
         }else{
             cells.forEach(function(cell){
                     resultPoints = resultPoints.concat(this.getCellNeighbors(cell.x,cell.y));

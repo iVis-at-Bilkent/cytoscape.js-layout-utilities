@@ -213,7 +213,7 @@ var Grid = function () {
 
     _createClass(Grid, [{
         key: 'getDirectNeighbors',
-        value: function getDirectNeighbors(cells) {
+        value: function getDirectNeighbors(cells, level) {
             var resultPoints = [];
             if (cells.length == 0) {
                 for (var i = 0; i < this.width; i++) {
@@ -222,6 +222,20 @@ var Grid = function () {
                             resultPoints = resultPoints.concat(this.getCellNeighbors(i, j));
                         }
                     }
+                }
+                var startIndex = 0;
+                var endIndex = resultPoints.length - 1;
+
+                for (var i = 2; i <= level; i++) {
+
+                    if (endIndex >= startIndex) {
+                        for (var j = startIndex; j <= endIndex; j++) {
+                            resultPoints = resultPoints.concat(this.getCellNeighbors(resultPoints[j].x, resultPoints[j].y));
+                        }
+                    }
+
+                    startIndex = endIndex + 1;
+                    endIndex = resultPoints.length - 1;
                 }
             } else {
                 cells.forEach(function (cell) {
@@ -873,7 +887,12 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       var cells = [];
       var resultLocation = {};
       while (!placementFound) {
-        cells = mainGrid.getDirectNeighbors(cells);
+        if (i == 1) {
+          cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width, polyominos[i].height) / 2));
+        } else {
+          cells = mainGrid.getDirectNeighbors(cells, 1);
+        }
+
         cells.forEach(function (cell) {
           if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
             placementFound = true;
@@ -971,7 +990,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
       offset: 20,
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
-      utilityFunction: 1 // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      utilityFunction: 1, // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      componentSpacing: 0
     };
 
     var layoutUtilities = __webpack_require__(2);

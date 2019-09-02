@@ -14,10 +14,39 @@
       offset: 20,
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
-      utilityFunction: 1  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      utilityFunction: 1,  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      componentSpacing : 0
     };
 
 
+   /*  function extend(defaults, options) {
+      var obj = {};
+
+      for (var i in defaults) {
+        obj[i] = defaults[i];
+      }
+
+      for (var i in options) {
+        if(i == "desiredAspectRatio"){
+          var value = options[i];
+           if(!isNaN(value))
+           {
+              if(value >= 0 && value <= 20){
+                obj[i] = options[i];
+              }else if(value < 0){
+                obj[i] = 0
+              }else{
+                obj[i] = 20
+              }
+           }
+        }else{
+          obj[i] = options[i];
+        }
+
+      }
+
+      return obj;
+     }; */
     var layoutUtilities = require("./layout-utilities");
 
     cytoscape('core', 'layoutUtilities', function (opts) {
@@ -27,6 +56,7 @@
       if (opts === 'get') {
         return getScratch(cy).instance;
       }
+
 
       $.extend(true, options, opts);
 
