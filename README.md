@@ -5,25 +5,34 @@ cytoscape-layout-utilities
 
 This Cytoscape.js extension provides miscellenaous layout utilities in order to manage the placement of nodes or components without layout information. 
 
-Sometimes, your graph will have a pre-calculated layout but changes (addition and/or deletion of nodes and edges) will require an *incremental* layout to adjust the existing layout according to these changes. However, often times, the new nodes do not have a good initial position for incremental layout (randomize: false) to produce successful results. Some utility methods in this library try to choose the best position for any node without a previous layout, so that subsequent incremental layout can achieve this. 
+Sometimes, your graph will have a pre-calculated layout but changes (addition and/or deletion of nodes and edges or simply changes in graph geometry) will require an *incremental* layout to adjust the existing layout according to these changes. However, often times, the new nodes do not have an initial position (or a good one) for incremental layout (randomize: false) to produce good results. Some utility methods in this library try to choose the best position for any node without a previous or outdated layout, so that subsequent incremental layout is a good one. 
 
 When doing so, these methods use the following heuristics [1]:
 
-- If a new node without layout has a *single* neighbor with layout information,  the idea is to split the neighboring space around the single neighbor into quadrants and scoring how crowded each quadrant is, and placing the new node in least crowded quadrant.
+- If a new node without layout has a *single* neighbor with layout information,  the idea is to split the neighboring space around the single neighbor into quadrants and scoring how crowded each quadrant is, and placing the new node in the least crowded quadrant.
 
 - If a new node without layout has *multiple* neighbors with layout information, we chose the position of the new node without layout to be the geometric center of all its neighbors.
 
-- If a new node without layout has *no* neighbors with layout information, then we place it around the periphery of the bounding box of all nodes with pre-calculated layout.
+- If a new node without layout has *no* neighbors with layout information, then we place it around the periphery of the bounding box of all nodes with up-to-date layout.
 
-In all of the above cases, we choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases.
+In all of the above cases, we try to choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases. Hence these are exposed as user customizable options by the extension.
 
-Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. This library uses a polyomino packing based algorithm to achieve this. A polyomino is a geometric figure composed of unit squares joined at their edges. Each components is represented with a polyomino and these polyominoes are packed by a greedy algorithm described in [2].
+Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. Below is an example where [a layout algorithm]() works by laying out a disconnected graph normally (left) and uses this extension to pack components after layout (right).
+<p align="center">
+  <img src="packing-example-before.jpg" width="320"/>
+  &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+  <img src="packing-example-after.jpg" width="180"/>
+</p>
+
+This library uses a polyomino packing based algorithm to achieve this. A polyomino is a geometric figure composed of unit squares joined at their edges. Each component is represented with a polyomino and these polyominoes are packed by a greedy algorithm described in [2].
 
 <p align="center">
   <img src="polyomino-example.png" width="180"/>
 </p>
 
-One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in a component needs to be relocated*. The utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio while minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time.
+One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in a component needs to be relocated*. The utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio, minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time.
+
+Recommended usage of packing utility for disconnected graphs for a layout extension is as follows. The layout should first detect components of a given graph using [`eles.components()`](http://js.cytoscape.org/#eles.components). Then for each component a separate, independent layout should be calculated. The resulting graph will have a layout where components might overlap or might be very far from each other. A call to this extension with those components will return the amount of relocation needed for each component so that the resulting final layout for the disconnected graph is rather tight.
 
 Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
@@ -106,8 +115,11 @@ the function returns an object which has the following properties:
 ## Default Options
 
 ```
+      // Placing new / hidden nodes
       idealEdgeLength: 50,
       offset: 20,
+      
+      // Packing
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
