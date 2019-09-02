@@ -111,7 +111,7 @@ The function returns an object which has the following properties:
 3. fullness: the fullness of the resulting packed components
 4. adjusted fullness: the adjusted (with respect to desired aspect ratio) fullness of the resulting packed components
 
-input example: 
+Here is a sample input: 
 ```js
 [
   {//first component
@@ -137,12 +137,12 @@ input example:
 ]
 ```
 
-and output example:
+resulting in this sample output:
 ```js
 {
   shift: [
-          {dx:344,dy:420},//shift for first component
-          {dx:-80,dy:-40}//shift for second component
+          {dx:344,dy:420},//shift amount for first component
+          {dx:-80,dy:-40}//shift amount for second component
          ],
   aspectRatio: 1,
   fullness: 35.25,
