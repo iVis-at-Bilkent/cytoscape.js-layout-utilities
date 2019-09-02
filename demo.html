@@ -264,6 +264,7 @@
                       
                         subgraphs.push(subgraph);
                     });
+                                      
                     var result = packingApi.packComponents(subgraphs);
                     $("#resultAspectRatio").text(result.aspectRatio);
                     $("#resultFullness").text(result.fullness);
@@ -358,7 +359,7 @@
                 </p>
                 <p>
                   <label for="gridSizeFactor">Polyomino grid size factor</label>
-                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".1" value="1" step="0.1">
+                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".1" value="1" step="0.05">
                 </p>
                
 

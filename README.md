@@ -111,6 +111,46 @@ The function returns an object which has the following properties:
 3- fullness: the fullness of the resulting packed components
 4- adjustedFullness = the adjusted fullness (with respect to desired aspect ratio) of the resulting packed components
 
+input example: 
+```js
+[
+  {//first component
+    nodes:[
+          {x:150,y:100,width:30,height:20},
+          {x:400,y:120,width:40,height:20}
+          ],
+    edges:[
+          {startX:165,startY:110,endX:420,endY:130}
+          ]
+  },
+  {//second component
+    nodes:[
+          {x:80,y:40,width:20,height:20},
+          {x:600,y:800,width:30,height:30},
+          {x:200,y:200,width:30,height:20},
+          ],
+    edges:[
+          {startX:90,startY:50,endX:215,endY:210},
+          {startX:90,startY:50,endX:615,endY:815}
+          ]
+  }
+]
+```
+
+and output example:
+```js
+{
+  shift: [
+          {dx:344,dy:420},//shift for first component
+          {dx:-80,dy:-40}//shift for second component
+         ],
+  aspectRatio: 1,
+  fullness: 35.25,
+  adjustedFullness: 30.40
+}
+```
+
+
 ## Default Options
 
 ```
