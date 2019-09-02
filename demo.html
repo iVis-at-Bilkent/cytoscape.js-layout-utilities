@@ -175,13 +175,13 @@
                             { data: { id: 'n20', name: 'n20' } },
                             { data: { id: 'n21', name: 'n21' } },
 
-                            { data: { id: 'a', name: 'a' } },
-                            { data: { id: 'b', name: 'b' } },
-                            { data: { id: 'c', name: 'c' } },
-                            { data: { id: 'd', name: 'd' } },
-                            { data: { id: 'e', name: 'e' } },
-                            { data: { id: 'f', name: 'f' } },
-                            { data: { id: 'g', name: 'g' } },
+                            { data: { id: 'n22', name: 'n22' } },
+                            { data: { id: 'n23', name: 'n23' } },
+                            { data: { id: 'n24', name: 'n24' } },
+                            { data: { id: 'n25', name: 'n25' } },
+                            { data: { id: 'n26', name: 'n26' } },
+                            { data: { id: 'n27', name: 'n27' } },
+                            { data: { id: 'n28', name: 'n28' } },
 
                         ],
                         edges: [
@@ -207,11 +207,11 @@
                             { data: { source: 'n17', target: 'n20' } },
                             { data: { source: 'n19', target: 'n20' } },
 
-                            { data: { source: 'a', target: 'b'  ,id:'ab'} },
-                            { data: { source: 'a', target: 'c' ,id:'ac'} },
-                            { data: { source: 'c', target: 'b',id:'cb' } },
-                            { data: { source: 'd', target: 'e', id:'de'} },
-                            { data: { source: 'e', target: 'f',id:'ef'} },
+                            { data: { source: 'n22', target: 'n23' } },
+                            { data: { source: 'n22', target: 'n24'} },
+                            { data: { source: 'n24', target: 'n23'} },
+                            { data: { source: 'n25', target: 'n26'} },
+                            { data: { source: 'n26', target: 'n27'} },
 
                             //{ data: { source: "n19", target: "n21" } }
                         ]
@@ -264,7 +264,9 @@
                       
                         subgraphs.push(subgraph);
                     });
-                    var result = packingApi.perfromPolyominoPacking(subgraphs);
+                    var result = packingApi.packComponents(subgraphs);
+                    $("#resultAspectRatio").text(result.aspectRatio);
+                    $("#resultFullness").text(result.fullness);
                     components.forEach(function(component, index){
                         component.nodes().layout({
                             name: 'preset',
@@ -272,8 +274,8 @@
                             fit: false,
                             transform: (node) => {
                                 let position = {};
-                                position.x = node.position('x') + result[index].dx;
-                                position.y = node.position('y') + result[index].dy;
+                                position.x = node.position('x') + result.shifts[index].dx;
+                                position.y = node.position('y') + result.shifts[index].dy;
                                 return position;
                             }
                         }).run();                   
@@ -338,28 +340,33 @@
         </div>
         <div class="topnav">            
 
-            <b id="polyominoPack" style="cursor: pointer; color: brown">Pack Components</b><br/><br/>
+            <b id="polyominoPack" style="cursor: pointer; color: brown">Pack components</b><br/><br/>
             <form>
-                <p><label>Select Utility function</label></p>
+                <p><label>Select utility function</label></p>
                 <p>
                     <select id="utilityFunctionType" style="margin-top:10px;">
-                    <option value = "1">Adjusted Fullness</option>
-                    <option value="2"> Weighted Fullness and Aspect Ratio</option>
+                    <option value = "1">Adjusted fullness</option>
+                    <option value="2"> Weighted fullness and aspect ratio</option>
                     </select>
                 </p>
             </form>
             <form>
                 <p>
-                  <label for="desiredAspectRatio">Desired Aspect Ratio</label>
-                  <input id="desiredAspectRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25" min="0" value="1">
+                  <label for="desiredAspectRatio">Desired aspect ratio</label>
+                  <input id="desiredAspectRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25" min=".25" value="1">
                 </p>
                 <p>
-                  <label for="gridSizeFactor">polyomino grid size factor</label>
-                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = "0.5" value="1" step="0.5">
+                  <label for="gridSizeFactor">Polyomino grid size factor</label>
+                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".25" value="1" step="0.25">
                 </p>
                
 
               </form>
+              <div>
+                <b>Result aspect ratio : <span id=resultAspectRatio style="color:green;"> </span><br/><br/>
+                <b>Result fullness : <span id=resultFullness style="color:green;""> </span>%<br/><br/>
+    
+            </div>
             
         </div>
         <br>
@@ -367,11 +374,7 @@
             <b>Shift + drag</b> to specify region<br/><br/>
             <b>Shift + taphold</b> to select neighbors<br/><br/>
         </div>
-        <div>
-            <b>Result Aspect Ratio : <span id=resultAspectRatio style="color:green;"> </span><br/><br/>
-            <b>Result Fullness : <span id=resultFullness style="color:green;""> </span>%<br/><br/>
-
-        </div>
+        
         <div id="cy"></div>
 
     </body>
