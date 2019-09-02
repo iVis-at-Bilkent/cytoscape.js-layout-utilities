@@ -109,6 +109,7 @@ The function returns an object which has the following properties:
 1- shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input comoponent should be shifted by this amount.
 2- aspectRatio: the aspect ratio of the resulting packed components
 3- fullness: the fullness of the resulting packed components
+4- adjustedFullness = the adjusted fullness (with respect to desired aspect ratio) of the resulting packed components
 
 ## Default Options
 

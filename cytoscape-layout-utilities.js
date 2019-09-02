@@ -887,12 +887,8 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       var cells = [];
       var resultLocation = {};
       while (!placementFound) {
-        if (i == 1) {
-          cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width, polyominos[i].height) / 2));
-        } else {
-          cells = mainGrid.getDirectNeighbors(cells, 1);
-        }
 
+        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width, polyominos[i].height) / 2));
         cells.forEach(function (cell) {
           if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
             placementFound = true;
@@ -958,6 +954,18 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     packingResult.aspectRatio = ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)).toFixed(2);
     packingResult.fullness = (mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) * (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 100).toFixed(2);
 
+    if (packingResult.aspectRatio > options.desiredAspectRatio) {
+      var mainGridWidth = mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1;
+      packingResult.adjustedFullness = (mainGrid.numberOfOccupiredCells / (mainGridWidth * (mainGridWidth / options.desiredAspectRatio)) * 100).toFixed(2);
+      // height = width / desiredAspectRatio;
+    } else {
+
+      var mainGridheight = mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1;
+      packingResult.adjustedFullness = (mainGrid.numberOfOccupiredCells / (mainGridheight * options.desiredAspectRatio * mainGridheight) * 100).toFixed(2);
+
+      // width = height * desiredAspectRatio;
+    }
+
     return packingResult;
   };
 
@@ -994,6 +1002,30 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
       componentSpacing: 0
     };
 
+    /*  function extend(defaults, options) {
+       var obj = {};
+         for (var i in defaults) {
+         obj[i] = defaults[i];
+       }
+         for (var i in options) {
+         if(i == "desiredAspectRatio"){
+           var value = options[i];
+            if(!isNaN(value))
+            {
+               if(value >= 0 && value <= 20){
+                 obj[i] = options[i];
+               }else if(value < 0){
+                 obj[i] = 0
+               }else{
+                 obj[i] = 20
+               }
+            }
+         }else{
+           obj[i] = options[i];
+         }
+         }
+         return obj;
+      }; */
     var layoutUtilities = __webpack_require__(2);
 
     cytoscape('core', 'layoutUtilities', function (opts) {

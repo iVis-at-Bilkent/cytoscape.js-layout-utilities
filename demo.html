@@ -267,6 +267,7 @@
                     var result = packingApi.packComponents(subgraphs);
                     $("#resultAspectRatio").text(result.aspectRatio);
                     $("#resultFullness").text(result.fullness);
+                    $("#resultAdjustedFullness").text(result.adjustedFullness);
                     components.forEach(function(component, index){
                         component.nodes().layout({
                             name: 'preset',
@@ -357,7 +358,7 @@
                 </p>
                 <p>
                   <label for="gridSizeFactor">Polyomino grid size factor</label>
-                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".25" value="1" step="0.25">
+                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".1" value="1" step="0.1">
                 </p>
                
 
@@ -365,6 +366,8 @@
               <div>
                 <b>Result aspect ratio : <span id=resultAspectRatio style="color:green;"> </span><br/><br/>
                 <b>Result fullness : <span id=resultFullness style="color:green;""> </span>%<br/><br/>
+                <b>Result adjusted fullness : <span id=resultAdjustedFullness style="color:green;"> </span>%<br/><br/>
+                
     
             </div>
             

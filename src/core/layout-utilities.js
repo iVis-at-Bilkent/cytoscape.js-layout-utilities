@@ -560,6 +560,19 @@ var layoutUtilities = function (cy, options) {
 
     packingResult.aspectRatio = ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1)/(mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)).toFixed(2);
     packingResult.fullness = ((mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1)*(mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)))*100).toFixed(2);
+    
+    if(packingResult.aspectRatio > options.desiredAspectRatio){
+      var mainGridWidth = mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1;
+      packingResult.adjustedFullness = (((mainGrid.numberOfOccupiredCells) / (mainGridWidth* (mainGridWidth/options.desiredAspectRatio))*100)).toFixed(2);
+     // height = width / desiredAspectRatio;
+  }else{
+
+    var mainGridheight = mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1;
+    packingResult.adjustedFullness = (((mainGrid.numberOfOccupiredCells) / ((mainGridheight* options.desiredAspectRatio)* mainGridheight))*100).toFixed(2);
+
+     // width = height * desiredAspectRatio;
+  }
+     
    
     return packingResult;
   }
