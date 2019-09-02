@@ -106,10 +106,10 @@ Packs components of a disconnected graph.
 The function parameter has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
 
 The function returns an object which has the following properties:
-1- shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input comoponent should be shifted by this amount.
-2- aspectRatio: the aspect ratio of the resulting packed components
-3- fullness: the fullness of the resulting packed components
-4- adjustedFullness = the adjusted fullness (with respect to desired aspect ratio) of the resulting packed components
+1. shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input comoponent should be shifted by this amount.
+2. aspect ratio: the actual aspect ratio of the resulting packed components
+3. fullness: the fullness of the resulting packed components
+4. adjusted fullness: the adjusted (with respect to desired aspect ratio) fullness of the resulting packed components
 
 ## Default Options
 
