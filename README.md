@@ -103,14 +103,12 @@ Places each given node. It is assumed that the remaining nodes in the graph alre
 ```instance.packComponents(components)```
 
 Packs components of a disconnected graph.
-The function parameter has two arrays namely nodes and edges, a node has properties x1,y1 (top left corner coordinates of a node), width and height, an edge has the properties startX, startY,endX,endY presenting the starting and ending points of the edge respectivley.
+The function parameter has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
 
-the function returns an object which has the following properties:
-1- shifts  : an array of {dx and dy} the shift amounts each element in the corrosponding (same index) input comoponents should be shifted.
-2- aspectRatio : the aspect ratio of the resulting packed components
-3- fullness : the fullness of the resulting packed components
-
-
+The function returns an object which has the following properties:
+1- shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input comoponent should be shifted by this amount.
+2- aspectRatio: the aspect ratio of the resulting packed components
+3- fullness: the fullness of the resulting packed components
 
 ## Default Options
 
