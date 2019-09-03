@@ -161,11 +161,10 @@ resulting sample output:
       // Packing
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
-      utilityFunction: 1  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      componentSpacing: 0 //amount in pixel of the spacing between components
+      utilityFunction: 1  // maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      componentSpacing: 0 // use to increase spacing between components in pixels
 
 ```
-
 
 ## Build targets
 
@@ -176,7 +175,6 @@ resulting sample output:
 * `npm run lint` : Run eslint on the source
 
 N.b. all builds use babel, so modern ES features can be used in the `src`.
-
 
 ## Publishing instructions
 
