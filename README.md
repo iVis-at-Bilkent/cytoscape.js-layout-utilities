@@ -137,10 +137,10 @@ Here is a sample input:
 ]
 ```
 
-resulting in this sample output:
+resulting sample output:
 ```js
 {
-  shift: [
+  shifts: [
           {dx:344,dy:420},//shift amount for first component
           {dx:-80,dy:-40}//shift amount for second component
          ],
@@ -162,6 +162,7 @@ resulting in this sample output:
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
+      componentSpacing: 0 //amount in pixel of the spacing between components
 
 ```
 
