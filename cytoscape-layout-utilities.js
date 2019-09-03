@@ -879,7 +879,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
     //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
     for (var i = 1; i < polyominos.length; i++) {
-
+      var fullnessMax = 0;
       var adjustedFullnessMax = 0;
       var weigthFullnessAspectRatio = 0;
       var minAspectRatioDiff = 1000000;
@@ -893,20 +893,25 @@ var layoutUtilities = function layoutUtilities(cy, options) {
           if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
             placementFound = true;
             var utilityValue = mainGrid.calculateUtilityOfPlacing(polyominos[i], cell.x, cell.y, options.desiredAspectRatio);
-
+            var cellChosen = false;
             if (options.utilityFunction == 1) {
               if (utilityValue.adjustedFullness > adjustedFullnessMax) {
+                cellChosen = true;
+              } else if (utilityValue.adjustedFullness == adjustedFullnessMax) {
+                if (utilityValue.fullness > fullnessMax) {
+                  cellChosen = true;
+                } else if (utilityValue.fullness == fullnessMax) {
+                  if (Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio) <= minAspectRatioDiff) {
+                    cellChosen = true;
+                  }
+                }
+              }
+              if (cellChosen) {
                 adjustedFullnessMax = utilityValue.adjustedFullness;
                 minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
+                fullnessMax = utilityValue.fullness;
                 resultLocation.x = cell.x;
                 resultLocation.y = cell.y;
-              } else if (utilityValue.adjustedFullness == adjustedFullnessMax) {
-                if (Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio) <= minAspectRatioDiff) {
-                  adjustedFullnessMax = utilityValue.adjustedFullness;
-                  minAspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
-                  resultLocation.x = cell.x;
-                  resultLocation.y = cell.y;
-                }
               }
             } else if (options.utilityFunction == 2) {
               var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
