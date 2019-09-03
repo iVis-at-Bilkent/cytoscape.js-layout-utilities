@@ -137,10 +137,10 @@ Here is a sample input:
 ]
 ```
 
-resulting sample output:
+resulting in this sample output:
 ```js
 {
-  shifts: [
+  shift: [
           {dx:344,dy:420},//shift amount for first component
           {dx:-80,dy:-40}//shift amount for second component
          ],

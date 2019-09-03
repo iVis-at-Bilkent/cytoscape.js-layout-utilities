@@ -245,7 +245,14 @@
                 }
 
                 $("#polyominoPack").click(function () {
-                    var packingApi = cy.layoutUtilities({desiredAspectRatio:$('#desiredAspectRatio').val() ,polyominoGridSizeFactor:$('#gridSizeFactor').val(), utilityFunction: $('#utilityFunctionType').val()}); 
+                    var packingApi = cy.layoutUtilities(
+                            {
+                                desiredAspectRatio:$('#desiredAspectRatio').val(),
+                                polyominoGridSizeFactor:$('#gridSizeFactor').val(),
+                                utilityFunction: $('#utilityFunctionType').val(),
+                                componentSpacing : $('#componentSpacing').val()
+                            }
+                        ); 
                     var components = cy.elements(":visible").components();
                     var subgraphs = [];
                     components.forEach(function(component){
@@ -360,6 +367,10 @@
                 <p>
                   <label for="gridSizeFactor">Polyomino grid size factor</label>
                   <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".1" value="1" step="0.05">
+                </p>
+                <p>
+                    <label for="componentSpacing">Component spacing (px)</label>
+                    <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important;" type="number" min = "0" value="0" step="10">
                 </p>
                
 

@@ -369,10 +369,22 @@ var layoutUtilities = function (cy, options) {
       component.nodes.forEach(function(node){
         gridStep += node.width + node.height;
       }); 
-    });
+    });   
 
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+
+    if(options.componentSpacing > 0){
+      var spacingAmount = options.componentSpacing;
+      components.forEach(function(component){        
+        component.nodes.forEach(function(node){
+          node.x = node.x - spacingAmount;
+          node.y = node.y - spacingAmount;
+          node.width = node.width + (2* spacingAmount);
+          node.height = node.height + (2*spacingAmount);
+        }); 
+      });   
+    }
     var gridWidth = 0, gridHeight = 0;
     var polyominos = [];
     var globalX1 = 10000, globalX2=0,globalY1= 10000,globalY2=0 ;
@@ -519,7 +531,7 @@ var layoutUtilities = function (cy, options) {
                   resultLocation.x = cell.x;
                   resultLocation.y = cell.y;
                 }
-                
+
               }else  if(options.utilityFunction == 2){
                 var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
                 var weightedUtility = (utilityValue.fullness * .5) + ((1- aspectRatioDiff/Math.max(utilityValue.actualAspectRatio,options.desiredAspectRatio) * .5))

@@ -764,6 +764,18 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+
+    if (options.componentSpacing > 0) {
+      var spacingAmount = options.componentSpacing;
+      components.forEach(function (component) {
+        component.nodes.forEach(function (node) {
+          node.x = node.x - spacingAmount;
+          node.y = node.y - spacingAmount;
+          node.width = node.width + 2 * spacingAmount;
+          node.height = node.height + 2 * spacingAmount;
+        });
+      });
+    }
     var gridWidth = 0,
         gridHeight = 0;
     var polyominos = [];
