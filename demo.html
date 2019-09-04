@@ -15,14 +15,22 @@
         <script src="cytoscape-layout-utilities.js"></script>
         
         <script src="https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-view-utilities/master/cytoscape-view-utilities.js"></script>
-
         <style>
             body {
                 font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
                 font-size: 14px;
             }
+
+            .button {
+                height: 35px;
+                font-size: 16;
+                color: brown;
+                font-weight: bold;
+                cursor: pointer;
+                      
+            }
             form  { display: table;      }
-            p     { display: table-row;  }
+            p     { display: table-row;  }           
             label { display: table-cell; font-size:14; }
             select {display: table-cell;}
             input { display: table-cell; margin-left: 5px;}
@@ -274,8 +282,8 @@
                                       
                     var result = packingApi.packComponents(subgraphs);
                     $("#resultAspectRatio").text(result.aspectRatio);
-                    $("#resultFullness").text(result.fullness);
-                    $("#resultAdjustedFullness").text(result.adjustedFullness);
+                    $("#resultFullness").text(result.fullness + " %");
+                    $("#resultAdjustedFullness").text(result.adjustedFullness + " %");
                     components.forEach(function(component, index){
                         component.nodes().layout({
                             name: 'preset',
@@ -302,12 +310,15 @@
                 });
 
                 $("#showAll").click(function () {
-                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
-                    var hiddenNodes = cy.nodes(":hidden");
-                    revertBorder(nodesWithHiddenNeighbor);
-                    //api.placeHiddenNodes(nodesWithHiddenNeighbor);
-                    api.placeNewNodes(hiddenNodes);
-                    api2.show(hiddenNodes);
+
+                    api2.show(cy.nodes());
+                    api2.show(cy.nodes().neighborhood());
+                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
+                    // var hiddenNodes = cy.nodes(":hidden");
+                     revertBorder(cy.nodes());
+                    // //api.placeHiddenNodes(nodesWithHiddenNeighbor);
+                    // api.placeNewNodes(hiddenNodes);
+                    // api2.show(hiddenNodes);
                     if(document.getElementById('layout').checked){
                       layout.run();
                     }
@@ -324,6 +335,8 @@
                       layout.run();
                     }
                 });
+
+
             });
         </script>
     </head>
@@ -333,11 +346,16 @@
         <div class="topnav">
             
 
-            <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
-
+            <button  id="hide" class="button">Hide selected</button>
+        <br/> <br/>
+            <button  id="showAll" class="button">Show all</button>
+            <br/> <br/>
+            <button  id="showHiddenNeighbors" class="button">Show hidden neighbors of selected</button>
+            <br/> <br/>
+         <!--    <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
             <b id="showAll" style="cursor: pointer; color: brown">Show all</b><br/><br/>
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
-           
+            -->
             <form>
                 <p>
                     <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
@@ -349,7 +367,9 @@
         </div>
         <div class="topnav">            
 
-            <b id="polyominoPack" style="cursor: pointer; color: brown">Pack components</b><br/><br/>
+            <button id="polyominoPack" class="button">Pack components</button>
+            <br/><br/>
+            <!-- <input  style="cursor: pointer; color: brown">Pack components</button><br/><br/> -->
             <form>
                 <p><label>Select utility function</label></p>
                 <p>
@@ -376,9 +396,9 @@
 
               </form>
               <div>
-                <b>Result aspect ratio : <span id=resultAspectRatio style="color:green;"> </span><br/><br/>
-                <b>Result fullness : <span id=resultFullness style="color:green;""> </span>%<br/><br/>
-                <b>Result adjusted fullness : <span id=resultAdjustedFullness style="color:green;"> </span>%<br/><br/>
+                <b>Result aspect ratio : <span id=resultAspectRatio style="color:green;">-</span><br/><br/>
+                <b>Result fullness : <span id=resultFullness style="color:green;"">-</span><br/><br/>
+                <b>Result adjusted fullness : <span id=resultAdjustedFullness style="color:green;">-</span><br/><br/>
                 
     
             </div>
@@ -387,7 +407,7 @@
         <br>
         <div>
             <b>Shift + drag</b> to specify region<br/><br/>
-            <b>Shift + taphold</b> to select neighbors<br/><br/>
+            <!-- <b>Shift + taphold</b> to select neighbors<br/><br/> -->
         </div>
         
         <div id="cy"></div>

@@ -1084,36 +1084,39 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
           }
         });
         //Select the desired neighbors after taphold-and-free
-        cy.on('taphold', 'node', function (event) {
-          var target = event.target || event.cyTarget;
-          var tapheld = false;
-          var neighborhood;
-          var timeout = setTimeout(function () {
-            if (shiftKeyDown) {
-              cy.elements().unselect();
-              neighborhood = options.neighbor(target);
-              if (neighborhood) neighborhood.select();
-              target.lock();
-              tapheld = true;
-            }
-          }, options.neighborSelectTime - 500);
-          cy.on('free', 'node', function () {
-            var targetTapheld = event.target || event.cyTarget;
-            if (target == targetTapheld && tapheld === true) {
-              tapheld = false;
-              if (neighborhood) neighborhood.select();
-              target.unlock();
-            } else {
-              clearTimeout(timeout);
-            }
-          });
-          cy.on('drag', 'node', function () {
-            var targetDragged = event.target || event.cyTarget;
-            if (target == targetDragged && tapheld === false) {
-              clearTimeout(timeout);
-            }
-          });
-        });
+        /*  cy.on('taphold', 'node', function(event){
+           var target = event.target || event.cyTarget;
+           var tapheld = false;
+           var neighborhood;
+           var timeout = setTimeout(function(){
+             if(shiftKeyDown){
+               cy.elements().unselect();
+               neighborhood = options.neighbor(target);
+               if(neighborhood)
+                 neighborhood.select();
+               target.lock();
+               tapheld = true;
+             }
+           }, options.neighborSelectTime - 500);
+           cy.on('free', 'node', function(){
+             var targetTapheld = event.target || event.cyTarget;
+             if(target == targetTapheld && tapheld === true){
+               tapheld = false;
+               if(neighborhood)
+                 neighborhood.select();
+               target.unlock();
+             }
+             else{
+               clearTimeout(timeout);
+             }
+           });
+           cy.on('drag', 'node', function(){
+             var targetDragged = event.target || event.cyTarget;
+             if(target == targetDragged && tapheld === false){
+               clearTimeout(timeout);
+             }
+           })
+         }); */
       }
 
       // return the instance of extension
