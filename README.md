@@ -34,6 +34,8 @@ One can provide the list of nodes and edges in each component of a disconnected 
 
 Recommended usage of packing utility for disconnected graphs for a layout extension is as follows. The layout should first detect components of a given graph using [`eles.components()`](http://js.cytoscape.org/#eles.components). Then for each component a separate, independent layout should be calculated. The resulting graph will have a layout where components might overlap or might be very far from each other. A call to this extension with those components will return the amount of relocation needed for each component so that the resulting final layout for the disconnected graph is rather tight.
 
+Notice that in case you make use of compound nodes, it's sufficient to pass only highest level (root) nodes in the nesting hierarchy.
+
 Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
 Please cite the following when you use this extension:
