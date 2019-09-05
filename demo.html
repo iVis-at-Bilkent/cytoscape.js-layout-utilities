@@ -325,10 +325,12 @@
                 });
 
                 $("#showHiddenNeighbors").click(function () {
-                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');                    
 					revertBorder(nodesWithHiddenNeighbor);
                     api.placeHiddenNodes(cy.nodes(":selected"));
                     api2.show(cy.nodes(":selected").neighborhood());
+                    revertBorder(cy.nodes());
+
                     nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
                     changeBorder(nodesWithHiddenNeighbor);
                     if(document.getElementById('layout').checked){
