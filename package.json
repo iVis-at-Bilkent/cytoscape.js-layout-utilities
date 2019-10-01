@@ -56,6 +56,5 @@
     "cytoscape": "^3.7.1"
   },
   "dependencies": {
-    "cytoscape-view-utilities": "^3.0.0"
   }
 }

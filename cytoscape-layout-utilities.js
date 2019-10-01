@@ -440,22 +440,17 @@ var layoutUtilities = function layoutUtilities(cy, options) {
      polyominoGridSizeFactor : 1,
      utilityFunction : 1
    };
-  
-   function extend(defaults, options) {
+    function extend(defaults, options) {
      var obj = {};
-  
-     for (var i in defaults) {
+      for (var i in defaults) {
        obj[i] = defaults[i];
      }
-  
-     for (var i in options) {      
+      for (var i in options) {      
        obj[i] = options[i];
      }
-  
-     return obj;
+      return obj;
    };
-  
-   options = extend(defaults, options); */
+    options = extend(defaults, options); */
   var instance = {};
 
   instance.placeHiddenNodes = function (mainEles) {
@@ -998,15 +993,17 @@ module.exports = layoutUtilities;
 "use strict";
 var __WEBPACK_AMD_DEFINE_RESULT__;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 ;
 (function () {
   'use strict';
 
   // registers the extension on a cytoscape lib ref
 
-  var register = function register(cytoscape, $) {
+  var register = function register(cytoscape) {
 
-    if (!cytoscape || !$) {
+    if (!cytoscape) {
       return;
     } // can't register if cytoscape unspecified
 
@@ -1021,10 +1018,10 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
 
     /*  function extend(defaults, options) {
        var obj = {};
-         for (var i in defaults) {
+        for (var i in defaults) {
          obj[i] = defaults[i];
        }
-         for (var i in options) {
+        for (var i in options) {
          if(i == "desiredAspectRatio"){
            var value = options[i];
             if(!isNaN(value))
@@ -1040,8 +1037,8 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
          }else{
            obj[i] = options[i];
          }
-         }
-         return obj;
+        }
+        return obj;
       }; */
     var layoutUtilities = __webpack_require__(2);
 
@@ -1053,7 +1050,37 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
         return getScratch(cy).instance;
       }
 
-      $.extend(true, options, opts);
+      /**
+      * Deep copy or merge objects - replacement for jQuery deep extend
+      * Taken from http://youmightnotneedjquery.com/#deep_extend
+      * and bug related to deep copy of Arrays is fixed.
+      * Usage:Object.extend({}, objA, objB)
+      */
+      function extendOptions(out) {
+        out = out || {};
+
+        for (var i = 1; i < arguments.length; i++) {
+          var obj = arguments[i];
+
+          if (!obj) continue;
+
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (Array.isArray(obj[key])) {
+                out[key] = obj[key].slice();
+              } else if (_typeof(obj[key]) === 'object') {
+                out[key] = extendOptions(out[key], obj[key]);
+              } else {
+                out[key] = obj[key];
+              }
+            }
+          }
+        }
+
+        return out;
+      };
+
+      options = extendOptions({}, options, opts);
 
       function getScratch(eleOrCy) {
         if (!eleOrCy.scratch("_layoutUtilities")) {
@@ -1063,14 +1090,14 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
         return eleOrCy.scratch("_layoutUtilities");
       }
 
+      // create a view utilities instance
+      var instance = layoutUtilities(cy, options);
+
+      // set the instance on the scratch pad
+      getScratch(cy).instance = instance;
+
       if (!getScratch(cy).initialized) {
         getScratch(cy).initialized = true;
-
-        // create a view utilities instance
-        var instance = layoutUtilities(cy, options);
-
-        // set the instance on the scratch pad
-        getScratch(cy).instance = instance;
 
         var shiftKeyDown = false;
         document.addEventListener('keydown', function (event) {
@@ -1137,9 +1164,9 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
   }
 
-  if (typeof cytoscape !== 'undefined' && typeof $ !== "undefined") {
+  if (typeof cytoscape !== 'undefined') {
     // expose to global cytoscape (i.e. window.cytoscape)
-    register(cytoscape, $);
+    register(cytoscape);
   }
 })();
 

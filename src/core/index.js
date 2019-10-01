@@ -3,9 +3,9 @@
   'use strict';
 
   // registers the extension on a cytoscape lib ref
-  var register = function (cytoscape, $) {
+  var register = function (cytoscape) {
 
-    if (!cytoscape || !$) {
+    if (!cytoscape) {
       return;
     } // can't register if cytoscape unspecified
 
@@ -56,9 +56,39 @@
       if (opts === 'get') {
         return getScratch(cy).instance;
       }
+      
+      /**
+      * Deep copy or merge objects - replacement for jQuery deep extend
+      * Taken from http://youmightnotneedjquery.com/#deep_extend
+      * and bug related to deep copy of Arrays is fixed.
+      * Usage:Object.extend({}, objA, objB)
+      */
+      function extendOptions(out) {
+        out = out || {};
 
+        for (var i = 1; i < arguments.length; i++) {
+          var obj = arguments[i];
 
-      $.extend(true, options, opts);
+          if (!obj)
+            continue;
+
+          for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+              if (Array.isArray(obj[key])) {
+                out[key] = obj[key].slice();
+              } else if (typeof obj[key] === 'object') {
+                out[key] = extendOptions(out[key], obj[key]);
+              } else {
+                out[key] = obj[key];
+              }
+            }
+          }
+        }
+
+        return out;
+      };
+      
+      options = extendOptions({}, options, opts);
 
       function getScratch(eleOrCy) {
         if (!eleOrCy.scratch("_layoutUtilities")) {
@@ -67,17 +97,16 @@
 
         return eleOrCy.scratch("_layoutUtilities");
       }
+      
+      // create a view utilities instance
+      var instance = layoutUtilities(cy, options);
 
+
+      // set the instance on the scratch pad
+      getScratch(cy).instance = instance;
 
       if (!getScratch(cy).initialized) {
         getScratch(cy).initialized = true;
-
-        // create a view utilities instance
-        var instance = layoutUtilities(cy, options);
-
-
-        // set the instance on the scratch pad
-        getScratch(cy).instance = instance;
 
         var shiftKeyDown = false;
         document.addEventListener('keydown', function(event){
@@ -142,8 +171,8 @@
     });
   }
 
-  if (typeof cytoscape !== 'undefined' && typeof $ !== "undefined") { // expose to global cytoscape (i.e. window.cytoscape)
-    register(cytoscape, $);
+  if (typeof cytoscape !== 'undefined') { // expose to global cytoscape (i.e. window.cytoscape)
+    register(cytoscape);
   }
 
 })();
