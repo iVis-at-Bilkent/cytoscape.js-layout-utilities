@@ -1,0 +1,421 @@
+<!DOCTYPE>
+<html>
+
+    <head>
+        <title>cytoscape-layout-utilities.js demo</title>
+
+       <!--- <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1"> -->
+
+        <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+        <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+        <!-- for testing with local version of cytoscape.js -->
+        <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+        <script src="https://unpkg.com/layout-base/layout-base.js"></script>
+        <script src="https://unpkg.com/cose-base/cose-base.js"></script>
+        <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+        <script src="cytoscape-layout-utilities.js"></script>
+        
+        <script src="https://unpkg.com/cytoscape-view-utilities/cytoscape-view-utilities.js"></script>
+        <style>
+            body {
+                font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
+                font-size: 14px;
+            }
+
+            .button {
+                height: 35px;
+                font-size: 16;
+                color: brown;
+                font-weight: bold;
+                cursor: pointer;
+                      
+            }
+            form  { display: table;      }
+            p     { display: table-row;  }           
+            label { display: table-cell; font-size:14; }
+            select {display: table-cell;}
+            input { display: table-cell; margin-left: 5px;}
+            #cy {
+                width: 80%;
+                height: 100%;
+                left: 21%;
+                top: 0%;
+                float: left;
+                overflow: hidden;
+                position: fixed;
+              
+            }
+            .topnav {
+                width: 20%;
+                background-color: #e9e9e9;
+               /* font-weight: bold;*/
+                border-color: black;
+                border-style: solid;
+                font-size: 16;
+                padding: 10;
+            }
+            .topnav b:hover
+            {
+               background-color:white;
+            }
+            /* Customize the label (the container) */
+            .topnav .container {
+
+              position: relative;
+              padding: 14px;
+              cursor: pointer;
+              font-size: 15px;
+              left: 5px;
+              -webkit-user-select: none;
+              -moz-user-select: none;         
+              -ms-user-select: none;
+              user-select: none;
+            }
+            /* Hide the browser's default radio button */
+            .topnav .container input {
+              position: absolute;
+              opacity: 0;
+              cursor: pointer;
+              height: 0;
+              width: 0;
+            }
+            /* Create a custom radio button */
+            .topnav .checkmark {
+              position: absolute;
+              top: 17px;
+              left: 0;
+              right: 0px;
+              height: 12px;
+              width: 12px;
+              margin-right: 20px;
+              background-color: #000000;
+              border-radius: 50%;
+            }
+            /* On mouse-over, add a grey background color */
+            .container:hover input ~ .checkmark {
+                    background-color: #000000;
+            }
+            /* When the radio button is checked, add a blue background */
+            .container input:checked ~ .checkmark {
+                    background-color: #000          
+            }
+            /* Create the indicator (the dot/circle - hidden when not checked) */
+            .checkmark:after {
+                    content: "";
+                    position: absolute;
+                    display: none;
+            }
+            /* Show the indicator (dot/circle) when checked */
+            .container input:checked ~ .checkmark:after {
+                    display: block;
+            }
+            /* Style the indicator (dot/circle) */
+            .container .checkmark:after {
+                    position: absolute;
+                    top: 3px;
+                    left: 3px;
+                    width: 6px;
+                    height: 6px;
+                    border-radius: 50%;
+                    background: white;
+            }
+        </style>
+        <script>
+
+            document.addEventListener("DOMContentLoaded", function(){
+                var cy = window.cy = cytoscape({
+                    container: document.getElementById('cy'),
+                    layout: { name: "cose-bilkent" },
+                    style: [
+                        {
+                            selector: 'node',
+                            style: {
+                                'content': 'data(name)',
+                                'border-color': 'grey',
+                                'border-width': 3,
+                                'background-color': 'lightgrey'
+                            }
+                        },
+                        {
+                            selector: 'edge',
+                            style: {
+                                'target-arrow-shape': 'triangle'
+                            }
+                        },
+                        {
+                            selector: 'edge:selected',
+                            style: {
+                                            'line-color': 'black'
+                            }
+                        },
+                        {
+                            selector: 'node:selected',
+                            style: {
+                                            'border-color': 'black',
+                                            'border-width': '3px',
+                                            'background-color': 'lightgrey'
+                            }
+                        },
+                        {
+                            selector: 'node:parent',
+                            style: {
+                                            'background-color': 'lightgrey'
+                            }
+                        }
+                    ],
+
+                    elements: {
+                        nodes: [
+                            { data: { id: 'n7', name: 'n7' } },
+                            { data: { id: 'n6', name: 'n6' } },
+                            { data: { id: 'n5', name: 'n5' } },
+                            { data: { id: 'n8', name: 'n8' } },
+                            { data: { id: 'n9', name: 'n9' } },
+                            { data: { id: 'n10', name: 'n10' } },
+                            { data: { id: 'n11', name: 'n11' } },
+                            { data: { id: 'n12', name: 'n12' } },
+                            { data: { id: 'n13', name: 'n13' } },
+                            { data: { id: 'n14', name: 'n14' } },
+                            { data: { id: 'n15', name: 'n15' } },
+                            { data: { id: 'n16', name: 'n16' } },
+                            { data: { id: 'n17', name: 'n17' } },
+                            { data: { id: 'n18', name: 'n18' } },
+                            { data: { id: 'n19', name: 'n19' } },
+                            { data: { id: 'n20', name: 'n20' } },
+                            { data: { id: 'n21', name: 'n21' } },
+
+                            { data: { id: 'n22', name: 'n22' } },
+                            { data: { id: 'n23', name: 'n23' } },
+                            { data: { id: 'n24', name: 'n24' } },
+                            { data: { id: 'n25', name: 'n25' } },
+                            { data: { id: 'n26', name: 'n26' } },
+                            { data: { id: 'n27', name: 'n27' } },
+                            { data: { id: 'n28', name: 'n28' } },
+
+                        ],
+                        edges: [
+                            { data: { source: "n5", target: "n6" } },
+                            { data: { source: 'n5', target: 'n7' } },
+                            { data: { source: 'n6', target: 'n7' } },
+                            { data: { source: "n7", target: "n8" } },
+                            { data: { source: "n8", target: "n9" } },
+                            { data: { source: 'n7', target: 'n10' } },
+                            { data: { source: 'n6', target: 'n11' } },
+                            { data: { source: "n7", target: "n11" } },
+                            { data: { source: "n9", target: "n10" } },
+                            { data: { source: 'n10', target: 'n11' } },
+                            //{ data: { source: 'n10', target: 'n12' } },
+                            { data: { source: "n12", target: "n13" } },
+                            { data: { source: "n12", target: "n14" } },
+                            { data: { source: "n12", target: "n15" } },
+                            { data: { source: "n13", target: "n15" } },
+                            //{ data: { source: 'n15', target: 'n16' } },
+                            { data: { source: 'n15', target: 'n17' } },
+                            //{ data: { source: "n15", target: "n18" } },
+                            { data: { source: "n17", target: "n19" } },
+                            { data: { source: 'n17', target: 'n20' } },
+                            { data: { source: 'n19', target: 'n20' } },
+
+                            { data: { source: 'n22', target: 'n23' } },
+                            { data: { source: 'n22', target: 'n24'} },
+                            { data: { source: 'n24', target: 'n23'} },
+                            { data: { source: 'n25', target: 'n26'} },
+                            { data: { source: 'n26', target: 'n27'} },
+
+                            //{ data: { source: "n19", target: "n21" } }
+                        ]
+                    },
+                    wheelSensitivity: 0.2
+                });
+
+               
+                var api = cy.layoutUtilities({desiredAspectRatio:2 });                
+                var api2 = cy.viewUtilities();
+
+               
+
+                var layout = cy.layout({
+                    name: 'cose-bilkent',
+                    randomize: false,
+                    fit: false
+                });
+
+                function changeBorder(eles){
+                    eles.forEach(function( ele ){
+                        ele.css("background-color", 'purple');
+                    });
+                    return eles;
+                }
+                function revertBorder(eles){
+                    eles.forEach(function( ele ){
+                        ele.css("background-color", 'lightgrey');
+                  });
+                  return eles;
+                }
+
+                $("#polyominoPack").click(function () {
+                    var packingApi = cy.layoutUtilities(
+                            {
+                                desiredAspectRatio: parseInt($('#desiredAspectRatio').val()),
+                                polyominoGridSizeFactor: parseInt($('#gridSizeFactor').val()),
+                                utilityFunction: parseInt($('#utilityFunctionType').val()),
+                                componentSpacing : parseInt($('#componentSpacing').val())
+                            }
+                        ); 
+                    var components = cy.elements(":visible").components();
+                    var subgraphs = [];
+                    components.forEach(function(component){
+                        var subgraph = {};
+                        subgraph.nodes = [];
+                        subgraph.edges = [];
+
+                        component.edges().forEach(function(edge){
+                            var boundingBox = edge.boundingBox();
+                            subgraph.edges.push({startX: boundingBox.x1,startY:boundingBox.y1,endX:boundingBox.x2,endY:boundingBox.y2});
+                        });
+                        component.nodes().forEach(function(node){
+                            var boundingBox = node.boundingBox();
+                                subgraph.nodes.push({x: boundingBox.x1,y:boundingBox.y1,width:boundingBox.w,height:boundingBox.h});
+                        });
+                      
+                        subgraphs.push(subgraph);
+                    });
+                                      
+                    var result = packingApi.packComponents(subgraphs);
+                    $("#resultAspectRatio").text(result.aspectRatio);
+                    $("#resultFullness").text(result.fullness + " %");
+                    $("#resultAdjustedFullness").text(result.adjustedFullness + " %");
+                    components.forEach(function(component, index){
+                        component.nodes().layout({
+                            name: 'preset',
+                            animate: true,
+                            fit: false,
+                            transform: (node) => {
+                                let position = {};
+                                position.x = node.position('x') + result.shifts[index].dx;
+                                position.y = node.position('y') + result.shifts[index].dy;
+                                return position;
+                            }
+                        }).run();                   
+                    });                  
+                    
+                });
+                $("#hide").click(function () {
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    api2.hide(cy.$(":selected"));
+                    nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    changeBorder(nodesWithHiddenNeighbor);
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
+
+                $("#showAll").click(function () {
+
+                    api2.show(cy.nodes());
+                    api2.show(cy.nodes().neighborhood());
+                     var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes();
+                    // var hiddenNodes = cy.nodes(":hidden");
+                     revertBorder(cy.nodes());
+                    // //api.placeHiddenNodes(nodesWithHiddenNeighbor);
+                    // api.placeNewNodes(hiddenNodes);
+                    // api2.show(hiddenNodes);
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
+
+                $("#showHiddenNeighbors").click(function () {
+                    var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');                    
+					revertBorder(nodesWithHiddenNeighbor);
+                    api.placeHiddenNodes(cy.nodes(":selected"));
+                    api2.show(cy.nodes(":selected").neighborhood());
+                    revertBorder(cy.nodes());
+
+                    nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
+                    changeBorder(nodesWithHiddenNeighbor);
+                    if(document.getElementById('layout').checked){
+                      layout.run();
+                    }
+                });
+
+
+            });
+        </script>
+    </head>
+
+    <body>
+        <h1>cytoscape.js-layout-utilities demo</h1>
+        <div class="topnav">
+            
+
+            <button  id="hide" class="button">Hide selected</button>
+        <br/> <br/>
+            <button  id="showAll" class="button">Show all</button>
+            <br/> <br/>
+            <button  id="showHiddenNeighbors" class="button">Show hidden neighbors of selected</button>
+            <br/> <br/>
+         <!--    <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
+            <b id="showAll" style="cursor: pointer; color: brown">Show all</b><br/><br/>
+            <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
+            -->
+            <form>
+                <p>
+                    <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
+                    <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked">
+                </p>
+            </form>
+           
+            
+        </div>
+        <div class="topnav">            
+
+            <button id="polyominoPack" class="button">Pack components</button>
+            <br/><br/>
+            <!-- <input  style="cursor: pointer; color: brown">Pack components</button><br/><br/> -->
+            <form>
+                <p><label>Select utility function</label></p>
+                <p>
+                    <select id="utilityFunctionType" style="margin-top:10px;">
+                    <option value = "1">Adjusted fullness</option>
+                    <option value="2"> Weighted fullness and aspect ratio</option>
+                    </select>
+                </p>
+            </form>
+            <form>
+                <p>
+                  <label for="desiredAspectRatio">Desired aspect ratio</label>
+                  <input id="desiredAspectRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25" min=".25" value="1">
+                </p>
+                <p>
+                  <label for="gridSizeFactor">Polyomino grid size factor</label>
+                  <input id="gridSizeFactor" style="width:60px; margin-bottom: 10px!important;" type="number" min = ".1" value="1" step="0.05">
+                </p>
+                <p>
+                    <label for="componentSpacing">Component spacing (px)</label>
+                    <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important;" type="number" min = "0" value="0" step="10">
+                </p>
+               
+
+              </form>
+              <div>
+                <b>Result aspect ratio : <span id=resultAspectRatio style="color:green;">-</span><br/><br/>
+                <b>Result fullness : <span id=resultFullness style="color:green;"">-</span><br/><br/>
+                <b>Result adjusted fullness : <span id=resultAdjustedFullness style="color:green;">-</span><br/><br/>
+                
+    
+            </div>
+            
+        </div>
+        <br>
+        <div>
+            <b>Shift + drag</b> to specify region<br/><br/>
+            <!-- <b>Shift + taphold</b> to select neighbors<br/><br/> -->
+        </div>
+        
+        <div id="cy"></div>
+
+    </body>
+
+</html>
