@@ -46,7 +46,7 @@ Please cite the following when you use this extension:
 
 ## Dependencies
 
- * Cytoscape.js ^3.7.0
+ * Cytoscape.js ^3.2.0
 
 ## Usage instructions
 
