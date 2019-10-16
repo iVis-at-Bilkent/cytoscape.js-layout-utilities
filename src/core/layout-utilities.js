@@ -486,8 +486,8 @@ var layoutUtilities = function (cy, options) {
     gridWidth = Math.ceil(gridWidth*2/gridStep);
     gridHeight = Math.ceil(gridHeight*2/gridStep);
     
-    //intialize the grid
-    var mainGrid = new polyominoPacking.Grid(gridWidth,gridHeight);
+    //intialize the grid add 1 to avoid insufficient grid space due to divisin by 2 in calcuations
+    var mainGrid = new polyominoPacking.Grid(gridWidth + 1 ,gridHeight + 1);
 
     //place first (biggest) polyomino in the center
     mainGrid.placePolyomino(polyominos[0], mainGrid.center.x,mainGrid.center.y);
