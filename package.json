@@ -1,6 +1,6 @@
 {
   "name": "cytoscape-layout-utilities",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Package of layput utilities for cytoscape.js",
   "main": "cytoscape-layout-utilities.js",
   "author": {
