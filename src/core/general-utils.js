@@ -16,7 +16,7 @@ generalUtils.uniqueArray =  function( ar ) {
 //a function to determine the grid cells where a line between point p0 and p1 pass through
 generalUtils.LineSuperCover = function(p0,p1){
   var dx = p1.x-p0.x, dy = p1.y-p0.y;
-  var nx = Math.abs(dx), ny = Math.abs(dy);
+  var nx = Math.floor(Math.abs(dx)), ny = Math.floor(Math.abs(dy));
   var sign_x = dx > 0? 1 : -1, sign_y = dy > 0? 1 : -1;
 
   var p = new polyominoPacking.Point(p0.x, p0.y);
