@@ -15,7 +15,7 @@
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1,  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      componentSpacing : 0
+      componentSpacing : 30
     };
 
 

@@ -36,7 +36,7 @@ Recommended usage of packing utility for disconnected graphs for a layout extens
 
 Notice that in case you make use of compound nodes, it's sufficient to pass only highest level (root) nodes in the nesting hierarchy.
 
-Here is a [demo](https://ivis-at-bilkent.github.io/cytoscape.js-layout-utilities/demo.html).
+Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
 
 Please cite the following when you use this extension:
 
@@ -164,7 +164,7 @@ resulting sample output:
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      componentSpacing: 0 // use to increase spacing between components in pixels
+      componentSpacing: 30 // use to increase spacing between components in pixels
 
 ```
 
