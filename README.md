@@ -164,7 +164,7 @@ resulting sample output:
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      componentSpacing: 0 // use to increase spacing between components in pixels
+      componentSpacing: 30 // use to increase spacing between components in pixels
 
 ```
 
