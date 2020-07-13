@@ -1,6 +1,7 @@
 
 var generalUtils = require('./general-utils.js');
 var polyominoPacking = require('./polyomino-packing');
+const { Point } = require('./polyomino-packing');
 var layoutUtilities = function (cy, options) {
 
  /*  var defaults = {
@@ -361,6 +362,7 @@ var layoutUtilities = function (cy, options) {
 
  
   instance.packComponents = function(components){
+    let currentCenter = generalUtils.getCenter(components);
 
     var gridStep = 0;
     var totalNodes = 0;
@@ -568,10 +570,15 @@ var layoutUtilities = function (cy, options) {
   var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
   var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
   var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
+    let rectCenter = mainGrid.occupiedRectangle.center();
+
+    let renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
+    
+    let centerShift = renderedCenter.diff(currentCenter);
 
     polyominos.forEach(function(pol){
-      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord ;//+shiftX;
-      var dy = (pol.location.y -pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord;// + shiftY;
+      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord + centerShift.x;//+shiftX;
+      var dy = (pol.location.y -pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord + centerShift.y;// + shiftY;
       //var dx = (pol.location.x -occupiedCenterX) * gridStep + componentsCenter.x- pol.leftMostCoord;//+shiftX;
       //var dy = (pol.location.y -occupiedCenterY) * gridStep + componentsCenter.y-pol.topMostCoord;// + shiftY;
       packingResult.shifts.push({dx: dx, dy: dy});

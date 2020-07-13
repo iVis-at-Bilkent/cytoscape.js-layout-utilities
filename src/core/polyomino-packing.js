@@ -26,6 +26,17 @@ class Point{
         this.x = x;
         this.y = y;        
     }
+
+    /**
+     * Returns other - this for x and y
+     * @param { Point } other
+     */
+    diff(other) {
+        return new Point(
+            other.x - this.x,
+            other.y - this.y,
+        );
+    }
 }
 
 class BoundingRectangle{
@@ -34,6 +45,13 @@ class BoundingRectangle{
         this.x2 = x2;
         this.y1 = y1;
         this.y2 = y2;        
+    }
+
+    center() {
+        return new Point(
+            (this.x2 - this.x1) / 2, 
+            (this.y2 - this.y1) / 2,
+        );
     }
 }
 
@@ -56,7 +74,10 @@ class Grid{
             }
         }
         this.center = new Point(Math.floor(width/2), Math.floor(height/2));
-        this.occupiedRectangle = new BoundingRectangle(0,0,0,0);  // the bounding rectanble of the occupied cells in the grid
+        this.occupiedRectangle = new BoundingRectangle(
+            Number.MAX_VALUE, Number.MAX_VALUE,
+            Number.MIN_VALUE, Number.MIN_VALUE
+        );  // the bounding rectanble of the occupied cells in the grid
         this.numberOfOccupiredCells = 0;      
     }
 
@@ -170,10 +191,11 @@ class Grid{
                     this.grid[k-polyomino.center.x + i][l-polyomino.center.y + j].occupied = true;
                 }
             }
-        }
+        }        
+
         //update number of occupired cells
         this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
-
+        
         //update bounding rectangle and reset visited cells to none
         var x1 = 10000, x2= 0,y1 = 10000,y2=0;
         for(var x = 0 ; x<this.width; x++){
@@ -190,8 +212,7 @@ class Grid{
         this.occupiedRectangle.x1 = x1,
         this.occupiedRectangle.y1 = y1;
         this.occupiedRectangle.x2 = x2;
-        this.occupiedRectangle.y2= y2;     
-      
+        this.occupiedRectangle.y2 = y2;   
     }
 
     // a function to determine if a polyomino can be placed on the given cell i,j

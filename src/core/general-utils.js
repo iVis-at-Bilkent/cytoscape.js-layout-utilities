@@ -1,5 +1,6 @@
 var generalUtils = {};
 var polyominoPacking = require('./polyomino-packing');
+const { Point } = require('./polyomino-packing');
 
 
 //a function to remove duplicate object in array
@@ -41,6 +42,55 @@ generalUtils.LineSuperCover = function(p0,p1){
   }
   return points;
 };
+
+/**
+ * finds the current center of components
+ * @param { Array } components 
+ */
+generalUtils.getCenter = function(components) {
+  // In case the platform doesn't have flatMap function
+  if (typeof Array.prototype['flatMap'] === 'undefined') {
+    Array.prototype['flatMap'] = function(f) {
+      const concat = (x, y) => x.concat(y);
+      const flatMap = (f, xs) => xs.map(f).reduce(concat, []);
+
+      return flatMap(f, this);
+    }
+  }
+
+  let bounds = components.flatMap(component => component.nodes)
+  .map(node => {
+    return {
+      left: node.x,
+      top: node.y,
+      right: node.x + node.width,
+      bottom: node.y + node.height,
+    };
+  })
+  .reduce((bounds, currNode) => {
+    if (currNode.left < bounds.left) {
+      bounds.left = currNode.left;
+    }
+    if (currNode.right > bounds.right) {
+      bounds.right = currNode.right;
+    }
+    if (currNode.top < bounds.top) {
+      bounds.top = currNode.top;
+    }
+    if (currNode.bottom > bounds.bottom) {
+      bounds.bottom = currNode.bottom;
+    }
+
+    return bounds;
+  }, { 
+    left: Number.MAX_VALUE, 
+    right: Number.MIN_VALUE,
+    top: Number.MAX_VALUE, 
+    bottom: Number.MIN_VALUE
+  });
+
+  return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
+}
 
 module.exports = generalUtils;
   
