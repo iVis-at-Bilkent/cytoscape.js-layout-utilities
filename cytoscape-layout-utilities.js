@@ -531,17 +531,17 @@ var layoutUtilities = function layoutUtilities(cy, options) {
      polyominoGridSizeFactor : 1,
      utilityFunction : 1
    };
-    function extend(defaults, options) {
+     function extend(defaults, options) {
      var obj = {};
-      for (var i in defaults) {
+       for (var i in defaults) {
        obj[i] = defaults[i];
      }
-      for (var i in options) {      
+       for (var i in options) {      
        obj[i] = options[i];
      }
-      return obj;
+       return obj;
    };
-    options = extend(defaults, options); */
+     options = extend(defaults, options); */
   var instance = {};
 
   instance.placeHiddenNodes = function (mainEles) {
@@ -1115,10 +1115,10 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
 
     /*  function extend(defaults, options) {
        var obj = {};
-        for (var i in defaults) {
+         for (var i in defaults) {
          obj[i] = defaults[i];
        }
-        for (var i in options) {
+         for (var i in options) {
          if(i == "desiredAspectRatio"){
            var value = options[i];
             if(!isNaN(value))
@@ -1134,8 +1134,8 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
          }else{
            obj[i] = options[i];
          }
-        }
-        return obj;
+         }
+         return obj;
       }; */
     var layoutUtilities = __webpack_require__(2);
 
