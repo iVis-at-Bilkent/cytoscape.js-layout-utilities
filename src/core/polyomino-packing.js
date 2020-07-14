@@ -19,6 +19,18 @@ class Polyomino {
         this.center = new Point(Math.floor(width / 2), Math.floor(height / 2));// center of polyomino
         this.numberOfOccupiredCells = 0;
     }
+
+    getBoundingRectangle() {
+        const polyx1 = this.location.x - this.center.x; 
+        const polyy1 = this.location.y - this.center.y;
+
+        return new BoundingRectangle(
+            polyx1,
+            polyy1,
+            polyx1 + this.width,
+            polyy1 + this.height,   
+        );
+    }
 }
 
 class Point {
@@ -96,18 +108,14 @@ class Grid {
             var endIndex = resultPoints.length - 1;
 
             for (var i = 2; i <= level; i++) {
-
                 if (endIndex >= startIndex) {
                     for (var j = startIndex; j <= endIndex; j++) {
                         resultPoints = resultPoints.concat(this.getCellNeighbors(resultPoints[j].x, resultPoints[j].y));
                     }
                 }
-
                 startIndex = endIndex + 1;
                 endIndex = resultPoints.length - 1;
-
             }
-
         } else {
             cells.forEach(function (cell) {
                 resultPoints = resultPoints.concat(this.getCellNeighbors(cell.x, cell.y));
@@ -178,15 +186,14 @@ class Grid {
         }
 
         return resultPoints;
-
     }
 
     // a function to place a given polyomino in the cell i j on the grid
     placePolyomino(polyomino, i, j) {
         polyomino.location.x = i;
         polyomino.location.y = j;
-        for (var k = 0; k < polyomino.width; k++) {
-            for (var l = 0; l < polyomino.height; l++) {
+        for (let k = 0; k < polyomino.width; k++) {
+            for (let l = 0; l < polyomino.height; l++) {
                 if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino
                     this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
                 }
@@ -196,23 +203,27 @@ class Grid {
         //update number of occupired cells
         this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
 
+        let polyRect = polyomino.getBoundingRectangle();
+
+        if (polyRect.x1 < this.occupiedRectangle.x1) {
+            this.occupiedRectangle.x1 = polyRect.x1;
+        }
+        if (polyRect.x2 > this.occupiedRectangle.x2) {
+            this.occupiedRectangle.x2 = polyRect.x2;
+        }
+        if (polyRect.y1 < this.occupiedRectangle.y1) {
+            this.occupiedRectangle.y1 = polyRect.y1;
+        }
+        if (polyRect.y2 > this.occupiedRectangle.y2) {
+            this.occupiedRectangle.y2 = polyRect.y2;
+        }
+
         //update bounding rectangle and reset visited cells to none
-        var x1 = 10000, x2 = 0, y1 = 10000, y2 = 0;
-        for (var x = 0; x < this.width; x++) {
-            for (var y = 0; y < this.height; y++) {
+        for (let x = 0; x < this.width; x++) {
+            for (let y = 0; y < this.height; y++) {
                 this.grid[x][y].visited = false;
-                if (this.grid[x][y].occupied) {
-                    if (x <= x1) x1 = x;
-                    if (y <= y1) y1 = y;
-                    if (x >= x2) x2 = x;
-                    if (y >= y2) y2 = y;
-                }
             }
         }
-        this.occupiedRectangle.x1 = x1,
-            this.occupiedRectangle.y1 = y1;
-        this.occupiedRectangle.x2 = x2;
-        this.occupiedRectangle.y2 = y2;
     }
 
     // a function to determine if a polyomino can be placed on the given cell i,j
@@ -255,9 +266,7 @@ class Grid {
             adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (width * (width / desiredAspectRatio));
             // height = width / desiredAspectRatio;
         } else {
-
             adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / ((height * desiredAspectRatio) * height);
-
             // width = height * desiredAspectRatio;
         }
 
@@ -266,9 +275,7 @@ class Grid {
         result.adjustedFullness = adjustedFullness;
 
         return result;
-
     }
-
 }
 
 module.exports = {

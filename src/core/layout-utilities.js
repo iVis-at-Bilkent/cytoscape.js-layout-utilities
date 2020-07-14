@@ -378,10 +378,10 @@ var layoutUtilities = function (cy, options) {
     }
     var gridWidth = 0, gridHeight = 0;
     var polyominos = [];
-    var globalX1 = 10000, globalX2 = 0, globalY1 = 10000, globalY2 = 0;
+    var globalX1 = Number.MAX_VALUE, globalX2 = Number.MIN_VALUE, globalY1 = Number.MAX_VALUE, globalY2 = Number.MIN_VALUE;
     //create polyominos for components
     components.forEach(function (component, index) {
-      var x1 = 10000, x2 = 0, y1 = 10000, y2 = 0;
+      var x1 = Number.MAX_VALUE, x2 = Number.MIN_VALUE, y1 = Number.MAX_VALUE, y2 = Number.MIN_VALUE;
       component.nodes.forEach(function (node) {
         if (node.x <= x1) x1 = node.x;
         if (node.y <= y1) y1 = node.y;
@@ -422,7 +422,6 @@ var layoutUtilities = function (cy, options) {
         for (var i = topLeftX; i <= bottomRightX; i++) {
           for (var j = topLeftY; j <= bottomRightY; j++) {
             componentPolyomino.grid[i][j] = true;
-
           }
         }
       });
@@ -455,6 +454,7 @@ var layoutUtilities = function (cy, options) {
       polyominos.push(componentPolyomino);
     });
 
+    // These variables are not used anywhere. Should be safe to remove
     var componentsCenter = new polyominoPacking.Point((globalX1 + globalX2) / 2, (globalY1 + globalY2) / 2);
     var componentsCenteronGrid = new polyominoPacking.Point(Math.floor(componentsCenter.x / gridStep), Math.floor(componentsCenter.y / gridStep));
     //order plyominos non-increasing order
@@ -482,8 +482,6 @@ var layoutUtilities = function (cy, options) {
 
     //place first (biggest) polyomino in the center
     mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y);
-
-
 
     //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
     for (var i = 1; i < polyominos.length; i++) {
@@ -558,11 +556,10 @@ var layoutUtilities = function (cy, options) {
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
-     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
+     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */7
+    // Calculate the difference between old center and new center
     let rectCenter = mainGrid.occupiedRectangle.center();
-
     let renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
-
     let centerShift = renderedCenter.diff(currentCenter);
 
     polyominos.forEach(function (pol) {
@@ -581,10 +578,8 @@ var layoutUtilities = function (cy, options) {
       packingResult.adjustedFullness = Math.round((((mainGrid.numberOfOccupiredCells) / (mainGridWidth * (mainGridWidth / options.desiredAspectRatio)) * 100)) * 1e2) / 1e2;
       // height = width / desiredAspectRatio;
     } else {
-
       var mainGridheight = mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1;
       packingResult.adjustedFullness = Math.round((((mainGrid.numberOfOccupiredCells) / ((mainGridheight * options.desiredAspectRatio) * mainGridheight)) * 100) * 1e2) / 1e2;
-
       // width = height * desiredAspectRatio;
     }
 

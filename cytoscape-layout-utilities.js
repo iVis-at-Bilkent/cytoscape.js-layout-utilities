@@ -89,25 +89,39 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var generalUtils = __webpack_require__(1);
 
-var Polyomino = function Polyomino(width, height, index, leftMostCoord, topMostCoord) {
-    _classCallCheck(this, Polyomino);
+var Polyomino = function () {
+    function Polyomino(width, height, index, leftMostCoord, topMostCoord) {
+        _classCallCheck(this, Polyomino);
 
-    this.grid = new Array(width);
-    for (var i = 0; i < width; i++) {
-        this.grid[i] = new Array(height);
-        for (var j = 0; j < height; j++) {
-            this.grid[i][j] = false;
+        this.grid = new Array(width);
+        for (var i = 0; i < width; i++) {
+            this.grid[i] = new Array(height);
+            for (var j = 0; j < height; j++) {
+                this.grid[i][j] = false;
+            }
         }
+        this.index = index; //index of polyomino in the input of the packing function
+        this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
+        this.topMostCoord = topMostCoord; //kept to determine the amount of shift in the output
+        this.width = width;
+        this.height = height;
+        this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
+        this.center = new Point(Math.floor(width / 2), Math.floor(height / 2)); // center of polyomino
+        this.numberOfOccupiredCells = 0;
     }
-    this.index = index; //index of polyomino in the input of the packing function
-    this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
-    this.topMostCoord = topMostCoord; //kept to determine the amount of shift in the output
-    this.width = width;
-    this.height = height;
-    this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
-    this.center = new Point(Math.floor(width / 2), Math.floor(height / 2)); // center of polyomino
-    this.numberOfOccupiredCells = 0;
-};
+
+    _createClass(Polyomino, [{
+        key: 'getBoundingRectangle',
+        value: function getBoundingRectangle() {
+            var polyx1 = this.location.x - this.center.x;
+            var polyy1 = this.location.y - this.center.y;
+
+            return new BoundingRectangle(polyx1, polyy1, polyx1 + this.width, polyy1 + this.height);
+        }
+    }]);
+
+    return Polyomino;
+}();
 
 var Point = function () {
     function Point(x, y) {
@@ -198,13 +212,11 @@ var Grid = function () {
                 var endIndex = resultPoints.length - 1;
 
                 for (var i = 2; i <= level; i++) {
-
                     if (endIndex >= startIndex) {
                         for (var j = startIndex; j <= endIndex; j++) {
                             resultPoints = resultPoints.concat(this.getCellNeighbors(resultPoints[j].x, resultPoints[j].y));
                         }
                     }
-
                     startIndex = endIndex + 1;
                     endIndex = resultPoints.length - 1;
                 }
@@ -302,25 +314,27 @@ var Grid = function () {
             //update number of occupired cells
             this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
 
+            var polyRect = polyomino.getBoundingRectangle();
+
+            if (polyRect.x1 < this.occupiedRectangle.x1) {
+                this.occupiedRectangle.x1 = polyRect.x1;
+            }
+            if (polyRect.x2 > this.occupiedRectangle.x2) {
+                this.occupiedRectangle.x2 = polyRect.x2;
+            }
+            if (polyRect.y1 < this.occupiedRectangle.y1) {
+                this.occupiedRectangle.y1 = polyRect.y1;
+            }
+            if (polyRect.y2 > this.occupiedRectangle.y2) {
+                this.occupiedRectangle.y2 = polyRect.y2;
+            }
+
             //update bounding rectangle and reset visited cells to none
-            var x1 = 10000,
-                x2 = 0,
-                y1 = 10000,
-                y2 = 0;
             for (var x = 0; x < this.width; x++) {
                 for (var y = 0; y < this.height; y++) {
                     this.grid[x][y].visited = false;
-                    if (this.grid[x][y].occupied) {
-                        if (x <= x1) x1 = x;
-                        if (y <= y1) y1 = y;
-                        if (x >= x2) x2 = x;
-                        if (y >= y2) y2 = y;
-                    }
                 }
             }
-            this.occupiedRectangle.x1 = x1, this.occupiedRectangle.y1 = y1;
-            this.occupiedRectangle.x2 = x2;
-            this.occupiedRectangle.y2 = y2;
         }
 
         // a function to determine if a polyomino can be placed on the given cell i,j
@@ -369,9 +383,7 @@ var Grid = function () {
                 adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (width * (width / desiredAspectRatio));
                 // height = width / desiredAspectRatio;
             } else {
-
                 adjustedFullness = (this.numberOfOccupiredCells + polyomino.numberOfOccupiredCells) / (height * desiredAspectRatio * height);
-
                 // width = height * desiredAspectRatio;
             }
 
@@ -483,20 +495,12 @@ generalUtils.getCenter = function (components) {
       bottom: node.y + node.height
     };
   }).reduce(function (bounds, currNode) {
-    if (currNode.left < bounds.left) {
-      bounds.left = currNode.left;
-    }
-    if (currNode.right > bounds.right) {
-      bounds.right = currNode.right;
-    }
-    if (currNode.top < bounds.top) {
-      bounds.top = currNode.top;
-    }
-    if (currNode.bottom > bounds.bottom) {
-      bounds.bottom = currNode.bottom;
-    }
-
-    return bounds;
+    return {
+      left: currNode.left < bounds.left ? currNode.left : bounds.left,
+      right: currNode.right > bounds.right ? currNode.right : bounds.right,
+      top: currNode.top < bounds.top ? currNode.top : bounds.top,
+      bottom: currNode.bottom > bounds.bottom ? currNode.bottom : bounds.bottom
+    };
   }, {
     left: Number.MAX_VALUE,
     right: Number.MIN_VALUE,
@@ -866,16 +870,16 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     var gridWidth = 0,
         gridHeight = 0;
     var polyominos = [];
-    var globalX1 = 10000,
-        globalX2 = 0,
-        globalY1 = 10000,
-        globalY2 = 0;
+    var globalX1 = Number.MAX_VALUE,
+        globalX2 = Number.MIN_VALUE,
+        globalY1 = Number.MAX_VALUE,
+        globalY2 = Number.MIN_VALUE;
     //create polyominos for components
     components.forEach(function (component, index) {
-      var x1 = 10000,
-          x2 = 0,
-          y1 = 10000,
-          y2 = 0;
+      var x1 = Number.MAX_VALUE,
+          x2 = Number.MIN_VALUE,
+          y1 = Number.MAX_VALUE,
+          y2 = Number.MIN_VALUE;
       component.nodes.forEach(function (node) {
         if (node.x <= x1) x1 = node.x;
         if (node.y <= y1) y1 = node.y;
@@ -948,6 +952,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       polyominos.push(componentPolyomino);
     });
 
+    // These variables are not used anywhere. Should be safe to remove
     var componentsCenter = new polyominoPacking.Point((globalX1 + globalX2) / 2, (globalY1 + globalY2) / 2);
     var componentsCenteronGrid = new polyominoPacking.Point(Math.floor(componentsCenter.x / gridStep), Math.floor(componentsCenter.y / gridStep));
     //order plyominos non-increasing order
@@ -1045,11 +1050,10 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
-     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
+     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */7;
+    // Calculate the difference between old center and new center
     var rectCenter = mainGrid.occupiedRectangle.center();
-
     var renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
-
     var centerShift = renderedCenter.diff(currentCenter);
 
     polyominos.forEach(function (pol) {
@@ -1068,10 +1072,8 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       packingResult.adjustedFullness = Math.round(mainGrid.numberOfOccupiredCells / (mainGridWidth * (mainGridWidth / options.desiredAspectRatio)) * 100 * 1e2) / 1e2;
       // height = width / desiredAspectRatio;
     } else {
-
       var mainGridheight = mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1;
       packingResult.adjustedFullness = Math.round(mainGrid.numberOfOccupiredCells / (mainGridheight * options.desiredAspectRatio * mainGridheight) * 100 * 1e2) / 1e2;
-
       // width = height * desiredAspectRatio;
     }
 
