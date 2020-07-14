@@ -1,4 +1,3 @@
-;
 (function () {
   'use strict';
 
@@ -86,7 +85,7 @@
         }
 
         return out;
-      };
+      }
 
       options = extendOptions({}, options, opts);
 

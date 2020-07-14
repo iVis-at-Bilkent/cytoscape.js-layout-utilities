@@ -1,6 +1,3 @@
-var generalUtils = require('./general-utils');
-
-
 class Polyomino {
     constructor(width, height, index, leftMostCoord, topMostCoord) {
         this.grid = new Array(width);
@@ -28,7 +25,7 @@ class Polyomino {
             polyx1,
             polyy1,
             polyx1 + this.width,
-            polyy1 + this.height,   
+            polyy1 + this.height 
         );
     }
 }
@@ -46,7 +43,7 @@ class Point {
     diff(other) {
         return new Point(
             other.x - this.x,
-            other.y - this.y,
+            other.y - this.y
         );
     }
 }
@@ -62,7 +59,7 @@ class BoundingRectangle {
     center() {
         return new Point(
             (this.x2 - this.x1) / 2,
-            (this.y2 - this.y1) / 2,
+            (this.y2 - this.y1) / 2
         );
     }
 }

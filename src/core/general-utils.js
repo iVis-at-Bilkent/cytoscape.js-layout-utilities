@@ -55,7 +55,7 @@ generalUtils.getCenter = function (components) {
       const flatMap = (f, xs) => xs.map(f).reduce(concat, []);
 
       return flatMap(f, this);
-    }
+    };
   }
 
   let bounds = components.flatMap(component => component.nodes)
@@ -82,7 +82,6 @@ generalUtils.getCenter = function (components) {
     });
 
   return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
-}
+};
 
 module.exports = generalUtils;
-

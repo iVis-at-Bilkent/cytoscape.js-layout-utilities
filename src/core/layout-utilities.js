@@ -156,8 +156,6 @@ var layoutUtilities = function (cy, options) {
         component[0].position("y", y);
       }
       else {
-        var max = 0;
-        var index = 0;
         var positioned = [];
         for (var i = 0; i < component.length; i++) {
           positioned.push(false);
@@ -321,7 +319,7 @@ var layoutUtilities = function (cy, options) {
     var diffy = instance.generateRandom(0, options.offset / 2, 0);
     ele.position("x", x + diffx);
     ele.position("y", y + diffy);
-  }
+  };
 
   instance.generateRandom = function (min, max, mult) {
     var val = [-1, 1];
@@ -434,10 +432,10 @@ var layoutUtilities = function (cy, options) {
         p1.x = (edge.endX - x1) / gridStep;
         p1.y = (edge.endY - y1) / gridStep;
         //for every edge calculate the super cover 
-        var points = generalUtils.LineSuperCover(p0, p1)
+        var points = generalUtils.LineSuperCover(p0, p1);
         points.forEach(function (point) {
           var indexX = Math.floor(point.x);
-          var indexY = Math.floor(point.y)
+          var indexY = Math.floor(point.y);
           if (indexX >= 0 && indexX < componentPolyomino.width && indexY >= 0 && indexY < componentPolyomino.height) {
             componentPolyomino.grid[Math.floor(point.x)][Math.floor(point.y)] = true;
           }
@@ -454,9 +452,6 @@ var layoutUtilities = function (cy, options) {
       polyominos.push(componentPolyomino);
     });
 
-    // These variables are not used anywhere. Should be safe to remove
-    var componentsCenter = new polyominoPacking.Point((globalX1 + globalX2) / 2, (globalY1 + globalY2) / 2);
-    var componentsCenteronGrid = new polyominoPacking.Point(Math.floor(componentsCenter.x / gridStep), Math.floor(componentsCenter.y / gridStep));
     //order plyominos non-increasing order
     polyominos.sort(function (a, b) {
       var aSize = a.width * a.height;
@@ -523,15 +518,13 @@ var layoutUtilities = function (cy, options) {
 
             } else if (options.utilityFunction == 2) {
               var aspectRatioDiff = Math.abs(utilityValue.actualAspectRatio - options.desiredAspectRatio);
-              var weightedUtility = (utilityValue.fullness * .5) + ((1 - aspectRatioDiff / Math.max(utilityValue.actualAspectRatio, options.desiredAspectRatio) * .5))
+              var weightedUtility = (utilityValue.fullness * .5) + ((1 - aspectRatioDiff / Math.max(utilityValue.actualAspectRatio, options.desiredAspectRatio) * .5));
               if (weightedUtility > weigthFullnessAspectRatio) {
                 weigthFullnessAspectRatio = weightedUtility;
                 resultLocation.x = cell.x;
                 resultLocation.y = cell.y;
               }
-
             }
-
           }
         });
       }
@@ -551,12 +544,12 @@ var layoutUtilities = function (cy, options) {
     });
 
     var packingResult = {};
-    packingResult.shifts = []
+    packingResult.shifts = [];
 
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
-     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */7
+     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
     // Calculate the difference between old center and new center
     let rectCenter = mainGrid.occupiedRectangle.center();
     let renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
@@ -585,7 +578,7 @@ var layoutUtilities = function (cy, options) {
 
 
     return packingResult;
-  }
+  };
 
   return instance;
 };

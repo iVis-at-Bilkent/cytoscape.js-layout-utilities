@@ -87,8 +87,6 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var generalUtils = __webpack_require__(1);
-
 var Polyomino = function () {
     function Polyomino(width, height, index, leftMostCoord, topMostCoord) {
         _classCallCheck(this, Polyomino);
@@ -111,7 +109,7 @@ var Polyomino = function () {
     }
 
     _createClass(Polyomino, [{
-        key: 'getBoundingRectangle',
+        key: "getBoundingRectangle",
         value: function getBoundingRectangle() {
             var polyx1 = this.location.x - this.center.x;
             var polyy1 = this.location.y - this.center.y;
@@ -138,7 +136,7 @@ var Point = function () {
 
 
     _createClass(Point, [{
-        key: 'diff',
+        key: "diff",
         value: function diff(other) {
             return new Point(other.x - this.x, other.y - this.y);
         }
@@ -158,7 +156,7 @@ var BoundingRectangle = function () {
     }
 
     _createClass(BoundingRectangle, [{
-        key: 'center',
+        key: "center",
         value: function center() {
             return new Point((this.x2 - this.x1) / 2, (this.y2 - this.y1) / 2);
         }
@@ -197,7 +195,7 @@ var Grid = function () {
 
 
     _createClass(Grid, [{
-        key: 'getDirectNeighbors',
+        key: "getDirectNeighbors",
         value: function getDirectNeighbors(cells, level) {
             var resultPoints = [];
             if (cells.length == 0) {
@@ -231,7 +229,7 @@ var Grid = function () {
         //given a cell at locatoin i,j get the unvistied unoccupied neighboring cell
 
     }, {
-        key: 'getCellNeighbors',
+        key: "getCellNeighbors",
         value: function getCellNeighbors(i, j) {
             var resultPoints = [];
             //check all the 8 surrounding cells 
@@ -298,7 +296,7 @@ var Grid = function () {
         // a function to place a given polyomino in the cell i j on the grid
 
     }, {
-        key: 'placePolyomino',
+        key: "placePolyomino",
         value: function placePolyomino(polyomino, i, j) {
             polyomino.location.x = i;
             polyomino.location.y = j;
@@ -340,7 +338,7 @@ var Grid = function () {
         // a function to determine if a polyomino can be placed on the given cell i,j
 
     }, {
-        key: 'tryPlacingPolyomino',
+        key: "tryPlacingPolyomino",
         value: function tryPlacingPolyomino(polyomino, i, j) {
             for (var k = 0; k < polyomino.width; k++) {
                 for (var l = 0; l < polyomino.height; l++) {
@@ -360,7 +358,7 @@ var Grid = function () {
         //calculates the value of the utility (aspect ratio) of placing a polyomino on cell i,j
 
     }, {
-        key: 'calculateUtilityOfPlacing',
+        key: "calculateUtilityOfPlacing",
         value: function calculateUtilityOfPlacing(polyomino, i, j, desiredAspectRatio) {
             var result = {};
             var actualAspectRatio = 1;
@@ -413,114 +411,7 @@ module.exports = {
 "use strict";
 
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var generalUtils = {};
-var polyominoPacking = __webpack_require__(0);
-
-var _require = __webpack_require__(0),
-    Point = _require.Point;
-
-//a function to remove duplicate object in array
-
-
-generalUtils.uniqueArray = function (ar) {
-  var j = {};
-  ar.forEach(function (v) {
-    j[v + '::' + (typeof v === 'undefined' ? 'undefined' : _typeof(v))] = v;
-  });
-  return Object.keys(j).map(function (v) {
-    return j[v];
-  });
-};
-
-//a function to determine the grid cells where a line between point p0 and p1 pass through
-generalUtils.LineSuperCover = function (p0, p1) {
-  var dx = p1.x - p0.x,
-      dy = p1.y - p0.y;
-  var nx = Math.floor(Math.abs(dx)),
-      ny = Math.floor(Math.abs(dy));
-  var sign_x = dx > 0 ? 1 : -1,
-      sign_y = dy > 0 ? 1 : -1;
-
-  var p = new polyominoPacking.Point(p0.x, p0.y);
-  var points = [new polyominoPacking.Point(p.x, p.y)];
-  for (var ix = 0, iy = 0; ix < nx || iy < ny;) {
-    if ((0.5 + ix) / nx == (0.5 + iy) / ny) {
-      // next step is diagonal
-      p.x += sign_x;
-      p.y += sign_y;
-      ix++;
-      iy++;
-    } else if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
-      // next step is horizontal
-      p.x += sign_x;
-      ix++;
-    } else {
-      // next step is vertical
-      p.y += sign_y;
-      iy++;
-    }
-    points.push(new polyominoPacking.Point(p.x, p.y));
-  }
-  return points;
-};
-
-/**
- * finds the current center of components
- * @param { Array } components 
- */
-generalUtils.getCenter = function (components) {
-  // In case the platform doesn't have flatMap function
-  if (typeof Array.prototype['flatMap'] === 'undefined') {
-    Array.prototype['flatMap'] = function (f) {
-      var concat = function concat(x, y) {
-        return x.concat(y);
-      };
-      var flatMap = function flatMap(f, xs) {
-        return xs.map(f).reduce(concat, []);
-      };
-
-      return flatMap(f, this);
-    };
-  }
-
-  var bounds = components.flatMap(function (component) {
-    return component.nodes;
-  }).map(function (node) {
-    return {
-      left: node.x,
-      top: node.y,
-      right: node.x + node.width,
-      bottom: node.y + node.height
-    };
-  }).reduce(function (bounds, currNode) {
-    return {
-      left: currNode.left < bounds.left ? currNode.left : bounds.left,
-      right: currNode.right > bounds.right ? currNode.right : bounds.right,
-      top: currNode.top < bounds.top ? currNode.top : bounds.top,
-      bottom: currNode.bottom > bounds.bottom ? currNode.bottom : bounds.bottom
-    };
-  }, {
-    left: Number.MAX_VALUE,
-    right: Number.MIN_VALUE,
-    top: Number.MAX_VALUE,
-    bottom: Number.MIN_VALUE
-  });
-
-  return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
-};
-
-module.exports = generalUtils;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var generalUtils = __webpack_require__(1);
+var generalUtils = __webpack_require__(2);
 var polyominoPacking = __webpack_require__(0);
 
 var _require = __webpack_require__(0),
@@ -667,8 +558,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
         component[0].position("x", x);
         component[0].position("y", y);
       } else {
-        var max = 0;
-        var index = 0;
         var positioned = [];
         for (var i = 0; i < component.length; i++) {
           positioned.push(false);
@@ -952,9 +841,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       polyominos.push(componentPolyomino);
     });
 
-    // These variables are not used anywhere. Should be safe to remove
-    var componentsCenter = new polyominoPacking.Point((globalX1 + globalX2) / 2, (globalY1 + globalY2) / 2);
-    var componentsCenteronGrid = new polyominoPacking.Point(Math.floor(componentsCenter.x / gridStep), Math.floor(componentsCenter.y / gridStep));
     //order plyominos non-increasing order
     polyominos.sort(function (a, b) {
       var aSize = a.width * a.height;
@@ -1050,7 +936,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
-     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */7;
+     var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
     // Calculate the difference between old center and new center
     var rectCenter = mainGrid.occupiedRectangle.center();
     var renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
@@ -1086,6 +972,113 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 module.exports = layoutUtilities;
 
 /***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var generalUtils = {};
+var polyominoPacking = __webpack_require__(0);
+
+var _require = __webpack_require__(0),
+    Point = _require.Point;
+
+//a function to remove duplicate object in array
+
+
+generalUtils.uniqueArray = function (ar) {
+  var j = {};
+  ar.forEach(function (v) {
+    j[v + '::' + (typeof v === 'undefined' ? 'undefined' : _typeof(v))] = v;
+  });
+  return Object.keys(j).map(function (v) {
+    return j[v];
+  });
+};
+
+//a function to determine the grid cells where a line between point p0 and p1 pass through
+generalUtils.LineSuperCover = function (p0, p1) {
+  var dx = p1.x - p0.x,
+      dy = p1.y - p0.y;
+  var nx = Math.floor(Math.abs(dx)),
+      ny = Math.floor(Math.abs(dy));
+  var sign_x = dx > 0 ? 1 : -1,
+      sign_y = dy > 0 ? 1 : -1;
+
+  var p = new polyominoPacking.Point(p0.x, p0.y);
+  var points = [new polyominoPacking.Point(p.x, p.y)];
+  for (var ix = 0, iy = 0; ix < nx || iy < ny;) {
+    if ((0.5 + ix) / nx == (0.5 + iy) / ny) {
+      // next step is diagonal
+      p.x += sign_x;
+      p.y += sign_y;
+      ix++;
+      iy++;
+    } else if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
+      // next step is horizontal
+      p.x += sign_x;
+      ix++;
+    } else {
+      // next step is vertical
+      p.y += sign_y;
+      iy++;
+    }
+    points.push(new polyominoPacking.Point(p.x, p.y));
+  }
+  return points;
+};
+
+/**
+ * finds the current center of components
+ * @param { Array } components 
+ */
+generalUtils.getCenter = function (components) {
+  // In case the platform doesn't have flatMap function
+  if (typeof Array.prototype['flatMap'] === 'undefined') {
+    Array.prototype['flatMap'] = function (f) {
+      var concat = function concat(x, y) {
+        return x.concat(y);
+      };
+      var flatMap = function flatMap(f, xs) {
+        return xs.map(f).reduce(concat, []);
+      };
+
+      return flatMap(f, this);
+    };
+  }
+
+  var bounds = components.flatMap(function (component) {
+    return component.nodes;
+  }).map(function (node) {
+    return {
+      left: node.x,
+      top: node.y,
+      right: node.x + node.width,
+      bottom: node.y + node.height
+    };
+  }).reduce(function (bounds, currNode) {
+    return {
+      left: currNode.left < bounds.left ? currNode.left : bounds.left,
+      right: currNode.right > bounds.right ? currNode.right : bounds.right,
+      top: currNode.top < bounds.top ? currNode.top : bounds.top,
+      bottom: currNode.bottom > bounds.bottom ? currNode.bottom : bounds.bottom
+    };
+  }, {
+    left: Number.MAX_VALUE,
+    right: Number.MIN_VALUE,
+    top: Number.MAX_VALUE,
+    bottom: Number.MIN_VALUE
+  });
+
+  return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
+};
+
+module.exports = generalUtils;
+
+/***/ }),
 /* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -1094,7 +1087,6 @@ var __WEBPACK_AMD_DEFINE_RESULT__;
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-;
 (function () {
   'use strict';
 
@@ -1139,7 +1131,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
          }
          return obj;
       }; */
-    var layoutUtilities = __webpack_require__(2);
+    var layoutUtilities = __webpack_require__(1);
 
     cytoscape('core', 'layoutUtilities', function (opts) {
       var cy = this;
@@ -1177,7 +1169,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
         }
 
         return out;
-      };
+      }
 
       options = extendOptions({}, options, opts);
 
