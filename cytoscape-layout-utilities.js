@@ -88,25 +88,49 @@ var _createClass = function () { function defineProperties(target, props) { for 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Polyomino = function () {
-    function Polyomino(width, height, index, leftMostCoord, topMostCoord) {
+    /**
+     * @param { number } width width of the polyomino in pixels
+     * @param { number } height height of the polyomino in pixels
+     * @param { number } index index in according to the input
+     * @param { number } leftMostCoord
+     * @param { number } topMostCoord
+     * @param { number } gridStep width and height of a grid square
+     * 
+     * @description 
+     * Note: width and height are added to establish centering according to old layout center
+     * 
+     * Since width divided by the grid step can be calclated from raw step instead of adding new
+     * variables I changed width and height and added gridStep variable so that stepWith and stepHeight can be calculated
+     * from these. 
+     * 
+     * Old width and height properties were containing actually width and height divided by grid step, so I thought stepWidth and
+     * stepHeight are more convenient names for them. 
+     */
+    function Polyomino(width, height, index, leftMostCoord, topMostCoord, gridStep) {
         _classCallCheck(this, Polyomino);
 
-        this.grid = new Array(width);
-        for (var i = 0; i < width; i++) {
-            this.grid[i] = new Array(height);
-            for (var j = 0; j < height; j++) {
+        this.width = width;
+        this.height = height;
+        this.gridStep = gridStep;
+        this.grid = new Array(this.stepWidth);
+        for (var i = 0; i < this.stepWidth; i++) {
+            this.grid[i] = new Array(this.stepHeight);
+            for (var j = 0; j < this.stepHeight; j++) {
                 this.grid[i][j] = false;
             }
         }
         this.index = index; //index of polyomino in the input of the packing function
         this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
         this.topMostCoord = topMostCoord; //kept to determine the amount of shift in the output
-        this.width = width;
-        this.height = height;
         this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
-        this.center = new Point(Math.floor(width / 2), Math.floor(height / 2)); // center of polyomino
+        this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2)); // center of polyomino
         this.numberOfOccupiredCells = 0;
     }
+
+    /**
+     * width of the polyomino divided by grid steps
+     */
+
 
     _createClass(Polyomino, [{
         key: "getBoundingRectangle",
@@ -114,7 +138,24 @@ var Polyomino = function () {
             var polyx1 = this.location.x - this.center.x;
             var polyy1 = this.location.y - this.center.y;
 
-            return new BoundingRectangle(polyx1, polyy1, polyx1 + this.width, polyy1 + this.height);
+            return new BoundingRectangle(polyx1, polyy1,
+            // -1 because if length == 1 then x2 == x1
+            polyx1 + this.stepWidth - 1, polyy1 + this.stepHeight - 1);
+        }
+    }, {
+        key: "stepWidth",
+        get: function get() {
+            return Math.floor(this.width / this.gridStep) + 1;
+        }
+
+        /**
+         * height of the polyomino divided by grid steps
+         */
+
+    }, {
+        key: "stepHeight",
+        get: function get() {
+            return Math.floor(this.height / this.gridStep) + 1;
         }
     }]);
 
@@ -122,6 +163,11 @@ var Polyomino = function () {
 }();
 
 var Point = function () {
+    /**
+     * 
+     * @param { number } x 
+     * @param { number } y 
+     */
     function Point(x, y) {
         _classCallCheck(this, Point);
 
@@ -146,6 +192,12 @@ var Point = function () {
 }();
 
 var BoundingRectangle = function () {
+    /**
+     * @param { number } x1
+     * @param { number } y1
+     * @param { number } x2
+     * @param { number } y2
+     */
     function BoundingRectangle(x1, y1, x2, y2) {
         _classCallCheck(this, BoundingRectangle);
 
@@ -165,7 +217,13 @@ var BoundingRectangle = function () {
     return BoundingRectangle;
 }();
 
-var Cell = function Cell(occupied, visited) {
+var Cell =
+/**
+ * 
+ * @param { boolean } occupied 
+ * @param { boolean } visited 
+ */
+function Cell(occupied, visited) {
     _classCallCheck(this, Cell);
 
     this.occupied = occupied; //boolean to determine if the cell is occupied
@@ -173,34 +231,48 @@ var Cell = function Cell(occupied, visited) {
 };
 
 var Grid = function () {
-    function Grid(width, height) {
+    /**
+     * 
+     * @param { number } width 
+     * @param { number } height 
+     * @param { number } step 
+     */
+    function Grid(width, height, step) {
+        var _this = this;
+
         _classCallCheck(this, Grid);
 
         this.width = width;
         this.height = height;
+        this.step = step;
         //create and intialize the grid
-        this.grid = new Array(width);
-        for (var i = 0; i < width; i++) {
-            this.grid[i] = new Array(height);
-            for (var j = 0; j < height; j++) {
-                this.grid[i][j] = new Cell(false, false);
-            }
-        }
-        this.center = new Point(Math.floor(width / 2), Math.floor(height / 2));
+        this.grid = Array.from({ length: this.stepWidth }, function (_) {
+            return Array.from({ length: _this.stepHeight }, function (_) {
+                return new Cell(false, false);
+            });
+        });
+        this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
         this.occupiedRectangle = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE); // the bounding rectanble of the occupied cells in the grid
         this.numberOfOccupiredCells = 0;
     }
 
-    //function given a list of cells it returns the direct unvisited unoccupied neighboring cells 
+    /**
+     * returns the width in terms of grid steps
+     */
 
 
     _createClass(Grid, [{
         key: "getDirectNeighbors",
+
+
+        /**
+         * function given a list of cells it returns the direct unvisited unoccupied neighboring cells 
+         */
         value: function getDirectNeighbors(cells, level) {
             var resultPoints = [];
             if (cells.length == 0) {
-                for (var i = 0; i < this.width; i++) {
-                    for (var j = 0; j < this.height; j++) {
+                for (var i = 0; i < this.stepWidth; i++) {
+                    for (var j = 0; j < this.stepHeight; j++) {
                         if (this.grid[i][j].occupied) {
                             resultPoints = resultPoints.concat(this.getCellNeighbors(i, j));
                         }
@@ -226,7 +298,11 @@ var Grid = function () {
             return resultPoints;
         }
 
-        //given a cell at locatoin i,j get the unvistied unoccupied neighboring cell
+        /**
+         * given a cell at locatoin i,j get the unvistied unoccupied neighboring cell
+         * @param { number } i
+         * @param { number } j
+         */
 
     }, {
         key: "getCellNeighbors",
@@ -239,7 +315,7 @@ var Grid = function () {
                     this.grid[i - 1][j].visited = true;
                 }
             }
-            if (i + 1 < this.width) {
+            if (i + 1 < this.stepWidth) {
                 if (!this.grid[i + 1][j].occupied && !this.grid[i + 1][j].visited) {
                     resultPoints.push({ x: i + 1, y: j });
                     this.grid[i + 1][j].visited = true;
@@ -251,7 +327,7 @@ var Grid = function () {
                     this.grid[i][j - 1].visited = true;
                 }
             }
-            if (j + 1 < this.height) {
+            if (j + 1 < this.stepHeight) {
                 if (!this.grid[i][j + 1].occupied && !this.grid[i][j + 1].visited) {
                     resultPoints.push({ x: i, y: j + 1 });
                     this.grid[i][j + 1].visited = true;
@@ -270,20 +346,20 @@ var Grid = function () {
                 }
             }
 
-            if (i + 1 < this.width && j - 1 >= 0) {
+            if (i + 1 < this.stepWidth && j - 1 >= 0) {
                 if (!this.grid[i + 1][j - 1].occupied && !this.grid[i + 1][j - 1].visited) {
                     resultPoints.push({ x: i + 1, y: j - 1 });
                     this.grid[i + 1][j - 1].visited = true;
                 }
             }
 
-            if (i - 1 >= 0 && j + 1 < this.height) {
+            if (i - 1 >= 0 && j + 1 < this.stepHeight) {
                 if (!this.grid[i - 1][j + 1].occupied && !this.grid[i - 1][j + 1].visited) {
                     resultPoints.push({ x: i - 1, y: j + 1 });
                     this.grid[i - 1][j + 1].visited = true;
                 }
             }
-            if (i + 1 < this.width && j + 1 < this.height) {
+            if (i + 1 < this.stepWidth && j + 1 < this.stepHeight) {
                 if (!this.grid[i + 1][j + 1].occupied && !this.grid[i + 1][j + 1].visited) {
                     resultPoints.push({ x: i + 1, y: j + 1 });
                     this.grid[i + 1][j + 1].visited = true;
@@ -293,15 +369,20 @@ var Grid = function () {
             return resultPoints;
         }
 
-        // a function to place a given polyomino in the cell i j on the grid
+        /**
+         * a function to place a given polyomino in the cell i j on the grid
+         * @param { Polyomino } polyomino 
+         * @param { number } i 
+         * @param { number } j 
+         */
 
     }, {
         key: "placePolyomino",
         value: function placePolyomino(polyomino, i, j) {
             polyomino.location.x = i;
             polyomino.location.y = j;
-            for (var k = 0; k < polyomino.width; k++) {
-                for (var l = 0; l < polyomino.height; l++) {
+            for (var k = 0; k < polyomino.stepWidth; k++) {
+                for (var l = 0; l < polyomino.stepHeight; l++) {
                     if (polyomino.grid[k][l]) {
                         //if [k] [l] cell is occupied in polyomino
                         this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
@@ -328,22 +409,39 @@ var Grid = function () {
             }
 
             //update bounding rectangle and reset visited cells to none
-            for (var x = 0; x < this.width; x++) {
-                for (var y = 0; y < this.height; y++) {
+            /* let x1 = this.occupiedRectangle.x1, x2= this.occupiedRectangle.x2,
+                y1 = this.occupiedRectangle.y1, y2= this.occupiedRectangle.y2; */
+            for (var x = 0; x < this.stepWidth; x++) {
+                for (var y = 0; y < this.stepHeight; y++) {
                     this.grid[x][y].visited = false;
+                    /* if(this.grid[x][y].occupied){
+                        if(x <= x1) x1 = x;
+                        if(y <= y1) y1 = y;
+                        if(x >= x2) x2 = x;
+                        if(y >= y2) y2 = y;  
+                    } */
                 }
             }
+            /* this.occupiedRectangle.x1 = x1,
+            this.occupiedRectangle.y1 = y1;
+            this.occupiedRectangle.x2 = x2;
+            this.occupiedRectangle.y2 = y2;   */
         }
 
-        // a function to determine if a polyomino can be placed on the given cell i,j
+        /**
+         * a function to determine if a polyomino can be placed on the given cell i,j
+         * @param { Polyomino } polyomino 
+         * @param { number } i 
+         * @param { number } j 
+         */
 
     }, {
         key: "tryPlacingPolyomino",
         value: function tryPlacingPolyomino(polyomino, i, j) {
-            for (var k = 0; k < polyomino.width; k++) {
-                for (var l = 0; l < polyomino.height; l++) {
+            for (var k = 0; k < polyomino.stepWidth; k++) {
+                for (var l = 0; l < polyomino.stepHeight; l++) {
                     //return false if polyomino goes outside the grid when placed on i,j
-                    if (k - polyomino.center.x + i >= this.width || k - polyomino.center.x + i < 0 || l - polyomino.center.y + j >= this.height || l - polyomino.center.y + j < 0) {
+                    if (k - polyomino.center.x + i >= this.stepWidth || k - polyomino.center.x + i < 0 || l - polyomino.center.y + j >= this.stepHeight || l - polyomino.center.y + j < 0) {
                         return false;
                     }
                     //return false if the  polymino cell and the corrosponding main grid cell are both occupied
@@ -355,7 +453,13 @@ var Grid = function () {
             return true;
         }
 
-        //calculates the value of the utility (aspect ratio) of placing a polyomino on cell i,j
+        /**
+         * calculates the value of the utility (aspect ratio) of placing a polyomino on cell i,j
+         * @param { Polyomino } polyomino
+         * @param { number } i
+         * @param { number } j
+         * @param { number } desiredAspectRatio
+         */
 
     }, {
         key: "calculateUtilityOfPlacing",
@@ -370,8 +474,8 @@ var Grid = function () {
             var y2 = this.occupiedRectangle.y2;
             if (i - polyomino.center.x < x1) x1 = i - polyomino.center.x;
             if (j - polyomino.center.y < y1) y1 = j - polyomino.center.y;
-            if (polyomino.width - 1 - polyomino.center.x + i > x2) x2 = polyomino.width - 1 - polyomino.center.x + i;
-            if (polyomino.height - 1 - polyomino.center.y + j > y2) y2 = polyomino.height - 1 - polyomino.center.y + j;
+            if (polyomino.stepWidth - 1 - polyomino.center.x + i > x2) x2 = polyomino.stepWidth - 1 - polyomino.center.x + i;
+            if (polyomino.stepHeight - 1 - polyomino.center.y + j > y2) y2 = polyomino.stepHeight - 1 - polyomino.center.y + j;
             var width = x2 - x1 + 1;
             var height = y2 - y1 + 1;
             actualAspectRatio = width / height;
@@ -390,6 +494,21 @@ var Grid = function () {
             result.adjustedFullness = adjustedFullness;
 
             return result;
+        }
+    }, {
+        key: "stepWidth",
+        get: function get() {
+            return Math.floor(this.width / this.step) + 1;
+        }
+
+        /**
+         * returns the height in terms of grid steps
+         */
+
+    }, {
+        key: "stepHeight",
+        get: function get() {
+            return Math.floor(this.height / this.step) + 1;
         }
     }]);
 
@@ -415,7 +534,8 @@ var generalUtils = __webpack_require__(2);
 var polyominoPacking = __webpack_require__(0);
 
 var _require = __webpack_require__(0),
-    Point = _require.Point;
+    Point = _require.Point,
+    Polyomino = _require.Polyomino;
 
 var layoutUtilities = function layoutUtilities(cy, options) {
 
@@ -730,6 +850,9 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     return occupiedQuadrants;
   };
 
+  /**
+   * @param { any[] } components 
+   */
   instance.packComponents = function (components) {
     var currentCenter = generalUtils.getCenter(components);
 
@@ -758,6 +881,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     }
     var gridWidth = 0,
         gridHeight = 0;
+    /** @type { Polyomino[] } */
     var polyominos = [];
     var globalX1 = Number.MAX_VALUE,
         globalX2 = Number.MIN_VALUE,
@@ -788,12 +912,12 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       if (y1 < globalY1) globalY1 = y1;
       if (y2 > globalY2) globalY2 = y2;
 
-      gridWidth += x2 - x1;
-      gridHeight += y2 - y1;
-      var componentWidth = Math.floor((x2 - x1) / gridStep) + 1;
-      var componentHeight = Math.floor((y2 - y1) / gridStep) + 1;
+      var componentWidth = x2 - x1;
+      var componentHeight = y2 - y1;
+      gridWidth += componentWidth;
+      gridHeight += componentHeight;
 
-      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1);
+      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1, gridStep);
 
       //fill nodes to polyomino cells
       component.nodes.forEach(function (node) {
@@ -826,15 +950,15 @@ var layoutUtilities = function layoutUtilities(cy, options) {
         points.forEach(function (point) {
           var indexX = Math.floor(point.x);
           var indexY = Math.floor(point.y);
-          if (indexX >= 0 && indexX < componentPolyomino.width && indexY >= 0 && indexY < componentPolyomino.height) {
+          if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight) {
             componentPolyomino.grid[Math.floor(point.x)][Math.floor(point.y)] = true;
           }
         });
       });
 
       //update number of occupied cells in polyomino
-      for (var i = 0; i < componentPolyomino.width; i++) {
-        for (var j = 0; j < componentPolyomino.height; j++) {
+      for (var i = 0; i < componentPolyomino.stepWidth; i++) {
+        for (var j = 0; j < componentPolyomino.stepHeight; j++) {
           if (componentPolyomino.grid[i][j]) componentPolyomino.numberOfOccupiredCells++;
         }
       }
@@ -843,8 +967,8 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
     //order plyominos non-increasing order
     polyominos.sort(function (a, b) {
-      var aSize = a.width * a.height;
-      var bSize = b.width * b.height;
+      var aSize = a.stepWidth * a.stepHeight;
+      var bSize = b.stepWidth * b.stepHeight;
       // a should come before b in the sorted order
       if (aSize > bSize) {
         return -1;
@@ -858,11 +982,8 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     });
 
     //main grid width and height is two the times the sum of all components widths and heights (worst case scenario)
-    gridWidth = Math.ceil(gridWidth * 2 / gridStep);
-    gridHeight = Math.ceil(gridHeight * 2 / gridStep);
-
     //intialize the grid add 1 to avoid insufficient grid space due to divisin by 2 in calcuations
-    var mainGrid = new polyominoPacking.Grid(gridWidth + 1, gridHeight + 1);
+    var mainGrid = new polyominoPacking.Grid(gridWidth * 2 + gridStep, gridHeight * 2 + gridStep, gridStep);
 
     //place first (biggest) polyomino in the center
     mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y);
@@ -878,7 +999,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       var resultLocation = {};
       while (!placementFound) {
 
-        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width, polyominos[i].height) / 2));
+        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].stepWidth, polyominos[i].stepHeight) / 2));
         cells.forEach(function (cell) {
           if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
             placementFound = true;
@@ -1050,6 +1171,7 @@ generalUtils.getCenter = function (components) {
     };
   }
 
+  // @ts-ignore
   var bounds = components.flatMap(function (component) {
     return component.nodes;
   }).map(function (node) {
@@ -1061,10 +1183,10 @@ generalUtils.getCenter = function (components) {
     };
   }).reduce(function (bounds, currNode) {
     return {
-      left: currNode.left < bounds.left ? currNode.left : bounds.left,
-      right: currNode.right > bounds.right ? currNode.right : bounds.right,
-      top: currNode.top < bounds.top ? currNode.top : bounds.top,
-      bottom: currNode.bottom > bounds.bottom ? currNode.bottom : bounds.bottom
+      left: Math.min(currNode.left, bounds.left),
+      right: Math.max(currNode.right, bounds.right),
+      top: Math.min(currNode.top, bounds.top),
+      bottom: Math.max(currNode.bottom, bounds.bottom)
     };
   }, {
     left: Number.MAX_VALUE,

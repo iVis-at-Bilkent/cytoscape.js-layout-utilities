@@ -1,7 +1,7 @@
 
 var generalUtils = require('./general-utils.js');
 var polyominoPacking = require('./polyomino-packing');
-const { Point } = require('./polyomino-packing');
+const { Point, Polyomino } = require('./polyomino-packing');
 var layoutUtilities = function (cy, options) {
 
   /*  var defaults = {
@@ -347,7 +347,9 @@ var layoutUtilities = function (cy, options) {
     return occupiedQuadrants;
   };
 
-
+  /**
+   * @param { any[] } components 
+   */
   instance.packComponents = function (components) {
     let currentCenter = generalUtils.getCenter(components);
 
@@ -375,6 +377,7 @@ var layoutUtilities = function (cy, options) {
       });
     }
     var gridWidth = 0, gridHeight = 0;
+    /** @type { Polyomino[] } */
     var polyominos = [];
     var globalX1 = Number.MAX_VALUE, globalX2 = Number.MIN_VALUE, globalY1 = Number.MAX_VALUE, globalY2 = Number.MIN_VALUE;
     //create polyominos for components
@@ -399,12 +402,12 @@ var layoutUtilities = function (cy, options) {
       if (y1 < globalY1) globalY1 = y1;
       if (y2 > globalY2) globalY2 = y2;
 
-      gridWidth += (x2 - x1);
-      gridHeight += (y2 - y1);
-      var componentWidth = Math.floor((x2 - x1) / gridStep) + 1;
-      var componentHeight = Math.floor((y2 - y1) / gridStep) + 1;
+      let componentWidth = x2 - x1;
+      let componentHeight = y2 - y1;
+      gridWidth += componentWidth;
+      gridHeight += componentHeight;
 
-      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1);
+      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1, gridStep);
 
       //fill nodes to polyomino cells
       component.nodes.forEach(function (node) {
@@ -436,15 +439,15 @@ var layoutUtilities = function (cy, options) {
         points.forEach(function (point) {
           var indexX = Math.floor(point.x);
           var indexY = Math.floor(point.y);
-          if (indexX >= 0 && indexX < componentPolyomino.width && indexY >= 0 && indexY < componentPolyomino.height) {
+          if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight) {
             componentPolyomino.grid[Math.floor(point.x)][Math.floor(point.y)] = true;
           }
         });
       });
 
       //update number of occupied cells in polyomino
-      for (var i = 0; i < componentPolyomino.width; i++) {
-        for (var j = 0; j < componentPolyomino.height; j++) {
+      for (var i = 0; i < componentPolyomino.stepWidth; i++) {
+        for (var j = 0; j < componentPolyomino.stepHeight; j++) {
           if (componentPolyomino.grid[i][j]) componentPolyomino.numberOfOccupiredCells++;
 
         }
@@ -454,8 +457,8 @@ var layoutUtilities = function (cy, options) {
 
     //order plyominos non-increasing order
     polyominos.sort(function (a, b) {
-      var aSize = a.width * a.height;
-      var bSize = b.width * b.height;
+      var aSize = a.stepWidth * a.stepHeight;
+      var bSize = b.stepWidth * b.stepHeight;
       // a should come before b in the sorted order
       if (aSize > bSize) {
         return -1;
@@ -467,13 +470,10 @@ var layoutUtilities = function (cy, options) {
         return 0;
       }
     });
-
+    
     //main grid width and height is two the times the sum of all components widths and heights (worst case scenario)
-    gridWidth = Math.ceil(gridWidth * 2 / gridStep);
-    gridHeight = Math.ceil(gridHeight * 2 / gridStep);
-
     //intialize the grid add 1 to avoid insufficient grid space due to divisin by 2 in calcuations
-    var mainGrid = new polyominoPacking.Grid(gridWidth + 1, gridHeight + 1);
+    let mainGrid = new polyominoPacking.Grid((gridWidth * 2) + gridStep, (gridHeight * 2) + gridStep, gridStep);
 
     //place first (biggest) polyomino in the center
     mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y);
@@ -489,7 +489,7 @@ var layoutUtilities = function (cy, options) {
       var resultLocation = {};
       while (!placementFound) {
 
-        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].width, polyominos[i].height) / 2));
+        cells = mainGrid.getDirectNeighbors(cells, Math.ceil(Math.max(polyominos[i].stepWidth, polyominos[i].stepHeight) / 2));
         cells.forEach(function (cell) {
           if (mainGrid.tryPlacingPolyomino(polyominos[i], cell.x, cell.y)) {
             placementFound = true;

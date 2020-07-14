@@ -58,6 +58,7 @@ generalUtils.getCenter = function (components) {
     };
   }
 
+  // @ts-ignore
   let bounds = components.flatMap(component => component.nodes)
     .map(node => ({
       left: node.x,
@@ -66,14 +67,10 @@ generalUtils.getCenter = function (components) {
       bottom: node.y + node.height,
     }))
     .reduce((bounds, currNode) => ({
-        left: currNode.left < bounds.left ? 
-          currNode.left : bounds.left,
-        right: currNode.right > bounds.right ? 
-          currNode.right : bounds.right,
-        top: currNode.top < bounds.top ? 
-          currNode.top : bounds.top,
-        bottom: currNode.bottom > bounds.bottom ? 
-          currNode.bottom : bounds.bottom,
+        left: Math.min(currNode.left, bounds.left),
+        right: Math.max(currNode.right, bounds.right),
+        top: Math.min(currNode.top, bounds.top),
+        bottom: Math.max(currNode.bottom, bounds.bottom)
     }), {
       left: Number.MAX_VALUE,
       right: Number.MIN_VALUE,
