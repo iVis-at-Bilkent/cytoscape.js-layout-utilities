@@ -123,6 +123,7 @@ var Polyomino = function () {
         this.x1 = x1; //kept to determine the amount of shift in the output
         this.y1 = y1; //kept to determine the amount of shift in the output
         this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
+        /** inner center */
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2)); // center of polyomino
         this.numberOfOccupiredCells = 0;
     }
@@ -166,6 +167,16 @@ var Polyomino = function () {
         key: "y2",
         get: function get() {
             return this.y1 + this.height;
+        }
+
+        /**
+         * returns the center relative to location inside the grid
+         */
+
+    }, {
+        key: "gridStepCenter",
+        get: function get() {
+            return this.center.diff(this.location);
         }
     }]);
 
@@ -241,8 +252,7 @@ function Cell(occupied, visited) {
 };
 
 var Grid = function () {
-    /**
-     * 
+    /** 
      * @param { number } width 
      * @param { number } height 
      * @param { number } step 
@@ -263,8 +273,6 @@ var Grid = function () {
         });
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
         this.occupiedRectangle = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE); // the bounding rectanble of the occupied cells in the grid
-        /** Same with this.occupiedRectangle but contains the undivided coordinates */
-        this.occupiedRectangleReal = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
         this.numberOfOccupiredCells = 0;
     }
 
@@ -407,27 +415,16 @@ var Grid = function () {
 
             this.updateBounds(polyomino);
 
-            //update bounding rectangle and reset visited cells to none
-            /* let x1 = this.occupiedRectangle.x1, x2= this.occupiedRectangle.x2,
-                y1 = this.occupiedRectangle.y1, y2= this.occupiedRectangle.y2; */
+            // reset visited cells to none
             for (var x = 0; x < this.stepWidth; x++) {
                 for (var y = 0; y < this.stepHeight; y++) {
                     this.grid[x][y].visited = false;
-                    /* if(this.grid[x][y].occupied){
-                        if(x <= x1) x1 = x;
-                        if(y <= y1) y1 = y;
-                        if(x >= x2) x2 = x;
-                        if(y >= y2) y2 = y;  
-                    } */
                 }
             }
-            /* this.occupiedRectangle.x1 = x1,
-            this.occupiedRectangle.y1 = y1;
-            this.occupiedRectangle.x2 = x2;
-            this.occupiedRectangle.y2 = y2;   */
         }
 
         /**
+         * Updates step rectangle bounds so that the `polyomino` fits
          * @param { Polyomino } polyomino
          */
 
@@ -440,11 +437,6 @@ var Grid = function () {
             this.occupiedRectangle.x2 = Math.max(this.occupiedRectangle.x2, polyRect.x2);
             this.occupiedRectangle.y1 = Math.min(this.occupiedRectangle.y1, polyRect.y1);
             this.occupiedRectangle.y2 = Math.max(this.occupiedRectangle.y2, polyRect.y2);
-
-            this.occupiedRectangleReal.x1 = Math.min(this.occupiedRectangleReal.x1, polyomino.x1);
-            this.occupiedRectangleReal.x2 = Math.max(this.occupiedRectangleReal.x2, polyomino.x2);
-            this.occupiedRectangleReal.y1 = Math.min(this.occupiedRectangleReal.y1, polyomino.y1);
-            this.occupiedRectangleReal.y2 = Math.max(this.occupiedRectangleReal.y2, polyomino.y2);
         }
 
         /**
@@ -539,7 +531,6 @@ module.exports = {
     Polyomino: Polyomino,
     BoundingRectangle: BoundingRectangle,
     Point: Point
-
 };
 
 /***/ }),
@@ -1001,6 +992,8 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   instance.packComponents = function (components) {
     var currentCenter = generalUtils.getCenter(components);
 
+    console.log('current center: ', currentCenter);
+
     var gridStep = 0;
     var totalNodes = 0;
     components.forEach(function (component) {
@@ -1012,12 +1005,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
-
-    console.log("gridStep: ", gridStep);
-
-    // currentCenter.x = (Math.floor(currentCenter.x / gridStep)) * gridStep;
-    // currentCenter.y = (Math.floor(currentCenter.y / gridStep)) * gridStep;
-
 
     if (options.componentSpacing > 0) {
       var spacingAmount = options.componentSpacing;
@@ -1202,16 +1189,14 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       }
     });
 
-    var packingResult = {};
-    packingResult.shifts = [];
+    var packingResult = {
+      shifts: []
+    };
 
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
      var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
-    // Calculate the difference between old center and new center
-    // console.log("Rendered  center: ", renderedCenter);
-    // console.log("Rendered real center: ", mainGrid.occupiedRectangleReal.center());
 
     polyominos.forEach(function (pol) {
       var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.x1; //+shiftX;
@@ -1221,19 +1206,37 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       packingResult.shifts.push({ dx: dx, dy: dy });
     });
 
-    console.log("Current center: ", currentCenter);
-
+    // Calculate what would be the center of the packed layout
     var shiftedCenter = calculateShiftedCenter(components, packingResult.shifts);
-    console.log("Shifted center: ", shiftedCenter);
-
+    // Calculate the neccessary  additional shift to re-center
     var centerShift = shiftedCenter.diff(currentCenter);
-    console.log(centerShift);
 
     // Add the center shift
-    packingResult.shifts.forEach(function (shift) {
-      shift.dx += centerShift.x;
-      shift.dy += centerShift.y;
-    });
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = packingResult.shifts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var shift = _step.value;
+
+        shift.dx += centerShift.x;
+        shift.dy += centerShift.y;
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator.return) {
+          _iterator.return();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
 
     packingResult.aspectRatio = Math.round((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1) * 1e2) / 1e2;
     packingResult.fullness = Math.round(mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) * (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 100 * 1e2) / 1e2;

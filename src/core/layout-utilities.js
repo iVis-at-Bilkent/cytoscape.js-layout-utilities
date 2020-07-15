@@ -560,8 +560,9 @@ var layoutUtilities = function (cy, options) {
       }
     });
 
-    var packingResult = {};
-    packingResult.shifts = [];
+    var packingResult = {
+      shifts: []
+    };
 
     /*  var shiftX = componentsCenter.x - ((mainGrid.center.x - mainGrid.occupiedRectangle.x1)*gridStep); 
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
@@ -582,10 +583,10 @@ var layoutUtilities = function (cy, options) {
     let centerShift = shiftedCenter.diff(currentCenter);
 
     // Add the center shift
-    packingResult.shifts.forEach((shift) => {
+    for (let shift of packingResult.shifts) {
       shift.dx += centerShift.x;
       shift.dy += centerShift.y;
-    });
+    }
 
     packingResult.aspectRatio = Math.round(((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 1e2) / 1e2;
     packingResult.fullness = Math.round(((mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) * (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1))) * 100) * 1e2) / 1e2;

@@ -32,6 +32,7 @@ class Polyomino {
         this.x1 = x1; //kept to determine the amount of shift in the output
         this.y1 = y1;//kept to determine the amount of shift in the output
         this.location = new Point(-1, -1);  //the grid cell coordinates where the polyomino was placed
+        /** inner center */
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));// center of polyomino
         this.numberOfOccupiredCells = 0;
     }
@@ -56,6 +57,13 @@ class Polyomino {
 
     get y2() {
         return this.y1 + this.height;
+    }
+
+    /**
+     * returns the center relative to location inside the grid
+     */
+    get gridStepCenter() {
+        return this.center.diff(this.location);
     }
 
     getBoundingRectangle() {
@@ -128,9 +136,9 @@ class Cell {
         this.visited = visited; //boolean to determine if the cell was visited before while traversing the cells
     }
 }
+
 class Grid {
-    /**
-     * 
+    /** 
      * @param { number } width 
      * @param { number } height 
      * @param { number } step 
@@ -148,11 +156,6 @@ class Grid {
             Number.MAX_VALUE, Number.MAX_VALUE, 
             Number.MIN_VALUE, Number.MIN_VALUE
         );  // the bounding rectanble of the occupied cells in the grid
-        /** Same with this.occupiedRectangle but contains the undivided coordinates */
-        this.occupiedRectangleReal = new BoundingRectangle(
-            Number.MAX_VALUE, Number.MAX_VALUE, 
-            Number.MIN_VALUE, Number.MIN_VALUE
-        );
         this.numberOfOccupiredCells = 0;
     }
 
@@ -293,27 +296,16 @@ class Grid {
         
         this.updateBounds(polyomino);
         
-        //update bounding rectangle and reset visited cells to none
-        /* let x1 = this.occupiedRectangle.x1, x2= this.occupiedRectangle.x2,
-            y1 = this.occupiedRectangle.y1, y2= this.occupiedRectangle.y2; */
+        // reset visited cells to none
         for (let x = 0; x < this.stepWidth; x++) {
             for (let y = 0; y < this.stepHeight; y++) {
                 this.grid[x][y].visited = false;
-                /* if(this.grid[x][y].occupied){
-                    if(x <= x1) x1 = x;
-                    if(y <= y1) y1 = y;
-                    if(x >= x2) x2 = x;
-                    if(y >= y2) y2 = y;  
-                } */
             }
         }
-        /* this.occupiedRectangle.x1 = x1,
-        this.occupiedRectangle.y1 = y1;
-        this.occupiedRectangle.x2 = x2;
-        this.occupiedRectangle.y2 = y2;   */ 
     }
 
     /**
+     * Updates step rectangle bounds so that the `polyomino` fits
      * @param { Polyomino } polyomino
      */
     updateBounds(polyomino) {
@@ -323,11 +315,6 @@ class Grid {
         this.occupiedRectangle.x2 = Math.max(this.occupiedRectangle.x2, polyRect.x2);
         this.occupiedRectangle.y1 = Math.min(this.occupiedRectangle.y1, polyRect.y1);
         this.occupiedRectangle.y2 = Math.max(this.occupiedRectangle.y2, polyRect.y2);
-        
-        this.occupiedRectangleReal.x1 = Math.min(this.occupiedRectangleReal.x1, polyomino.x1);
-        this.occupiedRectangleReal.x2 = Math.max(this.occupiedRectangleReal.x2, polyomino.x2);
-        this.occupiedRectangleReal.y1 = Math.min(this.occupiedRectangleReal.y1, polyomino.y1);
-        this.occupiedRectangleReal.y2 = Math.max(this.occupiedRectangleReal.y2, polyomino.y2);
     }
 
     /**
@@ -398,7 +385,4 @@ module.exports = {
     Polyomino: Polyomino,
     BoundingRectangle: BoundingRectangle,
     Point: Point
-
 };
-
-
