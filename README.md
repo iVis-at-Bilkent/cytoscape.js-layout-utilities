@@ -104,7 +104,7 @@ Places each given node. It is assumed that the remaining nodes in the graph alre
 
 ```instance.packComponents(components)```
 
-Packs components of a disconnected graph.
+Packs components of a disconnected graph. Layout is done in a way that it preserves the center of the  [bounding rectangle](occupiedRectangleReal) of components. 
 The function parameter has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
 
 The function returns an object which has the following properties:
