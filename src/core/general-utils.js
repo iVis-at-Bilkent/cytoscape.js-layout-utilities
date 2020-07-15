@@ -63,8 +63,8 @@ generalUtils.getCenter = function (components) {
     .map(node => ({
       left: node.x,
       top: node.y,
-      right: node.x + node.width,
-      bottom: node.y + node.height,
+      right: node.x + node.width - 1,
+      bottom: node.y + node.height - 1,
     }))
     .reduce((bounds, currNode) => ({
         left: Math.min(currNode.left, bounds.left),

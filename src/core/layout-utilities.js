@@ -2,6 +2,7 @@
 var generalUtils = require('./general-utils.js');
 var polyominoPacking = require('./polyomino-packing');
 const { Point, Polyomino } = require('./polyomino-packing');
+const { getCenter } = require('./general-utils.js');
 var layoutUtilities = function (cy, options) {
 
   /*  var defaults = {
@@ -348,11 +349,26 @@ var layoutUtilities = function (cy, options) {
   };
 
   /**
+   * @param { { nodes: any[] }[] } components
+   * @param { { dx: number, dy: number }[] } shifts
+   */
+  function calculateShiftedCenter(components, shifts) {
+    components.forEach((component, index) => {
+        component.nodes.forEach(node => {
+          node.x += shifts[index].dx;
+          node.y += shifts[index].dy;
+        });
+    });
+
+    return getCenter(components);
+  }
+
+  /**
    * @param { any[] } components 
    */
   instance.packComponents = function (components) {
     let currentCenter = generalUtils.getCenter(components);
-
+    
     var gridStep = 0;
     var totalNodes = 0;
     components.forEach(function (component) {
@@ -361,9 +377,10 @@ var layoutUtilities = function (cy, options) {
         gridStep += node.width + node.height;
       });
     });
-
+    
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+
 
     if (options.componentSpacing > 0) {
       var spacingAmount = options.componentSpacing;
@@ -407,7 +424,7 @@ var layoutUtilities = function (cy, options) {
       gridWidth += componentWidth;
       gridHeight += componentHeight;
 
-      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1, gridStep);
+      var componentPolyomino = new polyominoPacking.Polyomino(x1, y1, componentWidth, componentHeight, gridStep, index);
 
       //fill nodes to polyomino cells
       component.nodes.forEach(function (node) {
@@ -550,17 +567,24 @@ var layoutUtilities = function (cy, options) {
      var shiftY = componentsCenter.y - ((mainGrid.center.y - mainGrid.occupiedRectangle.y1)*gridStep); 
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
      var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
-    // Calculate the difference between old center and new center
-    let rectCenter = mainGrid.occupiedRectangle.center();
-    let renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
-    let centerShift = renderedCenter.diff(currentCenter);
-
+    
     polyominos.forEach(function (pol) {
-      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord + centerShift.x;//+shiftX;
-      var dy = (pol.location.y - pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord + centerShift.y;// + shiftY;
+      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.x1;//+shiftX;
+      var dy = (pol.location.y - pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.y1;// + shiftY;
       //var dx = (pol.location.x -occupiedCenterX) * gridStep + componentsCenter.x- pol.leftMostCoord;//+shiftX;
       //var dy = (pol.location.y -occupiedCenterY) * gridStep + componentsCenter.y-pol.topMostCoord;// + shiftY;
       packingResult.shifts.push({ dx: dx, dy: dy });
+    });
+
+    // Calculate what would be the center of the packed layout
+    let shiftedCenter = calculateShiftedCenter(components, packingResult.shifts);
+    // Calculate the neccessary  additional shift to re-center
+    let centerShift = shiftedCenter.diff(currentCenter);
+
+    // Add the center shift
+    packingResult.shifts.forEach((shift) => {
+      shift.dx += centerShift.x;
+      shift.dy += centerShift.y;
     });
 
     packingResult.aspectRatio = Math.round(((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 1e2) / 1e2;

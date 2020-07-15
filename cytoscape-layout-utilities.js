@@ -92,8 +92,8 @@ var Polyomino = function () {
      * @param { number } width width of the polyomino in pixels
      * @param { number } height height of the polyomino in pixels
      * @param { number } index index in according to the input
-     * @param { number } leftMostCoord
-     * @param { number } topMostCoord
+     * @param { number } x1
+     * @param { number } y1
      * @param { number } gridStep width and height of a grid square
      * 
      * @description 
@@ -106,7 +106,7 @@ var Polyomino = function () {
      * Old width and height properties were containing actually width and height divided by grid step, so I thought stepWidth and
      * stepHeight are more convenient names for them. 
      */
-    function Polyomino(width, height, index, leftMostCoord, topMostCoord, gridStep) {
+    function Polyomino(x1, y1, width, height, gridStep, index) {
         _classCallCheck(this, Polyomino);
 
         this.width = width;
@@ -120,8 +120,8 @@ var Polyomino = function () {
             }
         }
         this.index = index; //index of polyomino in the input of the packing function
-        this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
-        this.topMostCoord = topMostCoord; //kept to determine the amount of shift in the output
+        this.x1 = x1; //kept to determine the amount of shift in the output
+        this.y1 = y1; //kept to determine the amount of shift in the output
         this.location = new Point(-1, -1); //the grid cell coordinates where the polyomino was placed
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2)); // center of polyomino
         this.numberOfOccupiredCells = 0;
@@ -156,6 +156,16 @@ var Polyomino = function () {
         key: "stepHeight",
         get: function get() {
             return Math.floor(this.height / this.gridStep) + 1;
+        }
+    }, {
+        key: "x2",
+        get: function get() {
+            return this.x1 + this.width;
+        }
+    }, {
+        key: "y2",
+        get: function get() {
+            return this.y1 + this.height;
         }
     }]);
 
@@ -253,6 +263,8 @@ var Grid = function () {
         });
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
         this.occupiedRectangle = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE); // the bounding rectanble of the occupied cells in the grid
+        /** Same with this.occupiedRectangle but contains the undivided coordinates */
+        this.occupiedRectangleReal = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
         this.numberOfOccupiredCells = 0;
     }
 
@@ -393,20 +405,7 @@ var Grid = function () {
             //update number of occupired cells
             this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
 
-            var polyRect = polyomino.getBoundingRectangle();
-
-            if (polyRect.x1 < this.occupiedRectangle.x1) {
-                this.occupiedRectangle.x1 = polyRect.x1;
-            }
-            if (polyRect.x2 > this.occupiedRectangle.x2) {
-                this.occupiedRectangle.x2 = polyRect.x2;
-            }
-            if (polyRect.y1 < this.occupiedRectangle.y1) {
-                this.occupiedRectangle.y1 = polyRect.y1;
-            }
-            if (polyRect.y2 > this.occupiedRectangle.y2) {
-                this.occupiedRectangle.y2 = polyRect.y2;
-            }
+            this.updateBounds(polyomino);
 
             //update bounding rectangle and reset visited cells to none
             /* let x1 = this.occupiedRectangle.x1, x2= this.occupiedRectangle.x2,
@@ -426,6 +425,26 @@ var Grid = function () {
             this.occupiedRectangle.y1 = y1;
             this.occupiedRectangle.x2 = x2;
             this.occupiedRectangle.y2 = y2;   */
+        }
+
+        /**
+         * @param { Polyomino } polyomino
+         */
+
+    }, {
+        key: "updateBounds",
+        value: function updateBounds(polyomino) {
+            var polyRect = polyomino.getBoundingRectangle();
+
+            this.occupiedRectangle.x1 = Math.min(this.occupiedRectangle.x1, polyRect.x1);
+            this.occupiedRectangle.x2 = Math.max(this.occupiedRectangle.x2, polyRect.x2);
+            this.occupiedRectangle.y1 = Math.min(this.occupiedRectangle.y1, polyRect.y1);
+            this.occupiedRectangle.y2 = Math.max(this.occupiedRectangle.y2, polyRect.y2);
+
+            this.occupiedRectangleReal.x1 = Math.min(this.occupiedRectangleReal.x1, polyomino.x1);
+            this.occupiedRectangleReal.x2 = Math.max(this.occupiedRectangleReal.x2, polyomino.x2);
+            this.occupiedRectangleReal.y1 = Math.min(this.occupiedRectangleReal.y1, polyomino.y1);
+            this.occupiedRectangleReal.y2 = Math.max(this.occupiedRectangleReal.y2, polyomino.y2);
         }
 
         /**
@@ -530,12 +549,123 @@ module.exports = {
 "use strict";
 
 
-var generalUtils = __webpack_require__(2);
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var generalUtils = {};
+var polyominoPacking = __webpack_require__(0);
+
+var _require = __webpack_require__(0),
+    Point = _require.Point;
+
+//a function to remove duplicate object in array
+
+
+generalUtils.uniqueArray = function (ar) {
+  var j = {};
+  ar.forEach(function (v) {
+    j[v + '::' + (typeof v === 'undefined' ? 'undefined' : _typeof(v))] = v;
+  });
+  return Object.keys(j).map(function (v) {
+    return j[v];
+  });
+};
+
+//a function to determine the grid cells where a line between point p0 and p1 pass through
+generalUtils.LineSuperCover = function (p0, p1) {
+  var dx = p1.x - p0.x,
+      dy = p1.y - p0.y;
+  var nx = Math.floor(Math.abs(dx)),
+      ny = Math.floor(Math.abs(dy));
+  var sign_x = dx > 0 ? 1 : -1,
+      sign_y = dy > 0 ? 1 : -1;
+
+  var p = new polyominoPacking.Point(p0.x, p0.y);
+  var points = [new polyominoPacking.Point(p.x, p.y)];
+  for (var ix = 0, iy = 0; ix < nx || iy < ny;) {
+    if ((0.5 + ix) / nx == (0.5 + iy) / ny) {
+      // next step is diagonal
+      p.x += sign_x;
+      p.y += sign_y;
+      ix++;
+      iy++;
+    } else if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
+      // next step is horizontal
+      p.x += sign_x;
+      ix++;
+    } else {
+      // next step is vertical
+      p.y += sign_y;
+      iy++;
+    }
+    points.push(new polyominoPacking.Point(p.x, p.y));
+  }
+  return points;
+};
+
+/**
+ * finds the current center of components
+ * @param { Array } components 
+ */
+generalUtils.getCenter = function (components) {
+  // In case the platform doesn't have flatMap function
+  if (typeof Array.prototype['flatMap'] === 'undefined') {
+    Array.prototype['flatMap'] = function (f) {
+      var concat = function concat(x, y) {
+        return x.concat(y);
+      };
+      var flatMap = function flatMap(f, xs) {
+        return xs.map(f).reduce(concat, []);
+      };
+
+      return flatMap(f, this);
+    };
+  }
+
+  // @ts-ignore
+  var bounds = components.flatMap(function (component) {
+    return component.nodes;
+  }).map(function (node) {
+    return {
+      left: node.x,
+      top: node.y,
+      right: node.x + node.width - 1,
+      bottom: node.y + node.height - 1
+    };
+  }).reduce(function (bounds, currNode) {
+    return {
+      left: Math.min(currNode.left, bounds.left),
+      right: Math.max(currNode.right, bounds.right),
+      top: Math.min(currNode.top, bounds.top),
+      bottom: Math.max(currNode.bottom, bounds.bottom)
+    };
+  }, {
+    left: Number.MAX_VALUE,
+    right: Number.MIN_VALUE,
+    top: Number.MAX_VALUE,
+    bottom: Number.MIN_VALUE
+  });
+
+  return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
+};
+
+module.exports = generalUtils;
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+var generalUtils = __webpack_require__(1);
 var polyominoPacking = __webpack_require__(0);
 
 var _require = __webpack_require__(0),
     Point = _require.Point,
     Polyomino = _require.Polyomino;
+
+var _require2 = __webpack_require__(1),
+    getCenter = _require2.getCenter;
 
 var layoutUtilities = function layoutUtilities(cy, options) {
 
@@ -851,6 +981,21 @@ var layoutUtilities = function layoutUtilities(cy, options) {
   };
 
   /**
+   * @param { { nodes: any[] }[] } components
+   * @param { { dx: number, dy: number }[] } shifts
+   */
+  function calculateShiftedCenter(components, shifts) {
+    components.forEach(function (component, index) {
+      component.nodes.forEach(function (node) {
+        node.x += shifts[index].dx;
+        node.y += shifts[index].dy;
+      });
+    });
+
+    return getCenter(components);
+  }
+
+  /**
    * @param { any[] } components 
    */
   instance.packComponents = function (components) {
@@ -867,6 +1012,12 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
+
+    console.log("gridStep: ", gridStep);
+
+    // currentCenter.x = (Math.floor(currentCenter.x / gridStep)) * gridStep;
+    // currentCenter.y = (Math.floor(currentCenter.y / gridStep)) * gridStep;
+
 
     if (options.componentSpacing > 0) {
       var spacingAmount = options.componentSpacing;
@@ -917,7 +1068,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
       gridWidth += componentWidth;
       gridHeight += componentHeight;
 
-      var componentPolyomino = new polyominoPacking.Polyomino(componentWidth, componentHeight, index, x1, y1, gridStep);
+      var componentPolyomino = new polyominoPacking.Polyomino(x1, y1, componentWidth, componentHeight, gridStep, index);
 
       //fill nodes to polyomino cells
       component.nodes.forEach(function (node) {
@@ -1059,16 +1210,29 @@ var layoutUtilities = function layoutUtilities(cy, options) {
      var occupiedCenterX = Math.floor((mainGrid.occupiedRectangle.x1 + mainGrid.occupiedRectangle.x2)/2);
      var occupiedCenterY = Math.floor((mainGrid.occupiedRectangle.y1 + mainGrid.occupiedRectangle.y2)/2); */
     // Calculate the difference between old center and new center
-    var rectCenter = mainGrid.occupiedRectangle.center();
-    var renderedCenter = new Point(rectCenter.x * gridStep, rectCenter.y * gridStep);
-    var centerShift = renderedCenter.diff(currentCenter);
+    // console.log("Rendered  center: ", renderedCenter);
+    // console.log("Rendered real center: ", mainGrid.occupiedRectangleReal.center());
 
     polyominos.forEach(function (pol) {
-      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.leftMostCoord + centerShift.x; //+shiftX;
-      var dy = (pol.location.y - pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.topMostCoord + centerShift.y; // + shiftY;
+      var dx = (pol.location.x - pol.center.x - mainGrid.occupiedRectangle.x1) * gridStep - pol.x1; //+shiftX;
+      var dy = (pol.location.y - pol.center.y - mainGrid.occupiedRectangle.y1) * gridStep - pol.y1; // + shiftY;
       //var dx = (pol.location.x -occupiedCenterX) * gridStep + componentsCenter.x- pol.leftMostCoord;//+shiftX;
       //var dy = (pol.location.y -occupiedCenterY) * gridStep + componentsCenter.y-pol.topMostCoord;// + shiftY;
       packingResult.shifts.push({ dx: dx, dy: dy });
+    });
+
+    console.log("Current center: ", currentCenter);
+
+    var shiftedCenter = calculateShiftedCenter(components, packingResult.shifts);
+    console.log("Shifted center: ", shiftedCenter);
+
+    var centerShift = shiftedCenter.diff(currentCenter);
+    console.log(centerShift);
+
+    // Add the center shift
+    packingResult.shifts.forEach(function (shift) {
+      shift.dx += centerShift.x;
+      shift.dy += centerShift.y;
     });
 
     packingResult.aspectRatio = Math.round((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1) * 1e2) / 1e2;
@@ -1091,114 +1255,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 };
 
 module.exports = layoutUtilities;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var generalUtils = {};
-var polyominoPacking = __webpack_require__(0);
-
-var _require = __webpack_require__(0),
-    Point = _require.Point;
-
-//a function to remove duplicate object in array
-
-
-generalUtils.uniqueArray = function (ar) {
-  var j = {};
-  ar.forEach(function (v) {
-    j[v + '::' + (typeof v === 'undefined' ? 'undefined' : _typeof(v))] = v;
-  });
-  return Object.keys(j).map(function (v) {
-    return j[v];
-  });
-};
-
-//a function to determine the grid cells where a line between point p0 and p1 pass through
-generalUtils.LineSuperCover = function (p0, p1) {
-  var dx = p1.x - p0.x,
-      dy = p1.y - p0.y;
-  var nx = Math.floor(Math.abs(dx)),
-      ny = Math.floor(Math.abs(dy));
-  var sign_x = dx > 0 ? 1 : -1,
-      sign_y = dy > 0 ? 1 : -1;
-
-  var p = new polyominoPacking.Point(p0.x, p0.y);
-  var points = [new polyominoPacking.Point(p.x, p.y)];
-  for (var ix = 0, iy = 0; ix < nx || iy < ny;) {
-    if ((0.5 + ix) / nx == (0.5 + iy) / ny) {
-      // next step is diagonal
-      p.x += sign_x;
-      p.y += sign_y;
-      ix++;
-      iy++;
-    } else if ((0.5 + ix) / nx < (0.5 + iy) / ny) {
-      // next step is horizontal
-      p.x += sign_x;
-      ix++;
-    } else {
-      // next step is vertical
-      p.y += sign_y;
-      iy++;
-    }
-    points.push(new polyominoPacking.Point(p.x, p.y));
-  }
-  return points;
-};
-
-/**
- * finds the current center of components
- * @param { Array } components 
- */
-generalUtils.getCenter = function (components) {
-  // In case the platform doesn't have flatMap function
-  if (typeof Array.prototype['flatMap'] === 'undefined') {
-    Array.prototype['flatMap'] = function (f) {
-      var concat = function concat(x, y) {
-        return x.concat(y);
-      };
-      var flatMap = function flatMap(f, xs) {
-        return xs.map(f).reduce(concat, []);
-      };
-
-      return flatMap(f, this);
-    };
-  }
-
-  // @ts-ignore
-  var bounds = components.flatMap(function (component) {
-    return component.nodes;
-  }).map(function (node) {
-    return {
-      left: node.x,
-      top: node.y,
-      right: node.x + node.width,
-      bottom: node.y + node.height
-    };
-  }).reduce(function (bounds, currNode) {
-    return {
-      left: Math.min(currNode.left, bounds.left),
-      right: Math.max(currNode.right, bounds.right),
-      top: Math.min(currNode.top, bounds.top),
-      bottom: Math.max(currNode.bottom, bounds.bottom)
-    };
-  }, {
-    left: Number.MAX_VALUE,
-    right: Number.MIN_VALUE,
-    top: Number.MAX_VALUE,
-    bottom: Number.MIN_VALUE
-  });
-
-  return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
-};
-
-module.exports = generalUtils;
 
 /***/ }),
 /* 3 */
@@ -1253,7 +1309,7 @@ var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol
          }
          return obj;
       }; */
-    var layoutUtilities = __webpack_require__(1);
+    var layoutUtilities = __webpack_require__(2);
 
     cytoscape('core', 'layoutUtilities', function (opts) {
       var cy = this;

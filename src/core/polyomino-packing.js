@@ -3,8 +3,8 @@ class Polyomino {
      * @param { number } width width of the polyomino in pixels
      * @param { number } height height of the polyomino in pixels
      * @param { number } index index in according to the input
-     * @param { number } leftMostCoord
-     * @param { number } topMostCoord
+     * @param { number } x1
+     * @param { number } y1
      * @param { number } gridStep width and height of a grid square
      * 
      * @description 
@@ -17,7 +17,7 @@ class Polyomino {
      * Old width and height properties were containing actually width and height divided by grid step, so I thought stepWidth and
      * stepHeight are more convenient names for them. 
      */
-    constructor(width, height, index, leftMostCoord, topMostCoord, gridStep) {
+    constructor(x1, y1, width, height, gridStep, index) {
         this.width = width;
         this.height = height;
         this.gridStep = gridStep;
@@ -29,8 +29,8 @@ class Polyomino {
             }
         }
         this.index = index; //index of polyomino in the input of the packing function
-        this.leftMostCoord = leftMostCoord; //kept to determine the amount of shift in the output
-        this.topMostCoord = topMostCoord;//kept to determine the amount of shift in the output
+        this.x1 = x1; //kept to determine the amount of shift in the output
+        this.y1 = y1;//kept to determine the amount of shift in the output
         this.location = new Point(-1, -1);  //the grid cell coordinates where the polyomino was placed
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));// center of polyomino
         this.numberOfOccupiredCells = 0;
@@ -48,6 +48,14 @@ class Polyomino {
      */
     get stepHeight() {
         return Math.floor(this.height / this.gridStep) + 1;
+    }
+
+    get x2() {
+        return this.x1 + this.width;
+    }
+
+    get y2() {
+        return this.y1 + this.height;
     }
 
     getBoundingRectangle() {
@@ -138,7 +146,13 @@ class Grid {
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
         this.occupiedRectangle = new BoundingRectangle(
             Number.MAX_VALUE, Number.MAX_VALUE, 
-            Number.MIN_VALUE, Number.MIN_VALUE);  // the bounding rectanble of the occupied cells in the grid
+            Number.MIN_VALUE, Number.MIN_VALUE
+        );  // the bounding rectanble of the occupied cells in the grid
+        /** Same with this.occupiedRectangle but contains the undivided coordinates */
+        this.occupiedRectangleReal = new BoundingRectangle(
+            Number.MAX_VALUE, Number.MAX_VALUE, 
+            Number.MIN_VALUE, Number.MIN_VALUE
+        );
         this.numberOfOccupiredCells = 0;
     }
 
@@ -276,22 +290,8 @@ class Grid {
 
         //update number of occupired cells
         this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
-
-        let polyRect = polyomino.getBoundingRectangle();
-
-        if (polyRect.x1 < this.occupiedRectangle.x1) {
-            this.occupiedRectangle.x1 = polyRect.x1;
-        }
-        if (polyRect.x2 > this.occupiedRectangle.x2) {
-            this.occupiedRectangle.x2 = polyRect.x2;
-        }
-        if (polyRect.y1 < this.occupiedRectangle.y1) {
-            this.occupiedRectangle.y1 = polyRect.y1;
-        }
-        if (polyRect.y2 > this.occupiedRectangle.y2) {
-            this.occupiedRectangle.y2 = polyRect.y2;
-        }
-
+        
+        this.updateBounds(polyomino);
         
         //update bounding rectangle and reset visited cells to none
         /* let x1 = this.occupiedRectangle.x1, x2= this.occupiedRectangle.x2,
@@ -311,6 +311,23 @@ class Grid {
         this.occupiedRectangle.y1 = y1;
         this.occupiedRectangle.x2 = x2;
         this.occupiedRectangle.y2 = y2;   */ 
+    }
+
+    /**
+     * @param { Polyomino } polyomino
+     */
+    updateBounds(polyomino) {
+        let polyRect = polyomino.getBoundingRectangle();
+
+        this.occupiedRectangle.x1 = Math.min(this.occupiedRectangle.x1, polyRect.x1);
+        this.occupiedRectangle.x2 = Math.max(this.occupiedRectangle.x2, polyRect.x2);
+        this.occupiedRectangle.y1 = Math.min(this.occupiedRectangle.y1, polyRect.y1);
+        this.occupiedRectangle.y2 = Math.max(this.occupiedRectangle.y2, polyRect.y2);
+        
+        this.occupiedRectangleReal.x1 = Math.min(this.occupiedRectangleReal.x1, polyomino.x1);
+        this.occupiedRectangleReal.x2 = Math.max(this.occupiedRectangleReal.x2, polyomino.x2);
+        this.occupiedRectangleReal.y1 = Math.min(this.occupiedRectangleReal.y1, polyomino.y1);
+        this.occupiedRectangleReal.y2 = Math.max(this.occupiedRectangleReal.y2, polyomino.y2);
     }
 
     /**
