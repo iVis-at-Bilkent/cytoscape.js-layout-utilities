@@ -117,9 +117,9 @@ var layoutUtilities = function (cy, options) {
 
   instance.disconnectedNodes = function (components) {
     var leftX = Number.MAX_VALUE;
-    var rightX = Number.MIN_VALUE;
+    var rightX = -Number.MAX_VALUE;
     var topY = Number.MAX_VALUE;
-    var bottomY = Number.MIN_VALUE;
+    var bottomY = -Number.MAX_VALUE;
     // Check the x and y limits of all hidden elements and store them in the variables above
     cy.nodes(':visible').forEach(function (node) {
       var halfWidth = node.outerWidth() / 2;
@@ -352,7 +352,7 @@ var layoutUtilities = function (cy, options) {
    * @param { { nodes: any[] }[] } components
    * @param { { dx: number, dy: number }[] } shifts
    */
-  function calculateShiftedCenter(components, shifts) {
+  function calculatePackingCenter(components, shifts) {
     components.forEach((component, index) => {
         component.nodes.forEach(node => {
           node.x += shifts[index].dx;
@@ -366,7 +366,7 @@ var layoutUtilities = function (cy, options) {
   /**
    * @param { any[] } components 
    */
-  instance.packComponents = function (components) {
+  instance.packComponents = function (components) {    
     let currentCenter = generalUtils.getCenter(components);
     
     var gridStep = 0;
@@ -396,10 +396,10 @@ var layoutUtilities = function (cy, options) {
     var gridWidth = 0, gridHeight = 0;
     /** @type { Polyomino[] } */
     var polyominos = [];
-    var globalX1 = Number.MAX_VALUE, globalX2 = Number.MIN_VALUE, globalY1 = Number.MAX_VALUE, globalY2 = Number.MIN_VALUE;
+    var globalX1 = Number.MAX_VALUE, globalX2 = -Number.MAX_VALUE, globalY1 = Number.MAX_VALUE, globalY2 = -Number.MAX_VALUE;
     //create polyominos for components
     components.forEach(function (component, index) {
-      var x1 = Number.MAX_VALUE, x2 = Number.MIN_VALUE, y1 = Number.MAX_VALUE, y2 = Number.MIN_VALUE;
+      var x1 = Number.MAX_VALUE, x2 = -Number.MAX_VALUE, y1 = Number.MAX_VALUE, y2 = -Number.MAX_VALUE;
       component.nodes.forEach(function (node) {
         if (node.x <= x1) x1 = node.x;
         if (node.y <= y1) y1 = node.y;
@@ -578,9 +578,9 @@ var layoutUtilities = function (cy, options) {
     });
 
     // Calculate what would be the center of the packed layout
-    let shiftedCenter = calculateShiftedCenter(components, packingResult.shifts);
+    let packingCenter = calculatePackingCenter(components, packingResult.shifts);
     // Calculate the neccessary  additional shift to re-center
-    let centerShift = shiftedCenter.diff(currentCenter);
+    let centerShift = packingCenter.diff(currentCenter);
 
     // Add the center shift
     for (let shift of packingResult.shifts) {

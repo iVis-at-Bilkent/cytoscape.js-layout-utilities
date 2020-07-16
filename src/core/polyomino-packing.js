@@ -154,7 +154,7 @@ class Grid {
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
         this.occupiedRectangle = new BoundingRectangle(
             Number.MAX_VALUE, Number.MAX_VALUE, 
-            Number.MIN_VALUE, Number.MIN_VALUE
+            -Number.MAX_VALUE, -Number.MAX_VALUE
         );  // the bounding rectanble of the occupied cells in the grid
         this.numberOfOccupiredCells = 0;
     }

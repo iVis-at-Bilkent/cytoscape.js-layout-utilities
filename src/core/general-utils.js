@@ -73,9 +73,9 @@ generalUtils.getCenter = function (components) {
         bottom: Math.max(currNode.bottom, bounds.bottom)
     }), {
       left: Number.MAX_VALUE,
-      right: Number.MIN_VALUE,
+      right: -Number.MAX_VALUE,
       top: Number.MAX_VALUE,
-      bottom: Number.MIN_VALUE
+      bottom: -Number.MAX_VALUE
     });
 
   return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);

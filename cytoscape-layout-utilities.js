@@ -272,7 +272,7 @@ var Grid = function () {
             });
         });
         this.center = new Point(Math.floor(this.stepWidth / 2), Math.floor(this.stepHeight / 2));
-        this.occupiedRectangle = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, Number.MIN_VALUE, Number.MIN_VALUE); // the bounding rectanble of the occupied cells in the grid
+        this.occupiedRectangle = new BoundingRectangle(Number.MAX_VALUE, Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE); // the bounding rectanble of the occupied cells in the grid
         this.numberOfOccupiredCells = 0;
     }
 
@@ -631,9 +631,9 @@ generalUtils.getCenter = function (components) {
     };
   }, {
     left: Number.MAX_VALUE,
-    right: Number.MIN_VALUE,
+    right: -Number.MAX_VALUE,
     top: Number.MAX_VALUE,
-    bottom: Number.MIN_VALUE
+    bottom: -Number.MAX_VALUE
   });
 
   return new Point((bounds.left + bounds.right) / 2, (bounds.top + bounds.bottom) / 2);
@@ -764,9 +764,9 @@ var layoutUtilities = function layoutUtilities(cy, options) {
 
   instance.disconnectedNodes = function (components) {
     var leftX = Number.MAX_VALUE;
-    var rightX = Number.MIN_VALUE;
+    var rightX = -Number.MAX_VALUE;
     var topY = Number.MAX_VALUE;
-    var bottomY = Number.MIN_VALUE;
+    var bottomY = -Number.MAX_VALUE;
     // Check the x and y limits of all hidden elements and store them in the variables above
     cy.nodes(':visible').forEach(function (node) {
       var halfWidth = node.outerWidth() / 2;
@@ -975,7 +975,7 @@ var layoutUtilities = function layoutUtilities(cy, options) {
    * @param { { nodes: any[] }[] } components
    * @param { { dx: number, dy: number }[] } shifts
    */
-  function calculateShiftedCenter(components, shifts) {
+  function calculatePackingCenter(components, shifts) {
     components.forEach(function (component, index) {
       component.nodes.forEach(function (node) {
         node.x += shifts[index].dx;
@@ -991,8 +991,6 @@ var layoutUtilities = function layoutUtilities(cy, options) {
    */
   instance.packComponents = function (components) {
     var currentCenter = generalUtils.getCenter(components);
-
-    console.log('current center: ', currentCenter);
 
     var gridStep = 0;
     var totalNodes = 0;
@@ -1022,15 +1020,15 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     /** @type { Polyomino[] } */
     var polyominos = [];
     var globalX1 = Number.MAX_VALUE,
-        globalX2 = Number.MIN_VALUE,
+        globalX2 = -Number.MAX_VALUE,
         globalY1 = Number.MAX_VALUE,
-        globalY2 = Number.MIN_VALUE;
+        globalY2 = -Number.MAX_VALUE;
     //create polyominos for components
     components.forEach(function (component, index) {
       var x1 = Number.MAX_VALUE,
-          x2 = Number.MIN_VALUE,
+          x2 = -Number.MAX_VALUE,
           y1 = Number.MAX_VALUE,
-          y2 = Number.MIN_VALUE;
+          y2 = -Number.MAX_VALUE;
       component.nodes.forEach(function (node) {
         if (node.x <= x1) x1 = node.x;
         if (node.y <= y1) y1 = node.y;
@@ -1207,9 +1205,9 @@ var layoutUtilities = function layoutUtilities(cy, options) {
     });
 
     // Calculate what would be the center of the packed layout
-    var shiftedCenter = calculateShiftedCenter(components, packingResult.shifts);
+    var packingCenter = calculatePackingCenter(components, packingResult.shifts);
     // Calculate the neccessary  additional shift to re-center
-    var centerShift = shiftedCenter.diff(currentCenter);
+    var centerShift = packingCenter.diff(currentCenter);
 
     // Add the center shift
     var _iteratorNormalCompletion = true;
