@@ -280,8 +280,8 @@
       $("#polyominoPack").click(function () {
         var packingApi = cy.layoutUtilities(
           {
-            desiredAspectRatio: parseInt($('#desiredAspectRatio').val()),
-            polyominoGridSizeFactor: parseInt($('#gridSizeFactor').val()),
+            desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
+            polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
             utilityFunction: parseInt($('#utilityFunctionType').val()),
             componentSpacing: parseInt($('#componentSpacing').val())
           }
