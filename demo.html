@@ -14,6 +14,7 @@
   <script src="https://unpkg.com/layout-base/layout-base.js"></script>
   <script src="https://unpkg.com/cose-base/cose-base.js"></script>
   <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+  <script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
   <script src="cytoscape-layout-utilities.js"></script>
 
   <script src="https://unpkg.com/cytoscape-view-utilities/cytoscape-view-utilities.js"></script>
@@ -363,13 +364,25 @@
         }
       });
 
+      document.getElementById('graphml-input')
+        .addEventListener('change', (ev) => {
+          const file = document.getElementById('graphml-input').files[0];
 
+          cy.elements().remove(); 
+          file.text().then((s) => {
+              cy.graphml(s);
+          });
+        });
     });
   </script>
 </head>
 
 <body>
   <h1>cytoscape.js-layout-utilities demo</h1>
+  <div class="topnav">
+    <label><b>Load Graphml file</b></label>
+    <input id="graphml-input" type="file" accept=".graphml">
+  </div>
   <div class="topnav">
 
 
