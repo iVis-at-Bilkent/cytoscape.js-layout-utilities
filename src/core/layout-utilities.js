@@ -3,6 +3,8 @@ var generalUtils = require('./general-utils.js');
 var polyominoPacking = require('./polyomino-packing');
 const { Point, Polyomino } = require('./polyomino-packing');
 const { getCenter } = require('./general-utils.js');
+const pose = require('../pose/pose.js');
+
 var layoutUtilities = function (cy, options) {
 
   /*  var defaults = {
@@ -367,6 +369,15 @@ var layoutUtilities = function (cy, options) {
    * @param { any[] } components 
    */
   instance.packComponents = function (components) {    
+
+    console.log(options.randomize);
+    
+    if (!options.randomize) {
+      console.log('using incremental packing');
+      
+      return pose.packComponents(components);
+    }
+
     let currentCenter = generalUtils.getCenter(components);
     
     var gridStep = 0;

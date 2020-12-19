@@ -284,7 +284,8 @@
             desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
             polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
             utilityFunction: parseInt($('#utilityFunctionType').val()),
-            componentSpacing: parseInt($('#componentSpacing').val())
+            componentSpacing: parseInt($('#componentSpacing').val()),
+            randomize: !document.getElementById('Incremental-checkbox').checked,
           }
         );
         var components = cy.elements(":visible").components();
@@ -365,13 +366,26 @@
       });
 
       document.getElementById('graphml-input')
-        .addEventListener('change', (ev) => {
-          const file = document.getElementById('graphml-input').files[0];
+        .addEventListener('change', function (ev) {
+          const file = this.files[0];
 
           cy.elements().remove(); 
           file.text().then((s) => {
               cy.graphml(s);
           });
+        });
+
+      document.getElementById('Incremental-checkbox')
+        .addEventListener('change', function (ev) {
+          const disables = [
+            'utilityFunctionType',
+            'desiredAspectRatio',
+            'gridSizeFactor',
+          ];
+
+          for (const disable of disables) {
+            document.getElementById(disable).disabled = this.checked;
+          }
         });
     });
   </script>
@@ -380,7 +394,7 @@
 <body>
   <h1>cytoscape.js-layout-utilities demo</h1>
   <div class="topnav">
-    <label><b>Load Graphml file</b></label>
+    <label for="graphml-input"><b>Load Graphml file</b></label>
     <input id="graphml-input" type="file" accept=".graphml">
   </div>
   <div class="topnav">
@@ -408,7 +422,13 @@
   <div class="topnav">
 
     <button id="polyominoPack" class="button">Pack components</button>
-    <br /><br />
+    <br />
+    <br />
+    <div style="display: flex; align-items: flex-start;">
+      <label>Incremental: </label>
+      <input id="Incremental-checkbox" type="checkbox" value="bruh">
+    </div>
+    <br />
     <!-- <input  style="cursor: pointer; color: brown">Pack components</button><br/><br/> -->
     <form>
       <p><label>Select utility function</label></p>
