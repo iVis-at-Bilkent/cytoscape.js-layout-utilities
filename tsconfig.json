@@ -16,5 +16,6 @@
       ],
       "downlevelIteration": true,
       "allowSyntheticDefaultImports": true,
+      "declaration": true
     }
 }

@@ -20,11 +20,16 @@ let configs = [
     },
     module: {
       rules: [
-          {
+          /* {
               test: /\.tsx?$/,
               use: 'ts-loader',
               exclude: /node_modules/,
-          },
+          }, */
+          {
+            test: /\.tsx?$/,
+            use: 'babel-loader',
+            exclude: /node_modules/,
+          }
       ]
     },
     resolve: {
@@ -50,7 +55,7 @@ let configs = [
     },
     module: {
       rules: [
-        { test: /\.js$/, exclude: /node_modules/, use: 'babel-loader?retainLines=true' }
+        { test: /\.js$/, exclude: /node_modules/, use: 'babel-loader' }
       ]
     },
     externals: PROD ? Object.keys( pkg.dependencies || {} ) : [],
