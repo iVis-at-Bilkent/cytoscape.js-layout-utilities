@@ -144,7 +144,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: LayoutOptio
         
         let turnTotalForce = 0;
 
-        console.log(`forces: ${JSON.stringify(turnForces)}`);
+        // console.log(`forces: ${JSON.stringify(turnForces)}`);
 
         for (let i = 0; i < components.nodes.length; ++i) {
             moveFn(i, turnForces[i]);
@@ -173,7 +173,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: LayoutOptio
 
             const averageForce = singleStep();
     
-            console.log(`Average force: ${averageForce}`);
+            // console.log(`Average force: ${averageForce}`);
 
             edgeCounter += 1;
     
@@ -182,7 +182,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: LayoutOptio
             } 
 
             if (edgeCounter >= EDGE_THRESHOLD) {
-                console.log("Recalculating edges...");
+                // console.log("Recalculating edges...");
                 components.edges = constructEdges(components.nodes);
             }
         }

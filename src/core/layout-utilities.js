@@ -369,8 +369,6 @@ var layoutUtilities = function (cy, options) {
    * @param { any[] } components 
    */
   instance.packComponents = function (components) {    
-
-    console.log(options.randomize);
     
     if (!options.randomize) {
       console.log('using incremental packing');

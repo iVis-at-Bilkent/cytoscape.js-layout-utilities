@@ -50,7 +50,7 @@ let configs = [
     },
     module: {
       rules: [
-        // { test: /\.js$/, exclude: /node_modules/, use: 'babel-loader' }
+        { test: /\.js$/, exclude: /node_modules/, use: 'babel-loader?retainLines=true' }
       ]
     },
     externals: PROD ? Object.keys( pkg.dependencies || {} ) : [],

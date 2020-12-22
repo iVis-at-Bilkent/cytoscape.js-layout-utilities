@@ -6,8 +6,8 @@ export const findNeighbors = (frame: IRectangle, centers: IPoint[]): number[][] 
     
     const centersMapped = centers.map(pointToArray);
 
-    console.log(JSON.stringify(centersMapped));
-    console.log(JSON.stringify(frame));
+    // console.log(JSON.stringify(centersMapped));
+    // console.log(JSON.stringify(frame));
 
     const neighbors: number[][] = Array.from({ length: centers.length },
         () => []);
@@ -21,7 +21,7 @@ export const findNeighbors = (frame: IRectangle, centers: IPoint[]): number[][] 
         }
     }
 
-    console.log(JSON.stringify(neighbors));
+    // console.log(JSON.stringify(neighbors));
 
     return neighbors;
 }

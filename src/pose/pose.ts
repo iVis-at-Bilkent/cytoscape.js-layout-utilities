@@ -24,12 +24,12 @@ export const packComponents = (components: Component[], options: LayoutOptions =
     }
     options.componentDistance = calculateIdealDistance(components);
 
-    console.log(`ideal distance: ${options.componentDistance}`);
+    // console.log(`ideal distance: ${options.componentDistance}`);
 
     const polygons = components.map(c => componentToPolygon(c));
 
     const edges = constructEdges(polygons);
-    console.log(JSON.stringify(edges));
+    // console.log(JSON.stringify(edges));
 
     const polyGraph = {
         nodes: polygons,
@@ -135,7 +135,7 @@ export const constructEdges = (polygons: Polygon[]): AdjList => {
     const bbox = boundingBox(polygons.map(p => p.boundingBox));
     const centers = polygons.map(p => p.center);
 
-    console.log(`centers: ${JSON.stringify(centers)}`);
+    // console.log(`centers: ${JSON.stringify(centers)}`);
 
     const neighbors = findNeighbors(bbox, centers);
 
@@ -166,7 +166,7 @@ const calculateIdealDistance = (components: Component[]): number => {
 
             const edgeLength = Math.sqrt(distance({ x: edge.startX, y: edge.startY }, { x: edge.endX, y: edge.endY }));
     
-            console.log(`distance: ${edgeLength}`);
+            // console.log(`distance: ${edgeLength}`);
     
             avgDistance += edgeLength;
         }
@@ -187,7 +187,7 @@ const calculateIdealDistance = (components: Component[]): number => {
     }
 
     // TODO: if all components are single 
-    console.log(avgDistance / len);
+    // console.log(avgDistance / len);
 
     return (avgDistance / len) * 1.5;
 };
