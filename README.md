@@ -36,7 +36,7 @@ Recommended usage of packing utility for disconnected graphs for a layout extens
 
 Notice that in case you make use of compound nodes, it's sufficient to pass only highest level (root) nodes in the nesting hierarchy.
 
-Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html).
+Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/incremental-packing/demo.html).
 
 Please cite the following when you use this extension:
 
@@ -189,6 +189,10 @@ This project is set up to automatically be published to npm and bower.  To publi
 1. Publish to npm: `npm publish .`
 1. If publishing to bower for the first time, you'll need to run `bower register cytoscape-layout-utilities https://github.com//cytoscape.js-layout-utilities.git`
 1. [Make a new release](https://github.com//cytoscape.js-layout-utilities/releases/new) for Zenodo.
+
+## Credits
+
+Third-party libraries: [Turf-js](https://github.com/Turfjs/turf), [convex-minkowski-sum](https://github.com/mikolalysenko/convex-minkowski-sum) licensed with MIT. [d3-delaunay](https://github.com/d3/d3-delaunay) licensed with ISC license.
 
 ## Team
   * [Nasim Saleh](https://github.com/nasimsaleh), [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
