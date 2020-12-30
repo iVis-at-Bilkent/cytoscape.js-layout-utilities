@@ -1,18 +1,35 @@
 import { IPoint, IRectangle } from "./models/common";
 import { Polygon } from "./models/polygon";
-import { LayoutOptions, AdjList } from "./embedder/iembedder";
-declare type PackReturn = {
+import { AdjList } from "./embedder/iembedder";
+import { GridSquareDistanceDetection } from './embedder/distance-detection/gridsquare-distance-detection';
+export declare enum DistanceDetectionType {
+    BASIC = "BASIC",
+    GRID_SQUARE = "GRID_SQUARE"
+}
+export declare type DistanceDetectionArgs = {
+    type: DistanceDetectionType.BASIC;
+} | {
+    type: DistanceDetectionType.GRID_SQUARE;
+    detection: GridSquareDistanceDetection;
+};
+export declare type LayoutOptions = {
+    step?: number;
+    componentSpacing?: number;
+} & DistanceDetectionArgs;
+export declare const DEFAULT_OPTIONS: LayoutOptions;
+declare type PackResult = {
     shifts: {
         dx: number;
         dy: number;
     }[];
+    fullness: number;
 };
 /**
  * Packs regular disconnected graph components
  * @param components each component represents a connected graph in itself
  * @param options
  */
-export declare const packComponents: (components: Component[], options?: LayoutOptions) => PackReturn;
+export declare const packComponents: (components: Component[], options?: LayoutOptions) => PackResult;
 declare type Node = {
     x: number;
     y: number;

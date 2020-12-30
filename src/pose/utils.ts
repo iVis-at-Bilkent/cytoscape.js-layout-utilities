@@ -194,9 +194,6 @@ export const area = (rect: IRectangle): number =>
     Math.abs((rect.maxX - rect.minX) * (rect.maxY - rect.minY)); 
 
 export const boundingBox = (rects: IRectangle[]): IRectangle => {
-    // console.log(rects);
-
-
     return rects.reduce((bbox, current) => ({
         minX: Math.min(bbox.minX, current.minX),
         maxX: Math.max(bbox.maxX, current.maxX),

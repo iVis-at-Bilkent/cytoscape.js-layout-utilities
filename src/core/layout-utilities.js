@@ -371,9 +371,11 @@ var layoutUtilities = function (cy, options) {
   instance.packComponents = function (components) {    
     
     if (!options.randomize) {
-      console.log('using incremental packing');
+      console.log('using incremental packing'); 
       
-      return pose.packComponents(components);
+      return pose.packComponents(components, {
+        componentSpacing: options.componentSpacing,
+      });
     }
 
     let currentCenter = generalUtils.getCenter(components);

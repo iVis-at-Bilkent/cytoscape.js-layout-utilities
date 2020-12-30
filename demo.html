@@ -30,8 +30,18 @@
       color: brown;
       font-weight: bold;
       cursor: pointer;
-
     }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-upload {
+      border: 1px solid #ccc;
+      display: inline-block;
+      padding: 6px 12px;
+      cursor: pointer;
+    } 
 
     form {
       display: table;
@@ -284,7 +294,7 @@
             desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
             polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
             utilityFunction: parseInt($('#utilityFunctionType').val()),
-            componentSpacing: parseInt($('#componentSpacing').val()),
+            componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())),
             randomize: !document.getElementById('Incremental-checkbox').checked,
           }
         );
@@ -308,9 +318,9 @@
         });
 
         var result = packingApi.packComponents(subgraphs);
-        $("#resultAspectRatio").text(result.aspectRatio);
-        $("#resultFullness").text(result.fullness + " %");
-        $("#resultAdjustedFullness").text(result.adjustedFullness + " %");
+        $("#resultAspectRatio").text(result.aspectRatio || "-");
+        $("#resultFullness").text(result.fullness.toFixed(2) + " %");
+        $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
         components.forEach(function (component, index) {
           component.nodes().layout({
             name: 'preset',
@@ -365,6 +375,11 @@
         }
       });
 
+      document.getElementById('load-button')
+        .addEventListener('click', () =>{
+          document.getElementById('graphml-input').click();
+        });
+
       document.getElementById('graphml-input')
         .addEventListener('change', function (ev) {
           const file = this.files[0];
@@ -383,9 +398,25 @@
             'gridSizeFactor',
           ];
 
+          const enables = [
+            'auto-spacing',
+          ];
+
           for (const disable of disables) {
             document.getElementById(disable).disabled = this.checked;
           }
+
+          for (const enable of enables) {
+            document.getElementById(enable).disabled = !this.checked;
+            document.getElementById(enable).checked = false;
+            document.getElementById(enable).dispatchEvent(new Event('change'));
+          }
+        });
+
+      document.getElementById('auto-spacing')
+        .addEventListener('change', function () {
+          console.log('called');
+          document.getElementById('componentSpacing').disabled = this.checked;
         });
     });
   </script>
@@ -394,7 +425,9 @@
 <body>
   <h1>cytoscape.js-layout-utilities demo</h1>
   <div class="topnav">
-    <label for="graphml-input"><b>Load Graphml file</b></label>
+    <label class="custom-file-input" for="graphml-input">
+      <button id="load-button" class="button">Load Graphml</button>
+    </label>
     <input id="graphml-input" type="file" accept=".graphml">
   </div>
   <div class="topnav">
@@ -411,9 +444,11 @@
             <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
             -->
     <form>
-      <p>
-        <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
-        <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked">
+      <p style="position: relative;">
+        <label for="layout" style="vertical-align:middle;">
+          Rearrange on hide/show
+        </label>
+        <input type="checkbox" class="input" id="layout" name="layout" style="vertical-align:middle;" value="checked">
       </p>
     </form>
 
@@ -454,6 +489,8 @@
         <label for="componentSpacing">Component spacing (px)</label>
         <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important;" type="number" min="0" value="30"
           step="10">
+        <label for="auto-spacing">Auto</label>
+        <input type="checkbox" id="auto-spacing">
       </p>
 
 

@@ -1,32 +1,9 @@
 import { IEdge, IPoint, IRectangle } from "../models/common";
 import { Polygon } from "../models/polygon";
+import { LayoutOptions } from "../pose";
 import { GridSquareDistanceDetection } from './distance-detection/gridsquare-distance-detection';
 
-export enum DistanceDetectionType {
-    BASIC = "BASIC",
-    GRID_SQUARE = "GRID_SQUARE",
-}
-
-export type DistanceDetectionArgs = 
-    { 
-        type: DistanceDetectionType.BASIC,
-    } |
-    { 
-        type: DistanceDetectionType.GRID_SQUARE, 
-        detection: GridSquareDistanceDetection,
-    };
-
-export type LayoutOptions = 
-    {
-        step?: number,
-        componentDistance: number,
-    } &
-    DistanceDetectionArgs;
-
-export const DEFAULT_OPTIONS: LayoutOptions = {
-    type: DistanceDetectionType.BASIC,
-    componentDistance: 50,
-};
+export type EmbedderOptions = LayoutOptions & { componentSpacing: number };
 
 /**
  * Performs a single layout iteration
@@ -34,7 +11,7 @@ export const DEFAULT_OPTIONS: LayoutOptions = {
  * @param components 
  * @returns displacement correspond to each polygon
  */
-export type LayoutFn = (components: PolyGraph, options: LayoutOptions) => void;
+export type LayoutFn = (components: PolyGraph, options: EmbedderOptions) => void;
 
 export type AdjList<T = number> = T[][];
 

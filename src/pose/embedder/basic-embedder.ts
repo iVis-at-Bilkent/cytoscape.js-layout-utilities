@@ -1,16 +1,14 @@
 import { ILine, IPoint, IRectangle } from "../models/common";
 import { Polygon } from "../models/polygon";
-import { DistanceDetectionType, LayoutFn, LayoutOptions, PolyGraph } from "./iembedder";
+import { EmbedderOptions, LayoutFn, PolyGraph } from "./iembedder";
 import { convexPolygonDistance } from "../algorithms/convex-polygon-distance";
 import { direction, lengthFromOrigin, slope } from '../utils';
 import { turfPoly } from '../helpers/turf';
 import intersection from '@turf/intersect';
-import { constructEdges } from "../pose";
+import { constructEdges, DistanceDetectionType } from "../pose";
 
-
-
-export const basicEmbed: LayoutFn = (components: PolyGraph, options: LayoutOptions) => {
-    const ATTRACTIVE_CONSTANT = options.componentDistance, REPULSIVE_CONSTANT = options.componentDistance ** 2;
+export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOptions) => {
+    const ATTRACTIVE_CONSTANT = options.componentSpacing, REPULSIVE_CONSTANT = options.componentSpacing ** 2;
     const CONVERGENCE_THRESHOLD = 1;
     const EDGE_THRESHOLD = 5;
     const MAX_FORCE = ATTRACTIVE_CONSTANT;

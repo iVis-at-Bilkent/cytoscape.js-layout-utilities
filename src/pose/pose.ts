@@ -1,13 +1,41 @@
 import { basicEmbed } from "./embedder/basic-embedder";
 import { IEdge, IPoint, IRectangle } from "./models/common";
 import { Polygon } from "./models/polygon";
-import { DistanceDetectionType, EmbedderEdge, DistanceDetectionArgs, PolyGraph, LayoutOptions, DEFAULT_OPTIONS, AdjList } from "./embedder/iembedder";
-import { boundingBox, distance, zip } from "./utils";
+import { AdjList, EmbedderOptions } from "./embedder/iembedder";
+import { area, boundingBox, distance, zip } from "./utils";
 import { GridSquareDistanceDetection } from './embedder/distance-detection/gridsquare-distance-detection';
 import { findNeighbors } from './algorithms/voronoi';
+import { polygon } from "@turf/turf";
 
-type PackReturn = {
+export enum DistanceDetectionType {
+    BASIC = "BASIC",
+    GRID_SQUARE = "GRID_SQUARE",
+}
+
+export type DistanceDetectionArgs = 
+    { 
+        type: DistanceDetectionType.BASIC,
+    } |
+    { 
+        type: DistanceDetectionType.GRID_SQUARE, 
+        detection: GridSquareDistanceDetection,
+    };
+
+export type LayoutOptions = 
+    {
+        step?: number,
+        componentSpacing?: number,
+    } &
+    DistanceDetectionArgs;
+
+export const DEFAULT_OPTIONS: LayoutOptions = {
+    type: DistanceDetectionType.BASIC,
+    componentSpacing: 50,
+};
+
+type PackResult = {
     shifts: { dx: number, dy: number }[],
+    fullness: number,
 };
 
 /**
@@ -15,14 +43,17 @@ type PackReturn = {
  * @param components each component represents a connected graph in itself
  * @param options 
  */
-export const packComponents = (components: Component[], options: LayoutOptions = DEFAULT_OPTIONS): PackReturn => {
+export const packComponents = (components: Component[], options: LayoutOptions = DEFAULT_OPTIONS): PackResult => {
     if (options !== DEFAULT_OPTIONS) {
         options = { 
             ...DEFAULT_OPTIONS, 
             ...options, 
         };
     }
-    options.componentDistance = calculateIdealDistance(components);
+
+    const embedderOptions: EmbedderOptions = { ...options, componentSpacing: options.componentSpacing || calculateIdealDistance(components) };
+
+    console.log(`component spacing: ${embedderOptions.componentSpacing}`);
 
     // console.log(`ideal distance: ${options.componentDistance}`);
 
@@ -36,14 +67,14 @@ export const packComponents = (components: Component[], options: LayoutOptions =
         edges,
     };
 
-    basicEmbed(polyGraph, options);
+    basicEmbed(polyGraph, embedderOptions);
 
     const shifts = polyGraph.nodes.map(p => {
         const base = p.base;
         return { dx: base.x, dy: base.y };
     });
 
-    return { shifts };
+    return { shifts, fullness: calculateFullness(polygons) };
 };
 
 type Node = {
@@ -54,22 +85,6 @@ type Node = {
 };
 
 export type Shape = IPoint[];
-
-const generateDistanceDetectionArgs = (type: DistanceDetectionType, frame?: IRectangle, polygons?: Polygon[]): DistanceDetectionArgs => {
-    switch (type) {
-        case DistanceDetectionType.BASIC:
-            return { type };
-        case DistanceDetectionType.GRID_SQUARE:
-            if (frame && polygons) {
-                return { 
-                    type, 
-                    detection: new GridSquareDistanceDetection(polygons, frame) 
-                };
-            } else {
-                throw new Error('Grid Square distance detection requires frame and polygons');
-            }
-    }
-};
 
 type ComponentEdge = {
     startX: number,
@@ -190,4 +205,16 @@ const calculateIdealDistance = (components: Component[]): number => {
     // console.log(avgDistance / len);
 
     return (avgDistance / len) * 1.5;
+};
+
+const calculateFullness = (polygons: Polygon[]): number => {
+    const polygonBboxes = polygons.map(p => p.boundingBox);
+
+    const bbox = boundingBox(polygonBboxes);
+
+    return (
+        polygonBboxes.map(bb => area(bb))
+            .reduce((a, s) => a + s) 
+        / area(bbox)
+    );
 };
