@@ -370,7 +370,7 @@ var layoutUtilities = function (cy, options) {
    */
   instance.packComponents = function (components) {    
     
-    if (!options.randomize) {
+    if (!options.incremental) {
       console.log('using incremental packing'); 
       
       return pose.packComponents(components, {

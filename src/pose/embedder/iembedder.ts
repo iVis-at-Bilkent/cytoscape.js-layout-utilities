@@ -1,7 +1,6 @@
-import { IEdge, IPoint, IRectangle } from "../models/common";
+import { IEdge } from "../models/common";
 import { Polygon } from "../models/polygon";
 import { LayoutOptions } from "../pose";
-import { GridSquareDistanceDetection } from './distance-detection/gridsquare-distance-detection';
 
 export type EmbedderOptions = LayoutOptions & { componentSpacing: number };
 

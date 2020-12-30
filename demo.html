@@ -295,7 +295,7 @@
             polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
             utilityFunction: parseInt($('#utilityFunctionType').val()),
             componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())),
-            randomize: !document.getElementById('Incremental-checkbox').checked,
+            incremental: !document.getElementById('Incremental-checkbox').checked,
           }
         );
         var components = cy.elements(":visible").components();

@@ -1,11 +1,10 @@
 import { basicEmbed } from "./embedder/basic-embedder";
-import { IEdge, IPoint, IRectangle } from "./models/common";
+import { IPoint, IRectangle } from "./models/common";
 import { Polygon } from "./models/polygon";
 import { AdjList, EmbedderOptions } from "./embedder/iembedder";
-import { area, boundingBox, distance, zip } from "./utils";
+import { area, boundingBox, distance } from "./utils";
 import { GridSquareDistanceDetection } from './embedder/distance-detection/gridsquare-distance-detection';
 import { findNeighbors } from './algorithms/voronoi';
-import { polygon } from "@turf/turf";
 
 export enum DistanceDetectionType {
     BASIC = "BASIC",
