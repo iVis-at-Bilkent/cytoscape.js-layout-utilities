@@ -319,6 +319,7 @@
 
         var result = packingApi.packComponents(subgraphs);
         $("#resultAspectRatio").text(result.aspectRatio || "-");
+        console.log(`fullness: ${result.fullness}`);
         $("#resultFullness").text(result.fullness.toFixed(2) + " %");
         $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
         components.forEach(function (component, index) {
@@ -487,10 +488,10 @@
       </p>
       <p>
         <label for="componentSpacing">Component spacing (px)</label>
-        <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important;" type="number" min="0" value="30"
+        <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important; margin-right: 10;" type="number" min="0" value="30"
           step="10">
         <label for="auto-spacing">Auto</label>
-        <input type="checkbox" id="auto-spacing">
+        <input type="checkbox" id="auto-spacing" style="vertical-align: middle;" disabled="true">
       </p>
 
 

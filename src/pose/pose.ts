@@ -215,5 +215,5 @@ const calculateFullness = (polygons: Polygon[]): number => {
         polygonBboxes.map(bb => area(bb))
             .reduce((a, s) => a + s) 
         / area(bbox)
-    );
+    ) * 100;
 };
