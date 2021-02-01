@@ -164,7 +164,7 @@ resulting sample output:
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      incremental: false // whether to use incremental packing
+      randomize: true // randomize input (if set to false layout is done incrementally)
       componentSpacing: 30 // use to increase spacing between components in pixels. If passed undefined when incremental is true then it is calculated automatically
 
 ```
