@@ -7,17 +7,22 @@ import { turfPoly } from '../helpers/turf';
 import intersection from '@turf/intersect';
 import { constructEdges, DistanceDetectionType } from "../pose";
 
+enum ForceType {
+    Normal,
+    Intersection,
+}
+
 export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOptions) => {
     const ATTRACTIVE_CONSTANT = options.componentSpacing, REPULSIVE_CONSTANT = options.componentSpacing ** 2;
     const CONVERGENCE_THRESHOLD = 1;
     const EDGE_THRESHOLD = 5;
     const MAX_FORCE = ATTRACTIVE_CONSTANT;
 
-    let hasIntersection = false;
-
     const makeForce = (multiplier: (n: number) => number) => {
         return (p1: Polygon, p2: Polygon) => {
             const { distance, unitVector } = convexPolygonDistance(p1, p2);
+
+            // console.log(`distance: ${distance}`);
 
             const calculatedForce = multiplier(distance);
             const force = Math.abs(calculatedForce) < MAX_FORCE ?
@@ -30,104 +35,71 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
 
     const attractiveForce = makeForce(n => 3 * Math.log2(Math.sqrt(n) / ATTRACTIVE_CONSTANT));
     
-    const repulsiveForce = makeForce(n => -REPULSIVE_CONSTANT / n);
+    const repulsiveForce = makeForce(n => -((REPULSIVE_CONSTANT / n) - 1));
 
     /**
      * Adds the intersection case
      * @param f displacement function without considering intersection
      */
-    const displacementWrapper = (p1: Polygon, p2: Polygon, f: (p1: Polygon, p2: Polygon) => IPoint): IPoint => {
+    const displacementWrapper = (p1Index: number, p2Index: number, f: (p1: Polygon, p2: Polygon) => IPoint): { force: IPoint, type: ForceType } => {
+        const [p1, p2] = [components.nodes[p1Index], components.nodes[p2Index]];
         const intersectionPoly = intersection(turfPoly(p1), turfPoly(p2));
         
         if (intersectionPoly === null) {
-            return f(p1, p2);
+            return { force: f(p1, p2), type: ForceType.Normal };
         } else {
-            hasIntersection = true;
+            console.log(`intersection between ${p1Index} and ${p2Index}`);
             // Always move 5 units if intersection occurs
-            const minForce = 5;
+            const minForce = options.componentSpacing;
 
             const centerLine = { from: p1.center, to: p2.center };
             const dir = direction(centerLine);
 
-            return { x: -dir.x * minForce, y: -dir.y * minForce };
+            return { 
+                force: { x: -dir.x * minForce, y: -dir.y * minForce },
+                type: ForceType.Intersection,
+            };
         }
     }
 
-    const turnForces = Array.from({ length: components.nodes.length }, () => ({ x: 0, y: 0 }));
-
-    const applyAttractiveForces = (components: PolyGraph, forces: IPoint[]) => {
+    const applyAttractiveForces = (components: PolyGraph, forces: IPoint[], intersectionForces: IPoint[]) => {
         for (let [from, neighbors] of components.edges.entries()) {
-            for (let to of neighbors) {
-                let poly1 = components.nodes[from];
-                let poly2 = components.nodes[to];
+            for (let to of neighbors) {        
+                const { force, type } = displacementWrapper(from, to, attractiveForce);
+
+                const forceArray = type === ForceType.Normal ? forces : intersectionForces;
         
-                const displacement = displacementWrapper(poly1, poly2, attractiveForce);
+                forceArray[from].x += force.x;
+                forceArray[from].y += force.y;
         
-                forces[from].x += displacement.x;
-                forces[from].y += displacement.y;
-        
-                forces[to].x -= displacement.x;
-                forces[to].y -= displacement.y;
+                forceArray[to].x -= force.x;
+                forceArray[to].y -= force.y;
             }
         }
     };
 
-    const applyRepulsiveForces = (components: PolyGraph, forces: IPoint[]) => {
+    const applyRepulsiveForces = (components: PolyGraph, forces: IPoint[], intersectionForces: IPoint[]) => {
         if (options.type === DistanceDetectionType.BASIC) {
             const nodesLen = components.nodes.length; 
             
             for (let i = 0; i < nodesLen; ++i) {
                 for (let j = i + 1; j < nodesLen; ++j) {
                     // Not connected
-                    if (!components.edges[i].find(n => n === j)) {
-                        const poly1 = components.nodes[i];
-                        const poly2 = components.nodes[j];
-                        
-                        const displacement = displacementWrapper(poly1, poly2, repulsiveForce);
+                    if (components.edges[i].find(n => n === j) !== undefined) {                        
+                        const { force, type } = displacementWrapper(i, j, repulsiveForce);
         
-                        forces[i].x += displacement.x;
-                        forces[i].y += displacement.y;
-            
-                        forces[j].x -= displacement.x;
-                        forces[j].y -= displacement.y;
+                        const forceArray = type === ForceType.Normal ? forces : intersectionForces;
+        
+                        forceArray[i].x += force.x;
+                        forceArray[i].y += force.y;
+                
+                        forceArray[j].x -= force.x;
+                        forceArray[j].y -= force.y;
                     }
                 }
             }
-        } else {
-            const distanceDetector = options.detection;
-            
-            throw new Error('TODO fix for not having adjacent edges');
-    
-            for (const [i, poly] of components.nodes.entries()) {
-                const { collisions, neighbours } = distanceDetector.getNeighbours(poly);
-    
-                for (const j of collisions) {
-                    // j <= i means visited because polygons are visited ordered
-                    if (j <= i) {
-                        continue;
-                    }
-                    const displacement = displacementWrapper(poly, components.nodes[j], repulsiveForce);
-
-                    forces[i].x += displacement.x;
-                    forces[i].y += displacement.y;
-        
-                    forces[j].x -= displacement.x;
-                    forces[j].y -= displacement.y;
-                }
-    
-                for (const j of neighbours) {
-                    if (j <= i) {
-                        continue;
-                    }
-                    const displacement = repulsiveForce(poly, components.nodes[j]);
-    
-                    forces[i].x += displacement.x;
-                    forces[i].y += displacement.y;
-        
-                    forces[j].x -= displacement.x;
-                    forces[j].y -= displacement.y;
-                }
-            }
+        } else {            
+            throw new Error('Not implemented');
         }
     };
 
@@ -135,22 +107,32 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
         options.detection.move :
         (index: number, displacement: IPoint) => { components.nodes[index].move(displacement); };
 
+    const turnForces = Array.from({ length: components.nodes.length }, () => ({ x: 0, y: 0 }));
+    const intersectionForces: IPoint[] = Array.from({ length: components.nodes.length }, () => ({ x: 0, y: 0 }));
+
     const singleStep = () => {
-        applyAttractiveForces(components, turnForces);
+        const hasIntersectionForce = (i: number): boolean =>
+            intersectionForces[i].x !== 0 || intersectionForces[i].y !== 0;
+
+        applyAttractiveForces(components, turnForces, intersectionForces);
         
-        applyRepulsiveForces(components, turnForces);
+        applyRepulsiveForces(components, turnForces, intersectionForces);
         
         let turnTotalForce = 0;
 
         // console.log(`forces: ${JSON.stringify(turnForces)}`);
 
         for (let i = 0; i < components.nodes.length; ++i) {
-            moveFn(i, turnForces[i]);
+            const force = hasIntersectionForce(i) ? intersectionForces[i] : turnForces[i];
 
-            turnTotalForce += lengthFromOrigin(turnForces[i]);
-            
+            moveFn(i, force);
+            turnTotalForce += lengthFromOrigin(force);
+
             turnForces[i].x = 0;
             turnForces[i].y = 0;
+
+            intersectionForces[i].x = 0;
+            intersectionForces[i].y = 0;
         }
 
         const averageForce = turnTotalForce / components.nodes.length;
@@ -164,24 +146,25 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
             singleStep();
         }
     } else {
-        let edgeCounter = 0;;
+        let edgeCounter = 0;
 
-        while (true) {
-            hasIntersection = false;
+        const ITERATION = 70;
 
+        for (let i = 0; i < ITERATION; i += 1) {
             const averageForce = singleStep();
     
-            // console.log(`Average force: ${averageForce}`);
+            console.log(`Average force: ${averageForce}`);
 
             edgeCounter += 1;
     
-            if (!hasIntersection && averageForce <= CONVERGENCE_THRESHOLD) {
+            /* if (!hasIntersection && averageForce <= CONVERGENCE_THRESHOLD) {
                 return;
-            } 
+            } */
 
             if (edgeCounter >= EDGE_THRESHOLD) {
                 // console.log("Recalculating edges...");
                 components.edges = constructEdges(components.nodes);
+                edgeCounter = 0;
             }
         }
     }
