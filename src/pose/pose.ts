@@ -50,7 +50,10 @@ export const packComponents = (components: Component[], options: LayoutOptions =
         };
     }
 
-    const embedderOptions: EmbedderOptions = { ...options, componentSpacing: options.componentSpacing || calculateIdealDistance(components) };
+    const embedderOptions: EmbedderOptions = { 
+        ...options, 
+        componentSpacing: options.componentSpacing !== undefined ? options.componentSpacing : calculateIdealDistance(components) 
+    };
 
     console.log(`component spacing: ${embedderOptions.componentSpacing}`);
 
