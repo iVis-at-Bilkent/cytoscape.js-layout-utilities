@@ -148,7 +148,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
     } else {
         let edgeCounter = 0;
 
-        const ITERATION = 70;
+        const ITERATION = 100;
 
         for (let i = 0; i < ITERATION; i += 1) {
             const averageForce = singleStep();
