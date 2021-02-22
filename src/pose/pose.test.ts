@@ -35,5 +35,5 @@ test('constructEdges works', () => {
 
     const edges = constructEdges(polygons);
     
-    console.log(edges);
+    // console.log(edges);
 });

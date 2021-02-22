@@ -17,7 +17,7 @@ export class GridSquareDistanceDetection implements IDistanceDetection<Polygon> 
     private currentPadding: number;
 
     constructor(private mPolygons: Polygon[], private mFrame: IRectangle) {
-        console.log(`frame: ${JSON.stringify(mFrame)}`);
+        // console.log(`frame: ${JSON.stringify(mFrame)}`);
 
         this.mWidth = mFrame.maxX - mFrame.minX + 1;
         this.mHeight = mFrame.maxY - mFrame.minY + 1;
@@ -33,7 +33,7 @@ export class GridSquareDistanceDetection implements IDistanceDetection<Polygon> 
         this.mGrid = Array.from({ length: this.gridVLen }, () =>
             Array.from({ length: this.gridHLen } , () => []));
 
-        console.log(`grid Width: ${this.gridHLen}, grid Height: ${this.gridVLen}`);
+        // console.log(`grid Width: ${this.gridHLen}, grid Height: ${this.gridVLen}`);
 
         for (const [index, poly] of mPolygons.entries()) {
             const gridSquares = this.getGridRange(poly.boundingBox);

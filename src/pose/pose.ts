@@ -55,7 +55,7 @@ export const packComponents = (components: Component[], options: LayoutOptions =
         componentSpacing: options.componentSpacing !== undefined ? options.componentSpacing : calculateIdealDistance(components) 
     };
 
-    console.log(`component spacing: ${embedderOptions.componentSpacing}`);
+    // console.log(`component spacing: ${embedderOptions.componentSpacing}`);
 
     // console.log(`ideal distance: ${options.componentDistance}`);
 
@@ -197,7 +197,7 @@ const calculateIdealDistance = (components: Component[]): number => {
     
             const nodeDistance = Math.sqrt(distance(node1, node2)); 
     
-            console.log(`distance: ${nodeDistance}`);
+            // console.log(`distance: ${nodeDistance}`);
             
             avgDistance += nodeDistance;
         } */

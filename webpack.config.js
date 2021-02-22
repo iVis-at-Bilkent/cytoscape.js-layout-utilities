@@ -35,14 +35,10 @@ let configs = [
     resolve: {
       extensions: [ '.tsx', '.ts', '.js' ],
     },
-    plugins: MIN ? [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false,
-          drop_console: false,
-        }
-      })
-    ] : []
+    optimization: {
+      minimize: MIN ? true : false
+    }
+
   },
   {
     devtool: PROD ? false : 'inline-source-map',
@@ -59,14 +55,9 @@ let configs = [
       ]
     },
     externals: PROD ? Object.keys( pkg.dependencies || {} ) : [],
-    plugins: MIN ? [
-      new webpack.optimize.UglifyJsPlugin({
-        compress: {
-          warnings: false,
-          drop_console: false,
-        }
-      })
-    ] : []
+    optimization: {
+      minimize: MIN ? true : false
+    }
   }
 ];
 

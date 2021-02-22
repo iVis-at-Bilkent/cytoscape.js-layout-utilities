@@ -319,7 +319,6 @@
 
         var result = packingApi.packComponents(subgraphs);
         $("#resultAspectRatio").text(result.aspectRatio || "-");
-        console.log(`fullness: ${result.fullness}`);
         $("#resultFullness").text(result.fullness.toFixed(2) + " %");
         $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
         components.forEach(function (component, index) {
@@ -416,7 +415,6 @@
 
       document.getElementById('auto-spacing')
         .addEventListener('change', function () {
-          console.log('called');
           document.getElementById('componentSpacing').disabled = this.checked;
         });
     });

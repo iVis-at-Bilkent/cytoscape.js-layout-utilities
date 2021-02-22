@@ -48,7 +48,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
         if (intersectionPoly === null) {
             return { force: f(p1, p2), type: ForceType.Normal };
         } else {
-            console.log(`intersection between ${p1Index} and ${p2Index}`);
+            // console.log(`intersection between ${p1Index} and ${p2Index}`);
             // Always move 5 units if intersection occurs
             const minForce = options.componentSpacing;
 
@@ -153,7 +153,7 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
         for (let i = 0; i < ITERATION; i += 1) {
             const averageForce = singleStep();
     
-            console.log(`Average force: ${averageForce}`);
+            // console.log(`Average force: ${averageForce}`);
 
             edgeCounter += 1;
     
