@@ -36,6 +36,8 @@ Recommended usage of packing utility for disconnected graphs for a layout extens
 
 Notice that in case you make use of compound nodes, it's sufficient to pass only highest level (root) nodes in the nesting hierarchy.
 
+Currently, some layout extensions such as [fCoSE](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) and [CiSE](https://github.com/iVis-at-Bilkent/cytoscape.js-cise) support packing utility as an option. These layout extensions require that this extension should be registered and initialized along with the layout extension to be able to apply packing utility.
+
 Here is a [demo](https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/incremental-packing/demo.html).
 
 Please cite the following when you use this extension:
