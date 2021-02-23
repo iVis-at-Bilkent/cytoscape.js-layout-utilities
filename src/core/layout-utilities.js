@@ -6,31 +6,14 @@ const { getCenter } = require('./general-utils.js');
 const pose = require('../pose/pose.js');
 
 var layoutUtilities = function (cy, options) {
-
-  /*  var defaults = {
-     idealEdgeLength : 50,
-     offset : 20,
-     desiredAspectRatio : 1,
-     polyominoGridSizeFactor : 1,
-     utilityFunction : 1
-   };
- 
-   function extend(defaults, options) {
-     var obj = {};
- 
-     for (var i in defaults) {
-       obj[i] = defaults[i];
-     }
- 
-     for (var i in options) {      
-       obj[i] = options[i];
-     }
- 
-     return obj;
-   };
- 
-   options = extend(defaults, options); */
+  
+  const isFn = fn => typeof fn === 'function';
+  
   var instance = {};
+  
+  instance.setOption = function (name, val) {
+    options[name] = val;
+  };
 
   instance.placeHiddenNodes = function (mainEles) {
     mainEles.forEach(function (mainEle) {
@@ -370,7 +353,7 @@ var layoutUtilities = function (cy, options) {
    */
   instance.packComponents = function (components) {    
     
-    if (!options.randomize) {
+    if (!(isFn( options.randomize ) ? options.randomize() : options.randomize)) {
       
       return pose.packComponents(components, {
         componentSpacing: options.componentSpacing
