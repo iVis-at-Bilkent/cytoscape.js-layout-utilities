@@ -94,6 +94,10 @@ Initializes the extension and sets options. This can be used to override default
 
 An instance has a number of functions available:
 
+```instance.setOption(name, value)```
+
+Sets the value of the option given by the name to the given value.
+
 ```instance.placeHiddenNodes(nodesWithLayout)```
 
 Places hidden neighbors of each given node. It is assumed that the given nodes have pre-calculated layout, and with this method, proper initial positions are calculated for their hidden neighbors to prepare them for a successful incremental layout.
