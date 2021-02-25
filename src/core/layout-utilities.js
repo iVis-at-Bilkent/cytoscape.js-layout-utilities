@@ -373,10 +373,10 @@ var layoutUtilities = function (cy, options) {
     
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
-
-
-    if (options.componentSpacing > 0) {
-      var spacingAmount = options.componentSpacing;
+    
+    var spacingAmount = options.componentSpacing;
+    spacingAmount = Math.max(0, spacingAmount - 52);  // subtract 52 to make it compatible with the incremental packing
+    if (spacingAmount > 0) {
       components.forEach(function (component) {
         component.nodes.forEach(function (node) {
           node.x = node.x - spacingAmount;
