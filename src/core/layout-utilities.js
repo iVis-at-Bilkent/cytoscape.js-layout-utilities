@@ -351,12 +351,23 @@ var layoutUtilities = function (cy, options) {
   /**
    * @param { any[] } components 
    */
-  instance.packComponents = function (components) {    
+  instance.packComponents = function (components) {
     
-    if (!(isFn( options.randomize ) ? options.randomize() : options.randomize)) {
+    var isRandomized = isFn( options.randomize ) ? options.randomize() : options.randomize;
+    var spacingAmount = options.componentSpacing;
+    
+    if(spacingAmount !== undefined) { // is spacingAmount is undefined, we expect it to be an incremental packing
+      if (isRandomized) {
+        spacingAmount = spacingAmount - 52; // subtract 52 to make it compatible with the incremental packing
+      }
+    
+      spacingAmount = Math.max(1, spacingAmount); // incremental packing requires spacingAmount > 0
+    }
+    
+    if (!isRandomized) {
       
       return pose.packComponents(components, {
-        componentSpacing: options.componentSpacing
+        componentSpacing: spacingAmount
       });
     }
 
@@ -374,18 +385,15 @@ var layoutUtilities = function (cy, options) {
     gridStep = gridStep / (2 * totalNodes);
     gridStep = Math.floor(gridStep * options.polyominoGridSizeFactor);
     
-    var spacingAmount = options.componentSpacing;
-    spacingAmount = Math.max(0, spacingAmount - 52);  // subtract 52 to make it compatible with the incremental packing
-    if (spacingAmount > 0) {
-      components.forEach(function (component) {
-        component.nodes.forEach(function (node) {
-          node.x = node.x - spacingAmount;
-          node.y = node.y - spacingAmount;
-          node.width = node.width + (2 * spacingAmount);
-          node.height = node.height + (2 * spacingAmount);
-        });
+    components.forEach(function (component) {
+      component.nodes.forEach(function (node) {
+        node.x = node.x - spacingAmount;
+        node.y = node.y - spacingAmount;
+        node.width = node.width + (2 * spacingAmount);
+        node.height = node.height + (2 * spacingAmount);
       });
-    }
+    });
+
     var gridWidth = 0, gridHeight = 0;
     /** @type { Polyomino[] } */
     var polyominos = [];
