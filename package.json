@@ -63,7 +63,7 @@
     "updater-license": "^1.0.0",
     "webpack": "^4.44.0",
     "webpack-cli": "^4.2.0",
-    "webpack-dev-server": "^2.4.5"
+    "webpack-dev-server": "^3.11.2"
   },
   "peerDependencies": {
     "cytoscape": "^3.2.0"
