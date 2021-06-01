@@ -202,4 +202,7 @@ This project is set up to automatically be published to npm and bower.  To publi
 Third-party libraries: [Turf-js](https://github.com/Turfjs/turf), [convex-minkowski-sum](https://github.com/mikolalysenko/convex-minkowski-sum) licensed with MIT. [d3-delaunay](https://github.com/d3/d3-delaunay) licensed with ISC license.
 
 ## Team
-  * [Nasim Saleh](https://github.com/nasimsaleh), [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
+  * [Hasan Balci](https://github.com/hasanbalci) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
+
+### Alumni
+  * [Nasim Saleh](https://github.com/nasimsaleh), [Rumeysa Özaydın](https://github.com/rumeysaozaydin) and [Onur Sahin](https://github.com/onsah)
