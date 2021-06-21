@@ -17,7 +17,7 @@ When doing so, these methods use the following heuristics [1]:
 
 In all of the above cases, we try to choose a position which is an *ideal edge length* away from a neighbor, and use a random *offset* for the final location of the node to avoid multiple nodes ending up at the exact same location since most layout algorithms will not gracefully handle such cases. Hence these are exposed as user customizable options by the extension.
 
-Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. Below is an example where [a layout algorithm]() works by laying out a disconnected graph normally (left) and uses this extension to pack components after layout (right).
+Another utility available in this library is for placing / packing components of a disconnected graph. Often times a particular layout algorithm will nicely lay out individual components of a disconnected graph but will not properly pack these components with respect to each other. Below is an example where a layout algorithm works by laying out a disconnected graph normally (left) and uses this extension to pack components after layout (right).
 <p align="center">
   <img src="packing-example-before.jpg" width="320"/>
   &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
@@ -30,13 +30,13 @@ This library uses a polyomino packing based algorithm to achieve this. A polyomi
   <img src="polyomino-example.png" width="180"/>
 </p>
 
-One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in a component needs to be relocated*. The utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio, minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time.
+One can provide the list of nodes and edges in each component of a disconnected graph and this library will calculate a good respective positioning for these components, returning the *amount by which each graph object in a component needs to be relocated*. The utility can be applied in a randomized way (randomizing component positions) or incrementally (starting from current component positions). In randomized case, the utility will take a *desired aspect ratio* and try to pack components so that all components will fit into a window of this aspect ratio, minimizing wasted space. It will also take *polyomino grid size factor* as an option, which is 1.0 by default, corresponding to the average node dimension in the graph. The lower this factor is the finer of a grid will be used. Similarly, higher values will correspond to relatively coarser grid. Notice that use of a finer grid will result in better packing of components at the cost of additional running time. If applied incrementally, the utility will not use these options, but try to achieve a good packing by maintaining user's *mental* map. 
 
 Recommended usage of packing utility for disconnected graphs for a layout extension is as follows. The layout should first detect components of a given graph using [`eles.components()`](http://js.cytoscape.org/#eles.components). Then for each component a separate, independent layout should be calculated. The resulting graph will have a layout where components might overlap or might be very far from each other. A call to this extension with those components will return the amount of relocation needed for each component so that the resulting final layout for the disconnected graph is rather tight.
 
 Notice that in case you make use of compound nodes, it's sufficient to pass only highest level (root) nodes in the nesting hierarchy.
 
-Currently, some layout extensions such as [fCoSE](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) and [CiSE](https://github.com/iVis-at-Bilkent/cytoscape.js-cise) support packing utility as an option. These layout extensions require that this extension should be registered and initialized along with the layout extension to be able to apply packing utility.
+Currently, some layout extensions such as [fCoSE](https://github.com/iVis-at-Bilkent/cytoscape.js-fcose) and [CiSE](https://github.com/iVis-at-Bilkent/cytoscape.js-cise) support packing utility as an option. These layout extensions require that this extension should be registered along with the layout extension to be able to apply packing utility.
 
 Here is a demo:
 <p align="center">
@@ -115,13 +115,13 @@ Places each given node. It is assumed that the remaining nodes in the graph alre
 
 Packs components of a disconnected graph. Packing is done in a way that it preserves the center of the  [bounding rectangle](https://en.wikipedia.org/wiki/Minimum_bounding_rectangle) of components. 
 The function parameter ```components``` has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
-```randomize``` parameter (default ```true```) determines whether packing is applied incrementally (starting from current component positions) or non-incrementally (randomizing component positions).
+```randomize``` parameter (default ```true```) determines whether packing is applied in a randomized way (randomizing component positions) or incrementally ( starting from current component positions).
 
 The function returns an object which has the following properties:
-1. shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input comoponent should be shifted by this amount.
-2. aspect ratio: the actual aspect ratio of the resulting packed components
-3. fullness: the fullness of the resulting packed components
-4. adjusted fullness: the adjusted (with respect to desired aspect ratio) fullness of the resulting packed components
+1. shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input component should be shifted by this amount.
+2. aspect ratio: the actual aspect ratio of the resulting packed components (only for randomized packing)
+3. fullness: the fullness of the resulting packed components (only for randomized packing)
+4. adjusted fullness: the adjusted (with respect to desired aspect ratio) fullness of the resulting packed components (only for randomized packing)
 
 Here is a sample input: 
 ```js
@@ -170,7 +170,7 @@ resulting sample output:
       idealEdgeLength: 50,
       offset: 20,
       
-      // Packing
+      // Packing options - options other than componentSpacing are only for randomized packing
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1  // maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
