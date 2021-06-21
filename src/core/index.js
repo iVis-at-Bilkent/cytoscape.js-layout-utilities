@@ -14,8 +14,7 @@
       desiredAspectRatio: 1,
       polyominoGridSizeFactor: 1,
       utilityFunction: 1,  // Maximize adjusted Fullness   2: maximizes weighted function of fullness and aspect ratio
-      componentSpacing: 80,
-      randomize: () => true
+      componentSpacing: 80
     };
 
     var layoutUtilities = require("./layout-utilities");

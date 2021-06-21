@@ -271,8 +271,7 @@
           desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
           polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
           utilityFunction: parseInt($('#utilityFunctionType').val()),
-          componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())),
-          randomize: !document.getElementById('Incremental-checkbox').checked,
+          componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val()))
         }
       );
       var api2 = cy.viewUtilities();
@@ -303,7 +302,6 @@
         api.setOption("polyominoGridSizeFactor", parseFloat($('#gridSizeFactor').val()));
         api.setOption("utilityFunction", parseInt($('#utilityFunctionType').val()));
         api.setOption("componentSpacing", (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())));
-        api.setOption("randomize", !document.getElementById('Incremental-checkbox').checked);        
         
         var components = cy.elements(":visible").components();
         var subgraphs = [];
@@ -323,7 +321,7 @@
           subgraphs.push(subgraph);
         });
 
-        var result = api.packComponents(subgraphs);
+        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked);
         $("#resultAspectRatio").text(result.aspectRatio || "-");
         $("#resultFullness").text(result.fullness.toFixed(2) + " %");
         $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");

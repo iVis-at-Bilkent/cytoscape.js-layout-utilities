@@ -351,13 +351,12 @@ var layoutUtilities = function (cy, options) {
   /**
    * @param { any[] } components 
    */
-  instance.packComponents = function (components) {
+  instance.packComponents = function (components, randomize = true) {
     
-    var isRandomized = isFn( options.randomize ) ? options.randomize() : options.randomize;
     var spacingAmount = options.componentSpacing;
     
     if(spacingAmount !== undefined) { // is spacingAmount is undefined, we expect it to be an incremental packing
-      if (isRandomized) {
+      if (randomize) {
         spacingAmount = spacingAmount - 52; // subtract 52 to make it compatible with the incremental packing
       }
     
@@ -369,7 +368,7 @@ var layoutUtilities = function (cy, options) {
     var packingResult;
     let mainGrid; // used in randomized packing
 
-    if (!isRandomized) {
+    if (!randomize) {
       
       packingResult = pose.packComponents(components, {
         componentSpacing: spacingAmount
@@ -594,7 +593,7 @@ var layoutUtilities = function (cy, options) {
       shift.dy += centerShift.y;
     }
 
-    if (isRandomized) {
+    if (randomize) {
       packingResult.aspectRatio = Math.round(((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) / (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1)) * 1e2) / 1e2;
       packingResult.fullness = Math.round(((mainGrid.numberOfOccupiredCells / ((mainGrid.occupiedRectangle.x2 - mainGrid.occupiedRectangle.x1 + 1) * (mainGrid.occupiedRectangle.y2 - mainGrid.occupiedRectangle.y1 + 1))) * 100) * 1e2) / 1e2;
 
