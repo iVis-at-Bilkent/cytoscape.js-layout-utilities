@@ -55,7 +55,7 @@ var layoutUtilities = function (cy, options) {
           oneNeig = true;
           mainEle = neighbors[0];
           positioned[j] = true;
-          instance.nodeWithOneNeighbor(mainEle, components[i][j]);
+          instance.nodeWithOneNeighbor(mainEle, components[i][j], eles);
           x = components[i][j].position("x");
           y = components[i][j].position("y");
           isPositioned = true;
@@ -222,8 +222,8 @@ var layoutUtilities = function (cy, options) {
     }
   };
 
-  instance.nodeWithOneNeighbor = function (mainEle, hiddenEle) {
-    var quadrants = instance.checkOccupiedQuadrants(mainEle, hiddenEle);
+  instance.nodeWithOneNeighbor = function (mainEle, unplacedEle, allUnplacedEles) {
+    var quadrants = instance.checkOccupiedQuadrants(mainEle, unplacedEle, allUnplacedEles);
     var freeQuadrants = [];
     for (var property in quadrants) {
       if (quadrants[property] === "free")
@@ -283,8 +283,8 @@ var layoutUtilities = function (cy, options) {
     var verticalParam = instance.generateRandom(options.idealEdgeLength - options.offset, options.idealEdgeLength + options.offset, verticalMult);
     var newCenterX = mainEle.position("x") + horizontalParam;
     var newCenterY = mainEle.position("y") + verticalParam;
-    hiddenEle.position("x", newCenterX);
-    hiddenEle.position("y", newCenterY);
+    unplacedEle.position("x", newCenterX);
+    unplacedEle.position("y", newCenterY);
   };
 
   instance.nodeWithMultipleNeighbors = function (ele, neighbors) {
@@ -314,8 +314,8 @@ var layoutUtilities = function (cy, options) {
     return (Math.floor(Math.random() * (max - min + 1)) + min) * mult;
   };
 
-  instance.checkOccupiedQuadrants = function (mainEle, hiddenEles) {
-    var visibleEles = mainEle.neighborhood().difference(hiddenEles).nodes();
+  instance.checkOccupiedQuadrants = function (mainEle, unplacedEle, allUnplacedEles) {
+    var visibleEles = mainEle.neighborhood().difference(unplacedEle).difference(allUnplacedEles).nodes();
     var occupiedQuadrants = { first: "free", second: "free", third: "free", fourth: "free" };
 
     visibleEles.forEach(function (ele) {
