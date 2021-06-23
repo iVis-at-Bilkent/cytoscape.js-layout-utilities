@@ -276,12 +276,12 @@
       );
       var api2 = cy.viewUtilities();
 
-      var layout = cy.layout({
+      var layoutOptions = {
         name: 'fcose',
         randomize: false,
         fit: false,
         packComponents: false
-      });
+      };
 
       function changeBorder(eles) {
         eles.forEach(function (ele) {
@@ -346,7 +346,7 @@
         nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
         changeBorder(nodesWithHiddenNeighbor);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
 
@@ -361,7 +361,7 @@
         // api.placeNewNodes(hiddenNodes);
         // api2.show(hiddenNodes);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
 
@@ -375,7 +375,7 @@
         nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
         changeBorder(nodesWithHiddenNeighbor);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
       
@@ -447,8 +447,7 @@
         api.placeNewNodes(newNodesAll);
         
         if (document.getElementById('layout').checked) {
-          //layout.run(); // this doesn't see newly added nodes
-          cy.elements().layout({name:"fcose", randomize:false, fit:false, packComponents: false}).run();
+          cy.layout(layoutOptions).run();
         }
       });      
 
