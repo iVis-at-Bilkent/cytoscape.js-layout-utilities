@@ -40,7 +40,7 @@ Currently, some layout extensions such as [fCoSE](https://github.com/iVis-at-Bil
 
 Here is a demo:
 <p align="center">
-<a href="https://ivis-at-bilkent.github.io/cytoscape.js-layout-utilities/demo.html"><img src="https://www.cs.bilkent.edu.tr/~ivis/images/demo1.png" height=42px></a>
+<a href="https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-layout-utilities/unstable/demo.html"><img src="https://www.cs.bilkent.edu.tr/~ivis/images/demo1.png" height=42px></a>
 </p>
 
 Please cite the following when you use this extension:
