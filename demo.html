@@ -11,9 +11,10 @@
 
   <!-- for testing with local version of cytoscape.js -->
   <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
-  <script src="https://unpkg.com/layout-base/layout-base.js"></script>
-  <script src="https://unpkg.com/cose-base/cose-base.js"></script>
-  <script src="https://unpkg.com/cytoscape-cose-bilkent/cytoscape-cose-bilkent.js"></script>
+  <script src="https://raw.githack.com/iVis-at-Bilkent/layout-base/unstable/layout-base.js"></script>
+  <script src="https://raw.githack.com/iVis-at-Bilkent/cose-base/unstable/cose-base.js"></script>
+  <script src="https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-fcose/unstable/cytoscape-fcose.js"></script>
+  <script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
   <script src="cytoscape-layout-utilities.js"></script>
 
   <script src="https://unpkg.com/cytoscape-view-utilities/cytoscape-view-utilities.js"></script>
@@ -29,8 +30,18 @@
       color: brown;
       font-weight: bold;
       cursor: pointer;
-
     }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-upload {
+      border: 1px solid #ccc;
+      display: inline-block;
+      padding: 6px 12px;
+      cursor: pointer;
+    } 
 
     form {
       display: table;
@@ -56,7 +67,7 @@
 
     #cy {
       width: 80%;
-      height: 100%;
+      height: 95%;
       left: 21%;
       top: 0%;
       float: left;
@@ -152,7 +163,7 @@
     document.addEventListener("DOMContentLoaded", function () {
       var cy = window.cy = cytoscape({
         container: document.getElementById('cy'),
-        layout: { name: "cose-bilkent" },
+        layout: { name: "fcose" },
         style: [
           {
             selector: 'node',
@@ -172,13 +183,13 @@
           {
             selector: 'edge:selected',
             style: {
-              'line-color': 'black'
+              'line-color': 'orange'
             }
           },
           {
             selector: 'node:selected',
             style: {
-              'border-color': 'black',
+              'border-color': 'orange',
               'border-width': '3px',
               'background-color': 'lightgrey'
             }
@@ -255,14 +266,22 @@
         wheelSensitivity: 0.2
       });
 
-      var api = cy.layoutUtilities({ desiredAspectRatio: 2 });
+      var api = cy.layoutUtilities(
+        {
+          desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
+          polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
+          utilityFunction: parseInt($('#utilityFunctionType').val()),
+          componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val()))
+        }
+      );
       var api2 = cy.viewUtilities();
 
-      var layout = cy.layout({
-        name: 'cose-bilkent',
+      var layoutOptions = {
+        name: 'fcose',
         randomize: false,
-        fit: false
-      });
+        fit: false,
+        packComponents: false
+      };
 
       function changeBorder(eles) {
         eles.forEach(function (ele) {
@@ -278,14 +297,12 @@
       }
 
       $("#polyominoPack").click(function () {
-        var packingApi = cy.layoutUtilities(
-          {
-            desiredAspectRatio: parseInt($('#desiredAspectRatio').val()),
-            polyominoGridSizeFactor: parseInt($('#gridSizeFactor').val()),
-            utilityFunction: parseInt($('#utilityFunctionType').val()),
-            componentSpacing: parseInt($('#componentSpacing').val())
-          }
-        );
+        
+        api.setOption("desiredAspectRatio", parseFloat($('#desiredAspectRatio').val()));
+        api.setOption("polyominoGridSizeFactor", parseFloat($('#gridSizeFactor').val()));
+        api.setOption("utilityFunction", parseInt($('#utilityFunctionType').val()));
+        api.setOption("componentSpacing", (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())));
+        
         var components = cy.elements(":visible").components();
         var subgraphs = [];
         components.forEach(function (component) {
@@ -294,8 +311,7 @@
           subgraph.edges = [];
 
           component.edges().forEach(function (edge) {
-            var boundingBox = edge.boundingBox();
-            subgraph.edges.push({ startX: boundingBox.x1, startY: boundingBox.y1, endX: boundingBox.x2, endY: boundingBox.y2 });
+            subgraph.edges.push({ startX: edge.sourceEndpoint().x, startY: edge.sourceEndpoint().y, endX: edge.targetEndpoint().x, endY: edge.targetEndpoint().y });
           });
           component.nodes().forEach(function (node) {
             var boundingBox = node.boundingBox();
@@ -305,10 +321,10 @@
           subgraphs.push(subgraph);
         });
 
-        var result = packingApi.packComponents(subgraphs);
-        $("#resultAspectRatio").text(result.aspectRatio);
-        $("#resultFullness").text(result.fullness + " %");
-        $("#resultAdjustedFullness").text(result.adjustedFullness + " %");
+        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked);
+        $("#resultAspectRatio").text(result.aspectRatio || "-");
+        $("#resultFullness").text(result.fullness.toFixed(2) + " %");
+        $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
         components.forEach(function (component, index) {
           component.nodes().layout({
             name: 'preset',
@@ -330,7 +346,7 @@
         nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
         changeBorder(nodesWithHiddenNeighbor);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
 
@@ -345,7 +361,7 @@
         // api.placeNewNodes(hiddenNodes);
         // api2.show(hiddenNodes);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
 
@@ -359,17 +375,137 @@
         nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
         changeBorder(nodesWithHiddenNeighbor);
         if (document.getElementById('layout').checked) {
-          layout.run();
+          cy.layout(layoutOptions).run();
         }
       });
+      
+      // color adjustment functions
+      function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+      }
+      
+      function rgbToHex(rgb) {
+        return "#" + componentToHex(rgb[0]) + componentToHex(rgb[1]) + componentToHex(rgb[2]);
+      }
+      
+      function adjust(color, amount) {
+          return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+ Math.min(255, (parseInt(color, 16) + amount + 255) % 255).toString(16)).substr(-2));
+      }      
+      
+      var newNodeCounter = 0;
 
+      $("#addRandomNeighbors").click(function () {
+        var selectedNodes = cy.nodes(":selected");
+        var newNodesAll = cy.collection();
+        
+        selectedNodes.forEach(function(node){
+          var newNodesForSelected = cy.collection();
+          var randomNeighborCount = Math.floor(1 + 5*Math.random());
+          // for each selected node, add random nodes and connect them to the selected node
+          for(var i=0; i < randomNeighborCount; i++) {
+            var nodeId = node.id() + "_n" + newNodeCounter;
+            var edgeId = node.id() + "_e" + newNodeCounter;
+            var newEles = cy.add([
+              { group: 'nodes', data: { id: nodeId, name: node.css("content")}},
+              { group: 'edges', data: { id: edgeId, source: node.id(), target: nodeId } }
+            ]);                       
+            newNodeCounter++;
+            newNodesAll.merge(newEles.nodes());
+            newNodesForSelected.merge(newEles.nodes());
+          }
+          
+          var currentColor = adjust(rgbToHex(node.numericStyle("background-color")), -50);
+          newNodesForSelected.css("background-color", currentColor);           
+          
+          // add random edges between newly added nodes
+          if(newNodesForSelected.length > 1) {
+            var randomEdgeCount = Math.floor(newNodesForSelected.length * Math.random());
+            var newEdgeIds = new Set();
+            for(var i=0; i < randomEdgeCount; i++) {
+              var index1 = Math.floor(newNodesForSelected.length * Math.random());
+              var index2 = Math.floor(newNodesForSelected.length * Math.random());
+              if(index1 == index2 && (index2 + 1 < newNodesForSelected.length)){
+                index2++;
+              }
+              if(index1 == index2 && (index2 - 1 >= 0)){
+                index2--;
+              }
+                     
+              var newEdgeId = newNodesForSelected[index1].id() + "_" + newNodesForSelected[index2].id();             
+              if(!newEdgeIds.has(newEdgeId)) {
+                cy.add([
+                  { group: 'edges', data: { id: newEdgeId, source: newNodesForSelected[index1].id(), target: newNodesForSelected[index2].id() } }
+                ]);
+                newEdgeIds.add(newEdgeId);
+              }              
+            }
+          }
+        });
+        
+        // place all newly added nodes to appropriate positions by using extension functionality
+        api.placeNewNodes(newNodesAll);
+        
+        if (document.getElementById('layout').checked) {
+          cy.layout(layoutOptions).run();
+        }
+      });      
 
+      document.getElementById('load-button')
+        .addEventListener('click', () =>{
+          document.getElementById('graphml-input').click();
+        });
+
+      document.getElementById('graphml-input')
+        .addEventListener('change', function (ev) {
+          const file = this.files[0];
+
+          cy.elements().remove(); 
+          file.text().then((s) => {
+              cy.graphml({layoutBy: "fcose"})
+              cy.graphml(s);
+          });
+        });
+
+      document.getElementById('Incremental-checkbox')
+        .addEventListener('change', function (ev) {
+          const disables = [
+            'utilityFunctionType',
+            'desiredAspectRatio',
+            'gridSizeFactor',
+          ];
+
+          const enables = [
+            'auto-spacing',
+          ];
+
+          for (const disable of disables) {
+            document.getElementById(disable).disabled = this.checked;
+          }
+
+          for (const enable of enables) {
+            document.getElementById(enable).disabled = !this.checked;
+            document.getElementById(enable).checked = false;
+            document.getElementById(enable).dispatchEvent(new Event('change'));
+          }
+        });
+
+      document.getElementById('auto-spacing')
+        .addEventListener('change', function () {
+          document.getElementById('componentSpacing').disabled = this.checked;
+        });
     });
   </script>
 </head>
 
 <body>
   <h1>cytoscape.js-layout-utilities demo</h1>
+  <div class="topnav">
+    <label class="custom-file-input" for="graphml-input">
+      <button id="load-button" class="button">Load Graphml</button>
+    </label>
+    <input id="graphml-input" type="file" accept=".graphml">
+  </div>
   <div class="topnav">
 
 
@@ -379,14 +515,15 @@
     <br /> <br />
     <button id="showHiddenNeighbors" class="button">Show hidden neighbors of selected</button>
     <br /> <br />
-    <!--    <b id="hide" style="cursor: pointer; color: brown">Hide selected</b><br/><br/>
-            <b id="showAll" style="cursor: pointer; color: brown">Show all</b><br/><br/>
-            <b id="showHiddenNeighbors" style="cursor: pointer; color: brown">Show hidden neighbors of selected</b> <br/><br/>
-            -->
+    <button id="addRandomNeighbors" class="button">Add random neighbors to selected</button>
+    <br /> <br />    
+
     <form>
-      <p>
-        <label for="layout" style="vertical-align:middle;">Rearrange on hide/show</label>
-        <input type="checkbox" id="layout" name="layout" style="vertical-align:middle;" value="checked">
+      <p style="position: relative;">
+        <label for="layout" style="vertical-align:middle;">
+          Rearrange on changes
+        </label>
+        <input type="checkbox" class="input" id="layout" name="layout" style="vertical-align:middle;" value="checked" checked>
       </p>
     </form>
 
@@ -395,7 +532,13 @@
   <div class="topnav">
 
     <button id="polyominoPack" class="button">Pack components</button>
-    <br /><br />
+    <br />
+    <br />
+    <div style="display: flex; align-items: flex-start;">
+      <label>Incremental: </label>
+      <input id="Incremental-checkbox" type="checkbox" value="bruh">
+    </div>
+    <br />
     <!-- <input  style="cursor: pointer; color: brown">Pack components</button><br/><br/> -->
     <form>
       <p><label>Select utility function</label></p>
@@ -419,8 +562,10 @@
       </p>
       <p>
         <label for="componentSpacing">Component spacing (px)</label>
-        <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important;" type="number" min="0" value="30"
+        <input id="componentSpacing" style="width:60px; margin-bottom: 10px!important; margin-right: 10;" type="number" min="0" value="80"
           step="10">
+        <label for="auto-spacing">Auto</label>
+        <input type="checkbox" id="auto-spacing" style="vertical-align: middle;" disabled="true">
       </p>
 
 

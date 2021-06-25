@@ -4,7 +4,7 @@
 */
 "use strict";
 
-const asyncLib = require("async");
+const asyncLib = require("neo-async");
 
 class MultiWatching {
 	constructor(watchings, compiler) {
@@ -13,19 +13,37 @@ class MultiWatching {
 	}
 
 	invalidate() {
-		this.watchings.forEach((watching) => watching.invalidate());
+		for (const watching of this.watchings) {
+			watching.invalidate();
+		}
+	}
+
+	suspend() {
+		for (const watching of this.watchings) {
+			watching.suspend();
+		}
+	}
+
+	resume() {
+		for (const watching of this.watchings) {
+			watching.resume();
+		}
 	}
 
 	close(callback) {
-		if(callback === undefined) callback = () => { /*do nothing*/ };
-
-		asyncLib.forEach(this.watchings, (watching, finishedCallback) => {
-			watching.close(finishedCallback);
-		}, err => {
-			this.compiler.applyPlugins("watch-close");
-			callback(err);
-		});
-
+		asyncLib.forEach(
+			this.watchings,
+			(watching, finishedCallback) => {
+				watching.close(finishedCallback);
+			},
+			err => {
+				this.compiler.hooks.watchClose.call();
+				if (typeof callback === "function") {
+					this.compiler.running = false;
+					callback(err);
+				}
+			}
+		);
 	}
 }
 

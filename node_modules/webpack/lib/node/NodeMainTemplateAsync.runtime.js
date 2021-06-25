@@ -2,31 +2,40 @@
 	MIT License http://www.opensource.org/licenses/mit-license.php
 	Author Tobias Koppers @sokra
 */
-/*global installedChunks $hotChunkFilename$ $require$ hotAddUpdateChunk $hotMainFilename$ */
+// eslint-disable-next-line no-unused-vars
+var $hotChunkFilename$ = undefined;
+var $require$ = undefined;
+var hotAddUpdateChunk = undefined;
+var $hotMainFilename$ = undefined;
+var installedChunks = undefined;
+
 module.exports = function() {
-	function hotDownloadUpdateChunk(chunkId) { // eslint-disable-line no-unused-vars
+	// eslint-disable-next-line no-unused-vars
+	function hotDownloadUpdateChunk(chunkId) {
 		var filename = require("path").join(__dirname, $hotChunkFilename$);
 		require("fs").readFile(filename, "utf-8", function(err, content) {
-			if(err) {
-				if($require$.onError)
-					return $require$.oe(err);
-				else
-					throw err;
+			if (err) {
+				if ($require$.onError) return $require$.oe(err);
+				throw err;
 			}
 			var chunk = {};
-			require("vm").runInThisContext("(function(exports) {" + content + "\n})", filename)(chunk);
+			require("vm").runInThisContext(
+				"(function(exports) {" + content + "\n})",
+				{ filename: filename }
+			)(chunk);
 			hotAddUpdateChunk(chunk.id, chunk.modules);
 		});
 	}
 
-	function hotDownloadManifest() { // eslint-disable-line no-unused-vars
+	// eslint-disable-next-line no-unused-vars
+	function hotDownloadManifest() {
 		var filename = require("path").join(__dirname, $hotMainFilename$);
 		return new Promise(function(resolve, reject) {
 			require("fs").readFile(filename, "utf-8", function(err, content) {
-				if(err) return resolve();
+				if (err) return resolve();
 				try {
 					var update = JSON.parse(content);
-				} catch(e) {
+				} catch (e) {
 					return reject(e);
 				}
 				resolve(update);
@@ -34,7 +43,8 @@ module.exports = function() {
 		});
 	}
 
-	function hotDisposeChunk(chunkId) { //eslint-disable-line no-unused-vars
+	// eslint-disable-next-line no-unused-vars
+	function hotDisposeChunk(chunkId) {
 		delete installedChunks[chunkId];
 	}
 };
