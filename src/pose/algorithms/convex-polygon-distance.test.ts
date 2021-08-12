@@ -1,6 +1,8 @@
 import * as assert from "assert";
+import { IEdge } from "../models/common";
 import { Polygon } from "../models/polygon";
 import { angle, convexPolygonDistance, direction } from "./convex-polygon-distance";
+import { AimState, getAimState } from "./convex-polygon-intersection";
 
 test('direction works', () => {
     let l = {
@@ -70,4 +72,58 @@ test('convexPolygonDistance works', () => {
     ]);
 
     assert.strictEqual(convexPolygonDistance(p, q).distance, 100);
+});
+
+describe("getAimState", () => {
+	it("should return Both", () => {
+		const e1: IEdge = { 
+			from: { x: 0, y: 0 },
+			to: { x: 5, y: 5 },
+		};
+		const e2: IEdge = {
+			from: { x: 15, y: 0 },
+			to: { x: 10, y: 5 },
+		};
+
+		assert.strictEqual(getAimState(e1, e2), AimState.Both);
+	});
+
+	it("should return Left", () => {
+		const e1: IEdge = {
+			from: { x: 0, y: 0 },
+			to: { x: 5, y: 5 },
+		};
+		const e2: IEdge = {
+			from: { x: 10, y: 5 },
+			to: { x: 5, y: 10 },	
+		};
+
+		assert.strictEqual(getAimState(e1, e2), AimState.Left);
+	});
+
+	it("should return Right", () => {
+		const e1: IEdge = {
+			from: { x: 0, y: 5 },
+			to: { x: 5, y: 10 },
+		};
+		const e2: IEdge = {
+			from: { x: 10, y: 0 },	
+			to: { x: 5, y: 5 },
+		};
+
+		assert.strictEqual(getAimState(e1, e2), AimState.Right);
+	});
+
+	it("should return Neither", () => {
+		const e1: IEdge = {
+			from: { x: 0, y: 0 },
+			to: { x: 5, y: 5 },
+		};
+		const e2: IEdge = {
+			from: { x: 5, y: 0 },
+			to: { x: 0, y: 5 },	
+		};
+
+		assert.strictEqual(getAimState(e1, e2), AimState.Neither);
+	});
 });

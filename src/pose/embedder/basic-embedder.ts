@@ -3,9 +3,8 @@ import { Polygon } from "../models/polygon";
 import { EmbedderOptions, LayoutFn, PolyGraph } from "./iembedder";
 import { convexPolygonDistance } from "../algorithms/convex-polygon-distance";
 import { direction, lengthFromOrigin, slope } from '../utils';
-import { turfPoly } from '../helpers/turf';
-import intersection from '@turf/intersect';
 import { constructEdges, DistanceDetectionType } from "../pose";
+import { polygonIntersects } from "../algorithms/convex-polygon-intersection";
 
 enum ForceType {
     Normal,
@@ -43,12 +42,12 @@ export const basicEmbed: LayoutFn = (components: PolyGraph, options: EmbedderOpt
      */
     const displacementWrapper = (p1Index: number, p2Index: number, f: (p1: Polygon, p2: Polygon) => IPoint): { force: IPoint, type: ForceType } => {
         const [p1, p2] = [components.nodes[p1Index], components.nodes[p2Index]];
-        const intersectionPoly = intersection(turfPoly(p1), turfPoly(p2));
+		const hasIntersection = polygonIntersects(p1, p2);
         
-        if (intersectionPoly === null) {
+        if (!hasIntersection) {
             return { force: f(p1, p2), type: ForceType.Normal };
         } else {
-            // console.log(`intersection between ${p1Index} and ${p2Index}`);
+			// console.log(`intersection between ${p1Index} and ${p2Index}`);
             // Always move 5 units if intersection occurs
             const minForce = options.componentSpacing;
 
