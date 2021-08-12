@@ -202,7 +202,7 @@ This project is set up to automatically be published to npm and bower.  To publi
 
 ## Credits
 
-Third-party libraries: [convex-minkowski-sum](https://github.com/mikolalysenko/convex-minkowski-sum) licensed with MIT. [d3-delaunay](https://github.com/d3/d3-delaunay) licensed with ISC license.
+Third-party libraries: [convex-minkowski-sum](https://github.com/mikolalysenko/convex-minkowski-sum) licensed with MIT and [d3-delaunay](https://github.com/d3/d3-delaunay) licensed with ISC license.
 
 ## Team
   * [Hasan Balci](https://github.com/hasanbalci) and [Ugur Dogrusoz](https://github.com/ugurdogrusoz) of [i-Vis at Bilkent University](http://www.cs.bilkent.edu.tr/~ivis)
