@@ -12,12 +12,13 @@
     "lint": "eslint src",
     "type-check": "tsc --noEmit",
     "build": "cross-env NODE_ENV=production webpack",
+    "build:dev": "cross-env NODE_ENV=development webpack",
     "build:types": "tsc --emitDeclarationOnly",
     "build:min": "cross-env NODE_ENV=production MIN=true webpack",
     "build:release": "run-s build copyright",
     "watch": "webpack --progress --watch",
     "dev": "webpack-dev-server --open",
-    "test": "mocha"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -72,7 +73,9 @@
     "@babel/runtime": "^7.12.5",
     "@turf/turf": "^5.1.6",
     "@types/d3-delaunay": "^5.3.0",
+    "ajv": "^8.6.2",
     "convex-minkowski-sum": "^1.0.0",
+    "cytoscape": "^3.19.0",
     "d3-delaunay": "^5.3.0"
   }
 }
