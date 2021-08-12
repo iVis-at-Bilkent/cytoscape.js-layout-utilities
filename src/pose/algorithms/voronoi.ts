@@ -1,5 +1,5 @@
-import { pointToArray } from '../helpers/turf';
-import { IEdge, ILine, IPoint, IRectangle } from '../models/common';
+import { pointToArray } from '../utils';
+import { IPoint, IRectangle } from '../models/common';
 import { Delaunay } from 'd3-delaunay';
 
 export const findNeighbors = (frame: IRectangle, centers: IPoint[]): number[][] => {
