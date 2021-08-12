@@ -66,3 +66,4 @@ export declare const slope: (line: ILine) => number;
 export declare const slopeAngle: (from: IPoint, to: IPoint) => number;
 export declare const area: (rect: IRectangle) => number;
 export declare const boundingBox: (rects: IRectangle[]) => IRectangle;
+export declare const pointToArray: (point: IPoint) => [number, number];

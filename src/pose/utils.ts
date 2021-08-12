@@ -206,3 +206,6 @@ export const boundingBox = (rects: IRectangle[]): IRectangle => {
         maxY: Number.MIN_SAFE_INTEGER,
     });
 }
+
+export const pointToArray = (point: IPoint): [number, number] =>
+    [ point.x, point.y ];

@@ -1,20 +1,6 @@
-import { polygon } from "@turf/helpers";
 import * as assert from 'assert';
-import { toGeoJSON } from '../helpers/turf';
 import { IRectangle } from '../models/common';
 import { expandLine } from './basic-embedder';
-
-test('basic-embedder', () => {
-    const vertices = [
-        { x: 0.7241939074706205, y: -0.899921305752629 },
-        { x: 0.7059695238187591, y: 0.9174951620481475 },
-        { x: 0.4694745137855003, y: 0.932289021415805 },
-        { x: -0.7785499585914355, y: 0.3108320554836923 },
-        { x: 0.7241939074706205, y: -0.899921305752629 },
-    ];
-
-    console.log(JSON.stringify(polygon([toGeoJSON(vertices)]), null, 1));
-});
 
 test('expandLine works', () => {
 

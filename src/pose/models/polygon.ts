@@ -1,7 +1,5 @@
 import { IPoint, IGraph, IRectangle, } from './common';
 import { orientation, Orientation, mod, distance, slopeAngle } from '../utils';
-import { fromTurfPoint, turfPoly } from '../helpers/turf';
-import centerOfMass from '@turf/center-of-mass';
 
 /**
  * TODO: test if bbox working correctly after move
@@ -16,8 +14,6 @@ export class Polygon {
     private constructor(private mPoints: IPoint[]) {
         this.mBase = { x: 0, y: 0 };
 
-        // No need to calculate center of mass if only single point
-        // this.mVerticeCenter = mPoints.length > 1 ? fromTurfPoint(centerOfMass(turfPoly(this))) : mPoints[0];
         this.mVerticeCenter = { x: 0, y: 0 };
 
         for (const p of this.mPoints) {
