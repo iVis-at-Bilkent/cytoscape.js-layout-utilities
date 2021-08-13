@@ -951,12 +951,12 @@ var AimState;
 })(AimState || (AimState = {}));
 // TODO: test this
 var getAimState = function (e1, e2) {
-    var _a = __read(intersectionCoefficients(e1, e2), 2), ɑ = _a[0], ɑ_ = _a[1];
-    return (ɑ < 0) ?
-        ((ɑ_ < 0) ?
+    var _a = __read(intersectionCoefficients(e1, e2), 2), a = _a[0], a_ = _a[1];
+    return (a < 0) ?
+        ((a_ < 0) ?
             AimState.Both :
             AimState.Left) :
-        ((ɑ_ < 0) ?
+        ((a_ < 0) ?
             AimState.Right :
             AimState.Neither);
 };

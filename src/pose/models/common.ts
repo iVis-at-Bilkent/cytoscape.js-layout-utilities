@@ -78,13 +78,13 @@ export const edgeIntersects = (e1: IEdge, e2: IEdge) => {
 export const intersectionCoefficients = (e1: IEdge, e2: IEdge): [number, number] => {
 	const { from: { x: x1, y: y1 }, to: { x: x2, y: y2 } } = e1;
 	const { from: { x: x1_, y: y1_ }, to: { x: x2_, y: y2_ } } = e2;
-	const ɑ_ = ((y2_ - y2) - ((x2_ - x2) / (x1 - x2) * (y1 - y2))) /
+	const a_ = ((y2_ - y2) - ((x2_ - x2) / (x1 - x2) * (y1 - y2))) /
 					((x1_ - x2_) / (x1 - x2) * (y1 - y2) - (y1_ - y2_));
 
-	const ɑ = 	(ɑ_ * (x1_ - x2_) + x2_ - x2) /
+	const a = 	(a_ * (x1_ - x2_) + x2_ - x2) /
 				(x1 - x2);
 
-	return [ɑ, ɑ_];
+	return [a, a_];
 }
 
 /**
@@ -96,10 +96,10 @@ export const intersectionCoefficients = (e1: IEdge, e2: IEdge): [number, number]
  * @returns point where the lines intersect
  */
 export const lineIntersection = (e1: IEdge, e2: IEdge): IPoint => {
-	const [ɑ, _] = intersectionCoefficients(e1, e2);
+	const [a, _] = intersectionCoefficients(e1, e2);
 	
 	return pointAdd(
-		pointMultScalar(e1.from, ɑ),
-		pointMultScalar(e1.to, (1 - ɑ))
+		pointMultScalar(e1.from, a),
+		pointMultScalar(e1.to, (1 - a))
 	);
 }

@@ -16,13 +16,13 @@ export enum AimState {
 
 // TODO: test this
 export const getAimState = (e1: IEdge, e2: IEdge): AimState => {
-	const [ɑ, ɑ_] = intersectionCoefficients(e1, e2);
+	const [a, a_] = intersectionCoefficients(e1, e2);
 
-	return (ɑ < 0) ?
-		((ɑ_ < 0) ?
+	return (a < 0) ?
+		((a_ < 0) ?
 			AimState.Both :
 			AimState.Left) :
-		((ɑ_ < 0) ?
+		((a_ < 0) ?
 			AimState.Right :
 			AimState.Neither);
 }
