@@ -914,11 +914,11 @@ var edgeIntersects = function (e1, e2) {
 var intersectionCoefficients = function (e1, e2) {
     var _a = e1.from, x1 = _a.x, y1 = _a.y, _b = e1.to, x2 = _b.x, y2 = _b.y;
     var _c = e2.from, x1_ = _c.x, y1_ = _c.y, _d = e2.to, x2_ = _d.x, y2_ = _d.y;
-    var ɑ_ = ((y2_ - y2) - ((x2_ - x2) / (x1 - x2) * (y1 - y2))) /
+    var a_ = ((y2_ - y2) - ((x2_ - x2) / (x1 - x2) * (y1 - y2))) /
         ((x1_ - x2_) / (x1 - x2) * (y1 - y2) - (y1_ - y2_));
-    var ɑ = (ɑ_ * (x1_ - x2_) + x2_ - x2) /
+    var a = (a_ * (x1_ - x2_) + x2_ - x2) /
         (x1 - x2);
-    return [ɑ, ɑ_];
+    return [a, a_];
 };
 /**
  * This function uses parametric representation of lines.
@@ -929,8 +929,8 @@ var intersectionCoefficients = function (e1, e2) {
  * @returns point where the lines intersect
  */
 var lineIntersection = function (e1, e2) {
-    var _a = __read(intersectionCoefficients(e1, e2), 2), ɑ = _a[0], _ = _a[1];
-    return pointAdd(pointMultScalar(e1.from, ɑ), pointMultScalar(e1.to, (1 - ɑ)));
+    var _a = __read(intersectionCoefficients(e1, e2), 2), a = _a[0], _ = _a[1];
+    return pointAdd(pointMultScalar(e1.from, a), pointMultScalar(e1.to, (1 - a)));
 };
 
 // CONCATENATED MODULE: ./src/pose/algorithms/convex-polygon-intersection.ts
