@@ -380,29 +380,80 @@ class Grid {
      * @param { number } i 
      * @param { number } j 
      */
-    placePolyomino(polyomino, i, j) {
-        polyomino.location.x = i;
-        polyomino.location.y = j;
-        for (let k = 0; k < polyomino.stepWidth; k++) {
-            for (let l = 0; l < polyomino.stepHeight; l++) {
-                if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino
-                    this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
-                }
-            }
-        }
+     placePolyomino(polyomino, i, j) {
+      polyomino.location.x = i;
+      polyomino.location.y = j;
 
-        //update number of occupired cells
-        this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
-        
-        this.updateBounds(polyomino);
-        
-        // reset visited cells to none
-        for (let x = 0; x < this.stepWidth; x++) {
-            for (let y = 0; y < this.stepHeight; y++) {
-                this.grid[x][y].visited = false;
-            }
-        }
-    }
+
+      var vertical = new Array(polyomino.stepWidth);
+
+      for(var k = 0; k < polyomino.stepWidth; k++){
+          vertical[k] = new Array(2);
+          vertical[k][0] = -1;
+          vertical[k][1] = -1;
+      }
+
+      var horizontal = new Array(polyomino.stepHeight);
+
+      for(var k = 0; k < polyomino.stepHeight; k++){
+          horizontal[k] = new Array(2);
+          horizontal[k][0] = -1;
+          horizontal[k][1] = -1;
+      }
+
+      //vertical & horizontal coordinates
+      for (let k = 0; k < polyomino.stepWidth; k++) {
+          for (let l = 0; l < polyomino.stepHeight; l++) {
+              if(polyomino.grid[k][l]){
+                  if(vertical[k][0] == -1)
+                      vertical[k][0] = l;
+                  else
+                      vertical[k][1] = l;
+                  
+                  if(horizontal[l][0] == -1)
+                      horizontal[l][0] = k;
+                  else
+                      horizontal[l][1] = k;
+              }
+          }
+      }
+      
+      // fill the vertical line
+      for(let k = 0; k < polyomino.stepWidth;k++){
+          for(let l = vertical[k][0]; l <= vertical[k][1] && vertical[k][0] != -1; l++){
+              polyomino.grid[k][l] = true;
+              polyomino.numberOfOccupiredCells++;
+          }
+      }
+
+      // fill the horizontal line
+      for(let k = 0; k < polyomino.stepHeight;k++){
+          for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
+              polyomino.grid[l][k] = true;
+              polyomino.numberOfOccupiredCells++;
+          }
+      }
+
+      for (let k = 0; k < polyomino.stepWidth; k++) {
+          for (let l = 0; l < polyomino.stepHeight; l++) {
+              if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino
+                  this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
+              }
+          }
+      }
+
+      //update number of occupired cells
+      this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
+      
+      this.updateBounds(polyomino);
+      
+      // reset visited cells to none
+      for (let x = 0; x < this.stepWidth; x++) {
+          for (let y = 0; y < this.stepHeight; y++) {
+              this.grid[x][y].visited = false;
+          }
+      }
+  }
 
     /**
      * Updates step rectangle bounds so that the `polyomino` fits
@@ -1130,13 +1181,21 @@ var layoutUtilities = function (cy, options) {
           //bottom right cell of a node
           var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
           var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
-
-          //all cells between topleft cell and bottom right cell should be occupied
-          for (var i = topLeftX; i <= bottomRightX; i++) {
-            for (var j = topLeftY; j <= bottomRightY; j++) {
-              componentPolyomino.grid[i][j] = true;
-            }
+          for(var i = topLeftX; i <= bottomRightX; i++) {
+            componentPolyomino.grid[i][topLeftY] = true;
+            componentPolyomino.grid[i][bottomRightY] = true;
           }
+
+          for(var i = topLeftY; i <= bottomRightY; i++) {
+            componentPolyomino.grid[topLeftX][i] = true;
+            componentPolyomino.grid[bottomRightX][i] = true;
+          }
+          //all cells between topleft cell and bottom right cell should be occupied
+          // for (var i = topLeftX; i <= bottomRightX; i++) {
+          //   for (var j = topLeftY; j <= bottomRightY; j++) {
+          //     componentPolyomino.grid[i][j] = true;
+          // }
+          // }
         });
 
         //fill cells where edges pass
