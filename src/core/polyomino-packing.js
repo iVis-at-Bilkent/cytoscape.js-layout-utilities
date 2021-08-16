@@ -283,6 +283,57 @@ class Grid {
     placePolyomino(polyomino, i, j) {
         polyomino.location.x = i;
         polyomino.location.y = j;
+
+
+        var vertical = new Array(polyomino.stepWidth);
+
+        for(var k = 0; k < polyomino.stepWidth; k++){
+            vertical[k] = new Array(2);
+            vertical[k][0] = -1;
+            vertical[k][1] = -1;
+        }
+
+        var horizontal = new Array(polyomino.stepHeight);
+
+        for(var k = 0; k < polyomino.stepHeight; k++){
+            horizontal[k] = new Array(2);
+            horizontal[k][0] = -1;
+            horizontal[k][1] = -1;
+        }
+
+        //vertical & horizontal coordinates
+        for (let k = 0; k < polyomino.stepWidth; k++) {
+            for (let l = 0; l < polyomino.stepHeight; l++) {
+                if(polyomino.grid[k][l]){
+                    if(vertical[k][0] == -1)
+                        vertical[k][0] = l;
+                    else
+                        vertical[k][1] = l;
+                    
+                    if(horizontal[l][0] == -1)
+                        horizontal[l][0] = k;
+                    else
+                        horizontal[l][1] = k;
+                }
+            }
+        }
+        
+        // fill the vertical line
+        for(let k = 0; k < polyomino.stepWidth;k++){
+            for(let l = vertical[k][0]; l <= vertical[k][1] && vertical[k][0] != -1; l++){
+                polyomino.grid[k][l] = true;
+                polyomino.numberOfOccupiredCells++;
+            }
+        }
+
+        // fill the horizontal line
+        for(let k = 0; k < polyomino.stepHeight;k++){
+            for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
+                polyomino.grid[l][k] = true;
+                polyomino.numberOfOccupiredCells++;
+            }
+        }
+
         for (let k = 0; k < polyomino.stepWidth; k++) {
             for (let l = 0; l < polyomino.stepHeight; l++) {
                 if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino

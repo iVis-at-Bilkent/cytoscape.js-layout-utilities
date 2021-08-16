@@ -439,13 +439,17 @@ var layoutUtilities = function (cy, options) {
           //bottom right cell of a node
           var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
           var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
-
-          //all cells between topleft cell and bottom right cell should be occupied
-          for (var i = topLeftX; i <= bottomRightX; i++) {
-            for (var j = topLeftY; j <= bottomRightY; j++) {
-              componentPolyomino.grid[i][j] = true;
-            }
+          
+          for(var i = topLeftY; i <= bottomRightY; i++) {
+            componentPolyomino.grid[topLeftX][i] = true;
+            componentPolyomino.grid[bottomRightX][i] = true;
           }
+          //all cells between topleft cell and bottom right cell should be occupied
+          // for (var i = topLeftX; i <= bottomRightX; i++) {
+          //   for (var j = topLeftY; j <= bottomRightY; j++) {
+          //     componentPolyomino.grid[i][j] = true;
+          //   }
+          // }
         });
 
         //fill cells where edges pass
