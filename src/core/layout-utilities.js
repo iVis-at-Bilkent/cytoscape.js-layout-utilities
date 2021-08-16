@@ -440,6 +440,11 @@ var layoutUtilities = function (cy, options) {
           var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
           var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
           
+          for(var i = topLeftX; i <= bottomRightX; i++) {
+            componentPolyomino.grid[i][topLeftY] = true;
+            componentPolyomino.grid[i][bottomRightY] = true;
+          }
+
           for(var i = topLeftY; i <= bottomRightY; i++) {
             componentPolyomino.grid[topLeftX][i] = true;
             componentPolyomino.grid[bottomRightX][i] = true;
