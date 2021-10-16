@@ -284,15 +284,6 @@ class Grid {
         polyomino.location.x = i;
         polyomino.location.y = j;
 
-
-        var vertical = new Array(polyomino.stepWidth);
-
-        for(var k = 0; k < polyomino.stepWidth; k++){
-            vertical[k] = new Array(2);
-            vertical[k][0] = -1;
-            vertical[k][1] = -1;
-        }
-
         var horizontal = new Array(polyomino.stepHeight);
 
         for(var k = 0; k < polyomino.stepHeight; k++){
@@ -301,28 +292,15 @@ class Grid {
             horizontal[k][1] = -1;
         }
 
-        //vertical & horizontal coordinates
+        //Horizontal coordinates
         for (let k = 0; k < polyomino.stepWidth; k++) {
             for (let l = 0; l < polyomino.stepHeight; l++) {
                 if(polyomino.grid[k][l]){
-                    if(vertical[k][0] == -1)
-                        vertical[k][0] = l;
-                    else
-                        vertical[k][1] = l;
-                    
                     if(horizontal[l][0] == -1)
                         horizontal[l][0] = k;
                     else
                         horizontal[l][1] = k;
                 }
-            }
-        }
-        
-        // fill the vertical line
-        for(let k = 0; k < polyomino.stepWidth;k++){
-            for(let l = vertical[k][0]; l <= vertical[k][1] && vertical[k][0] != -1; l++){
-                polyomino.grid[k][l] = true;
-                polyomino.numberOfOccupiredCells++;
             }
         }
 

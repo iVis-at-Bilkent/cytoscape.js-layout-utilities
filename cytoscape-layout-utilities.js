@@ -1173,6 +1173,7 @@ var layoutUtilities = function (cy, options) {
         var componentPolyomino = new polyominoPacking.Polyomino(x1, y1, componentWidth, componentHeight, gridStep, index);
 
         //fill nodes to polyomino cells
+        var i1 = 0; //node1 index
         component.nodes.forEach(function (node) {
           //top left cell of a node
           var topLeftX = Math.floor((node.x - x1) / gridStep);
@@ -1191,11 +1192,36 @@ var layoutUtilities = function (cy, options) {
             componentPolyomino.grid[bottomRightX][i] = true;
           }
           //all cells between topleft cell and bottom right cell should be occupied
-          // for (var i = topLeftX; i <= bottomRightX; i++) {
-          //   for (var j = topLeftY; j <= bottomRightY; j++) {
-          //     componentPolyomino.grid[i][j] = true;
-          // }
-          // }
+          for (var i = topLeftX; i <= bottomRightX; i++) {
+            for (var j = topLeftY; j <= bottomRightY; j++) {
+              componentPolyomino.grid[i][j] = true;
+            }
+          }
+
+          // To find the smallest close face for the component let's draw all the diagonals
+          var i2 = 0; // node2 index
+          component.nodes.forEach(function (node2){
+            // if i2  < i1 => node2-node edge is already drawn
+            if(i1 <= i2 && node.x != node2.x && node.y != node2.y){
+
+              // draw the line
+              var p0 = {}, p1 = {};
+              p0.x = (node.x - x1) / gridStep;
+              p0.y = (node.y - y1) / gridStep;
+              p1.x = (node2.x - x1) / gridStep;
+              p1.y = (node2.y - y1) / gridStep;
+              //for every edge calculate the super cover
+              var points = generalUtils.LineSuperCover(p0, p1);
+              points.forEach(function (point) {
+                var indexX = Math.floor(point.x);
+                var indexY = Math.floor(point.y);
+                if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight)
+                  componentPolyomino.grid[indexX][indexY] = true;
+              });
+            }
+            i2++;     
+          });
+          i1++;
         });
 
         //fill cells where edges pass
