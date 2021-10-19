@@ -450,12 +450,13 @@ var layoutUtilities = function (cy, options) {
             componentPolyomino.grid[topLeftX][i] = true;
             componentPolyomino.grid[bottomRightX][i] = true;
           }
+          // sweep line will fill inside the node
           //all cells between topleft cell and bottom right cell should be occupied
-          for (var i = topLeftX; i <= bottomRightX; i++) {
-            for (var j = topLeftY; j <= bottomRightY; j++) {
-              componentPolyomino.grid[i][j] = true;
-            }
-          }
+          // for (var i = topLeftX; i <= bottomRightX; i++) {
+          //   for (var j = topLeftY; j <= bottomRightY; j++) {
+          //     componentPolyomino.grid[i][j] = true;
+          //   }
+          // }
           // To find the smallest close face for the component let's draw all the diagonals
           var i2 = 0; // node2 index
           component.nodes.forEach(function (node2){
@@ -503,7 +504,6 @@ var layoutUtilities = function (cy, options) {
         for (var i = 0; i < componentPolyomino.stepWidth; i++) {
           for (var j = 0; j < componentPolyomino.stepHeight; j++) {
             if (componentPolyomino.grid[i][j]) componentPolyomino.numberOfOccupiredCells++;
-
           }
         }
         polyominos.push(componentPolyomino);

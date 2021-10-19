@@ -308,7 +308,6 @@ class Grid {
         for(let k = 0; k < polyomino.stepHeight;k++){
             for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
                 polyomino.grid[l][k] = true;
-                polyomino.numberOfOccupiredCells++;
             }
         }
 

@@ -384,15 +384,6 @@ class Grid {
       polyomino.location.x = i;
       polyomino.location.y = j;
 
-
-      var vertical = new Array(polyomino.stepWidth);
-
-      for(var k = 0; k < polyomino.stepWidth; k++){
-          vertical[k] = new Array(2);
-          vertical[k][0] = -1;
-          vertical[k][1] = -1;
-      }
-
       var horizontal = new Array(polyomino.stepHeight);
 
       for(var k = 0; k < polyomino.stepHeight; k++){
@@ -405,11 +396,6 @@ class Grid {
       for (let k = 0; k < polyomino.stepWidth; k++) {
           for (let l = 0; l < polyomino.stepHeight; l++) {
               if(polyomino.grid[k][l]){
-                  if(vertical[k][0] == -1)
-                      vertical[k][0] = l;
-                  else
-                      vertical[k][1] = l;
-                  
                   if(horizontal[l][0] == -1)
                       horizontal[l][0] = k;
                   else
@@ -417,20 +403,11 @@ class Grid {
               }
           }
       }
-      
-      // fill the vertical line
-      for(let k = 0; k < polyomino.stepWidth;k++){
-          for(let l = vertical[k][0]; l <= vertical[k][1] && vertical[k][0] != -1; l++){
-              polyomino.grid[k][l] = true;
-              polyomino.numberOfOccupiredCells++;
-          }
-      }
 
       // fill the horizontal line
       for(let k = 0; k < polyomino.stepHeight;k++){
           for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
               polyomino.grid[l][k] = true;
-              polyomino.numberOfOccupiredCells++;
           }
       }
 
@@ -1191,19 +1168,19 @@ var layoutUtilities = function (cy, options) {
             componentPolyomino.grid[topLeftX][i] = true;
             componentPolyomino.grid[bottomRightX][i] = true;
           }
+          // sweep line will fill inside the node
           //all cells between topleft cell and bottom right cell should be occupied
-          for (var i = topLeftX; i <= bottomRightX; i++) {
-            for (var j = topLeftY; j <= bottomRightY; j++) {
-              componentPolyomino.grid[i][j] = true;
-            }
-          }
+          // for (var i = topLeftX; i <= bottomRightX; i++) {
+          //   for (var j = topLeftY; j <= bottomRightY; j++) {
+          //     componentPolyomino.grid[i][j] = true;
+          //   }
+          // }
 
           // To find the smallest close face for the component let's draw all the diagonals
           var i2 = 0; // node2 index
           component.nodes.forEach(function (node2){
             // if i2  < i1 => node2-node edge is already drawn
             if(i1 <= i2 && node.x != node2.x && node.y != node2.y){
-
               // draw the line
               var p0 = {}, p1 = {};
               p0.x = (node.x - x1) / gridStep;
@@ -1246,7 +1223,6 @@ var layoutUtilities = function (cy, options) {
         for (var i = 0; i < componentPolyomino.stepWidth; i++) {
           for (var j = 0; j < componentPolyomino.stepHeight; j++) {
             if (componentPolyomino.grid[i][j]) componentPolyomino.numberOfOccupiredCells++;
-
           }
         }
         polyominos.push(componentPolyomino);
