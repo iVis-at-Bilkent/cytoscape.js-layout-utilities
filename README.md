@@ -117,7 +117,7 @@ Packs components of a disconnected graph. Packing is done in a way that it prese
 The function parameter ```components``` has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
 ```randomize``` parameter (default ```true```) determines whether packing is applied in a randomized way (randomizing component positions) or incrementally ( starting from current component positions).
 
-```polygonwise``` parameter (default ```false```) determines how to calculate the graph fullness. If the polygonwise is false, we calculate the fullness with respect to used grids / all the grids. If the polygonwise is true, we consider all the components as polygons and fill all the grids that are inside the component and calculate fullness accordingly.
+```spacewise``` parameter (default ```true```) determines how to calculate the graph fullness. If the spacewise is true, we calculate the fullness with respect to used grids / all the grids. If the spacewise is false, we consider all the components as polygons and fill all the grids that are inside the component and calculate fullness accordingly.
 
 The function returns an object which has the following properties:
 1. shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input component should be shifted by this amount.
