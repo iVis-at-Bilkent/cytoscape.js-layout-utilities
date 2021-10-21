@@ -279,8 +279,9 @@ class Grid {
      * @param { Polyomino } polyomino 
      * @param { number } i 
      * @param { number } j 
+     * @param {boolean} spacewise Consider whether count the grid cells inside the face for calculating fullness or not 
      */
-    placePolyomino(polyomino, i, j) {
+    placePolyomino(polyomino, i, j, spacewise = true) {
         polyomino.location.x = i;
         polyomino.location.y = j;
 
@@ -307,6 +308,8 @@ class Grid {
         // fill the horizontal line
         for(let k = 0; k < polyomino.stepHeight;k++){
             for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
+                if(spacewise && !polyomino.grid[l][k])
+                    polyomino.numberOfOccupiredCells++;
                 polyomino.grid[l][k] = true;
             }
         }
