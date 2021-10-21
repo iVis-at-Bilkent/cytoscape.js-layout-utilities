@@ -321,7 +321,7 @@
           subgraphs.push(subgraph);
         });
 
-        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked, document.getElementById('spacewise-checkbox').checked);
+        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked, document.getElementById('polygonwise-checkbox').checked);
         $("#resultAspectRatio").text(result.aspectRatio || "-");
         $("#resultFullness").text(result.fullness.toFixed(2) + " %");
         $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
@@ -579,7 +579,7 @@
     </div>
     <div style="display: flex; align-items: flex-start;">
       <label><span style="font-weight:normal">Consider as Polygons on Calculations</span></label>
-      <input id="spacewise-checkbox" type="checkbox" value="bruh">
+      <input id="polygonwise-checkbox" type="checkbox" value="bruh">
     </div>
   </div>
   <br>

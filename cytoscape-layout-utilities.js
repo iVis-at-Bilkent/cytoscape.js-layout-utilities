@@ -379,9 +379,9 @@ class Grid {
      * @param { Polyomino } polyomino 
      * @param { number } i 
      * @param { number } j 
-     * @param {boolean} spacewise Consider whether count the grid cells inside the face for calculating fullness or not 
+     * @param {boolean} polygonwise Consider whether count the grid cells inside the face for calculating fullness or not 
      */
-     placePolyomino(polyomino, i, j, spacewise = true) {
+     placePolyomino(polyomino, i, j, polygonwise = false) {
       polyomino.location.x = i;
       polyomino.location.y = j;
 
@@ -408,7 +408,7 @@ class Grid {
       // fill the horizontal line
       for(let k = 0; k < polyomino.stepHeight;k++){
           for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
-            if(spacewise && !polyomino.grid[l][k])
+            if(!polygonwise && !polyomino.grid[l][k])
               polyomino.numberOfOccupiredCells++;  
             polyomino.grid[l][k] = true;
           }
@@ -1072,10 +1072,10 @@ var layoutUtilities = function (cy, options) {
 
   /**
    * @param { any[] } components 
-   * @param {boolean} spacewise include the empty cells inside the components to calculate how well the algorithm perform
-   * spacewise is true by default so the algorithm looks nonempty area/total area
+   * @param {boolean} polygonwise include the empty cells inside the components to calculate how well the algorithm perform
+   * polygonwise is false by default so the algorithm looks nonempty area/total area
    */
-  instance.packComponents = function (components, randomize = true, spacewise = true) {
+  instance.packComponents = function (components, randomize = true, polygonwise = false) {
     
     var spacingAmount = options.componentSpacing;
     
@@ -1225,7 +1225,7 @@ var layoutUtilities = function (cy, options) {
                  var indexX = Math.floor(point.x);
                  var indexY = Math.floor(point.y);
                  if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight){
-                  if(spacewise && !componentPolyomino.grid[indexX][indexY])
+                  if(!polygonwise && !componentPolyomino.grid[indexX][indexY])
                     componentPolyomino.numberOfOccupiredCells++;
                   componentPolyomino.grid[indexX][indexY] = true;
                  }
@@ -1259,7 +1259,7 @@ var layoutUtilities = function (cy, options) {
       mainGrid = new polyominoPacking.Grid((gridWidth * 2) + gridStep, (gridHeight * 2) + gridStep, gridStep);
 
       //place first (biggest) polyomino in the center
-      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y, spacewise);
+      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y, polygonwise);
 
       //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
       for (var i = 1; i < polyominos.length; i++) {
@@ -1312,7 +1312,7 @@ var layoutUtilities = function (cy, options) {
           });
         }
 
-        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y, spacewise);
+        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y, polygonwise);
       }
 
       //sort polyominos according to index of input to return correct output order

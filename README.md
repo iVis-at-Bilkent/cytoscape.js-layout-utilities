@@ -111,11 +111,13 @@ Places hidden neighbors of each given node. It is assumed that the given nodes h
 
 Places each given node. It is assumed that the remaining nodes in the graph already have pre-calculated layout, whereas given nodes do not. With this method, given nodes are positioned with respect to their already laid out neighbors so that a following incremental layout produce a good layout for the entire graph.
 
-```instance.packComponents(components, randomize = true)```
+```instance.packComponents(components, randomize = true, spacewise = true)```
 
 Packs components of a disconnected graph. Packing is done in a way that it preserves the center of the  [bounding rectangle](https://en.wikipedia.org/wiki/Minimum_bounding_rectangle) of components. 
 The function parameter ```components``` has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
 ```randomize``` parameter (default ```true```) determines whether packing is applied in a randomized way (randomizing component positions) or incrementally ( starting from current component positions).
+
+```polygonwise``` parameter (default ```false```) determines how to calculate the graph fullness. If the polygonwise is false, we calculate the fullness with respect to used grids / all the grids. If the polygonwise is true, we consider all the components as polygons and fill all the grids that are inside the component and calculate fullness accordingly.
 
 The function returns an object which has the following properties:
 1. shift amount needed: an array of shift amounts (dx, dy). Each element in the corrosponding (same index) input component should be shifted by this amount.
