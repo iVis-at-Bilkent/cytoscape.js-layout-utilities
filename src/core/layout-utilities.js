@@ -350,11 +350,10 @@ var layoutUtilities = function (cy, options) {
 
   /**
    * @param { any[] } components 
-   * @param {boolean} spacewise include the empty cells inside the components to calculate how well the algorithm perform
-   * spacewise is true by default so the algorithm looks how well the free cells (outside the polyomino) is used
+   * @param {boolean} considerAsPolygons include the empty cells inside the components to calculate how well the algorithm perform
+   * considerAsPolygons is false by default so the algorithm looks how well the free cells (outside the polyomino) is used
    */
-  instance.packComponents = function (components, randomize = true, spacewise = true) {
-    
+  instance.packComponents = function (components, randomize = true, considerAsPolygons = false) {
     var spacingAmount = options.componentSpacing;
     
     if(spacingAmount !== undefined) { // is spacingAmount is undefined, we expect it to be an incremental packing
@@ -505,7 +504,7 @@ var layoutUtilities = function (cy, options) {
                  var indexX = Math.floor(point.x);
                  var indexY = Math.floor(point.y);
                  if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight){
-                  if(spacewise && !componentPolyomino.grid[indexX][indexY])
+                  if(considerAsPolygons && !componentPolyomino.grid[indexX][indexY])
                     componentPolyomino.numberOfOccupiredCells++;
                   componentPolyomino.grid[indexX][indexY] = true;
                  }
@@ -539,7 +538,7 @@ var layoutUtilities = function (cy, options) {
       mainGrid = new polyominoPacking.Grid((gridWidth * 2) + gridStep, (gridHeight * 2) + gridStep, gridStep);
 
       //place first (biggest) polyomino in the center
-      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y, spacewise);
+      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y, considerAsPolygons);
 
       //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
       for (var i = 1; i < polyominos.length; i++) {
@@ -592,7 +591,7 @@ var layoutUtilities = function (cy, options) {
           });
         }
 
-        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y, spacewise);
+        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y, considerAsPolygons);
       }
 
       //sort polyominos according to index of input to return correct output order
