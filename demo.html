@@ -321,7 +321,7 @@
           subgraphs.push(subgraph);
         });
 
-        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked);
+        var result = api.packComponents(subgraphs, !document.getElementById('Incremental-checkbox').checked, document.getElementById('spacewise-checkbox').checked);
         $("#resultAspectRatio").text(result.aspectRatio || "-");
         $("#resultFullness").text(result.fullness.toFixed(2) + " %");
         $("#resultAdjustedFullness").text(result.adjustedFullness ? result.adjustedFullness + " %" : "-");
@@ -459,12 +459,13 @@
       document.getElementById('graphml-input')
         .addEventListener('change', function (ev) {
           const file = this.files[0];
-
-          cy.elements().remove(); 
-          file.text().then((s) => {
+          if(file){
+            cy.elements().remove(); 
+            file.text().then((s) => {
               cy.graphml({layoutBy: "fcose"})
               cy.graphml(s);
-          });
+            });
+          }
         });
 
       document.getElementById('Incremental-checkbox')
@@ -575,10 +576,11 @@
         <b>Result fullness : <span id=resultFullness style="color:green;"">-</span><br/><br/>
                 <b>Result adjusted fullness : <span id=resultAdjustedFullness style="
             color:green;">-</span><br /><br />
-
-
     </div>
-
+    <div style="display: flex; align-items: flex-start;">
+      <label><span style="font-weight:normal">Consider as Polygons on Calculations</span></label>
+      <input id="spacewise-checkbox" type="checkbox" value="bruh">
+    </div>
   </div>
   <br>
   <div>
