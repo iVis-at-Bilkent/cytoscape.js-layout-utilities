@@ -115,8 +115,7 @@ Places each given node. It is assumed that the remaining nodes in the graph alre
 
 Packs components of a disconnected graph. Packing is done in a way that it preserves the center of the  [bounding rectangle](https://en.wikipedia.org/wiki/Minimum_bounding_rectangle) of components. 
 The function parameter ```components``` has two arrays, namely nodes and edges. Each node has properties (x, y), top left corner coordinate of the node, width and height. Each edge has the properties (startX, startY), (endX, endY) representing the starting and ending points of the edge, respectively.
-```randomize``` parameter (default ```true```) determines whether packing is applied in a randomized way (randomizing component positions) or incrementally ( starting from current component positions).
-
+```randomize``` parameter (default ```true```) determines whether packing is applied in a randomized way (randomizing component positions) or incrementally ( starting from current component positions). 
 ```considerAsPolygons``` parameter (default ```false```) determines how to calculate the graph fullness. If the considerAsPolygons is false, we calculate the fullness with respect to used grids / all the grids. If the considerAsPolygons is true, we consider all the components as polygons and fill all the grids that are inside the component and calculate fullness accordingly.
 
 The function returns an object which has the following properties:
