@@ -15,6 +15,224 @@ var layoutUtilities = function (cy, options) {
     options[name] = val;
   };
 
+  instance.placeNewNodesNewHeuristic = function (newNodes) {
+    const currentNodes = cy.nodes(':visible').difference(newNodes);
+    currentNodes.forEach(node => node.data('calculated', true));
+    const maxRank = this.rankNodes(newNodes, currentNodes);
+    const postponedNodes = [];
+    for (let i = 0; i <= maxRank; i++) {
+      let compounds = [];
+      for (const node of newNodes.filter(`node[rank=${i}]`)) {
+        if (node.isParent()) {
+          compounds.push(node);
+        } else if (node.isChild() && newNodes.contains(node.parent())) {
+          // If it is inside a new node, escalate its neighbors to parent
+          const neighbors = node.neighborhood().nodes().filter('node[calculated]');
+          const escalatedNeighbors = node.parent().data('escalatedNeighbors');
+          node.parent().data('escalatedNeighbors', [...(escalatedNeighbors || []), ...neighbors]);
+        } else if (i === 0 && node.neighborhood().nodes().length !== 0 && node.isOrphan()) {
+          // Postpone this type of nodes since their neighbors will be placed after
+          postponedNodes.push(node);
+        } else {
+          this.setOptimumPosition(node);
+        }
+      }
+      compounds = this.sortByHierarchy(compounds);
+      for (const node of compounds) {
+        if (node.isChild() && newNodes.contains(node.parent())) {
+          // If this compound node is inside another new node, escalete the neighbors to parent
+          const escalatedNeighbors = node.parent().data('escalatedNeighbors');
+          const nodesNeighbors = node.neighborhood().filter('node[calculated]');
+          node.parent().data('escalatedNeighbors', [...(escalatedNeighbors || []), 
+                                                    ...nodesNeighbors,
+                                                    ...(node.data('escalatedNeighbors') || [])]);
+        } else {
+          // Calculate optimum position of the compound node with respect to siblings and neighbors
+          const siblingPositions = node.siblings().filter('node[calculated]').map(e => e.position());
+          const siblingAvg = this.getAvgPos(siblingPositions);
+
+          const neighbors = [...node.data('escalatedNeighbors'), ...node.neighborhood().filter('node[calculated]')];
+          const uniqueNeighbors = [...new Set(neighbors)];
+          const neighborsAvg = this.getAvgPos(uniqueNeighbors.map(e => e.position()));
+          
+          const calculatedAvgPos = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
+          this.placeCompoundNode(node, calculatedAvgPos, options.idealEdgeLength);
+        }
+      }
+    }
+    for (const node of postponedNodes) {
+      this.setOptimumPosition(node);
+    }
+  };
+
+  /** Get an average point between siblings average and neighbors average, with respect to siblingWeight */
+  instance.getSiblingNeighborAverage = function (siblingAvg, neighborsAvg) {
+    switch (true) {
+      case !!siblingAvg && !!neighborsAvg:
+        return {
+          x: siblingAvg.x * options.siblingWeight + neighborsAvg.x * (1 - options.siblingWeight),
+          y: siblingAvg.y * options.siblingWeight + neighborsAvg.y * (1 - options.siblingWeight)
+        };
+      case !!siblingAvg:
+        return siblingAvg;
+      case !!neighborsAvg:
+        return neighborsAvg;
+      default:
+        return {
+          x: cy.width() * -0.4,
+          y: cy.height() * -0.4
+        };
+    }
+  };
+
+  /** 
+   * Get the coordinates of a point between source and target, 
+   * where distance between point and source is offset 
+   */
+  instance.getWeightedMiddlePoint = function (source, target, offset) {
+    const calculateDistance = function (a, b) {
+      return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2));
+    };
+    if (target) {
+      const distance = calculateDistance(source, target);
+      if (distance) {
+        const ratio = offset / distance;
+        const highX = source.x > target.x ? -1 : 1;
+        const highY = source.y > target.y ? -1 : 1;
+        return {
+          x: source.x + highX * ratio * Math.abs(target.x - source.x),
+          y: source.y + highY * ratio * Math.abs(target.y - source.y)
+        }
+      }
+    }
+    return source;
+  };
+
+  /** Recursive function for placing the elements of a new node */
+  instance.placeCompoundNode = function (placedNode, coordinate, offset) {
+    const getOptimumPos = function (node, coordinate, offset) {
+      // Calculate the optimum position according to the average point of the neighbors and suggested coordinate
+      const allNeighbors = [...node.neighborhood().filter('node[calculated]'), ...(node.data('escalatedNeighbors') || [])];
+      const neighborsAvg = this.getAvgPos(allNeighbors.map(e => e.position()));
+      const weightedMiddlePoint = this.getWeightedMiddlePoint(coordinate, neighborsAvg, offset);
+      return this.getPositionWithOffset(weightedMiddlePoint, offset);
+    }.bind(this);
+    const postponedCompounds = [];
+    for (const node of placedNode.children()) {
+      if (node.isParent()) {
+        // Place compound nodes after placing all simple nodes
+        postponedCompounds.push(node);
+      } else {
+        node.position(getOptimumPos(node, coordinate, offset));
+        node.data('calculated', true);
+      }
+    }
+    for (const node of postponedCompounds) {
+      this.placeCompoundNode(node, getOptimumPos(node, coordinate, offset), offset / 2);
+    }
+  };
+
+  /** Sort given nodes so that most inner compound will come first in the sorted list */
+  instance.sortByHierarchy = function (nodes) {
+    let newNodes = [...nodes]; // deep copy
+    for (const node of nodes) {
+      const selfIndex = newNodes.findIndex(e => e.id() === node.id());
+      const parentIndex = newNodes.findIndex(e => e.id() === node.parent().id());
+      if (parentIndex !== -1 && parentIndex < selfIndex) {
+        const temp = newNodes[selfIndex];
+        newNodes[selfIndex] = newNodes[parentIndex];
+        newNodes[parentIndex] = temp;
+      }
+    }
+    return newNodes;
+  }
+
+  /** Get average position of given coordinates */
+  instance.getAvgPos = function (positions) {
+    if (positions.length === 0) return false;
+    const {xTotal, yTotal} = positions.reduce((acc, position) => {
+      const {x, y} = position;
+      acc.xTotal += x;
+      acc.yTotal += y;
+      return acc;
+    }, {xTotal: 0, yTotal: 0});
+    return {x: xTotal / positions.length, y: yTotal / positions.length};
+  }
+
+  /** Get new position whose distance to original one is offset */
+  instance.getPositionWithOffset = function(position, offset = options.offset) {
+    if (!position) {
+      position = {
+        x: cy.width() * -0.4,
+        y: cy.height() * -0.4
+      };
+    }
+    return {
+      x: position.x + this.generateRandom(0, offset / 2, 0),
+      y: position.y + this.generateRandom(0, offset / 2, 0),
+    }
+  };
+
+  instance.setOptimumPosition = function (node) {
+    const siblings = node.siblings().filter('node[calculated]');
+    const neighbors = node.neighborhood().filter('node[calculated]');
+
+    const siblingAvg = this.getAvgPos(siblings.map(e => e.position()));
+    const neighborsAvg = this.getAvgPos(neighbors.map(e => e.position()));
+
+    if (siblingAvg && !neighborsAvg && siblings.length === 1) {
+      this.nodeWithOneNeighbor(siblings[0], node);
+    } else if (neighborsAvg && !siblingAvg && neighbors.length === 1) {
+      this.nodeWithOneNeighbor(neighbors[0], node);
+    } else {
+      const newPosition = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
+      node.position(this.getPositionWithOffset(newPosition));
+    }
+    node.data('calculated', true);
+  };
+
+  instance.rankNodes = function (newNodes, currentNodes) {
+    const unrankedNodes = newNodes.filter(node => !node.isParent());
+    const n = unrankedNodes.length;
+    let maxRank = 0;
+    let iteration = 0;
+    while (unrankedNodes.length > 0 && iteration < n) {
+      for (let j = unrankedNodes.length - 1; j >= 0; j--) {
+        const node = unrankedNodes[j];
+        let calculatedRank = -1;
+
+        const neighborNodes = node.neighborhood().nodes();
+        const ranksOfNeighbors = neighborNodes.filter('node[rank]').map(e => e.data('rank'));
+        if (neighborNodes.intersection(currentNodes).length > 0) {
+          calculatedRank = 1;
+        } else if (ranksOfNeighbors.length > 0) {
+          calculatedRank = Math.min(...ranksOfNeighbors) + 1;
+        }
+
+        if (calculatedRank !== -1) {
+          node.data("rank", calculatedRank);
+          maxRank = Math.max(maxRank, calculatedRank);
+          for (const anc of node.ancestors()) {
+            anc.data("rank", Math.max(anc.data("rank") || 0, calculatedRank));
+          }
+          unrankedNodes.splice(j, 1);
+        }
+      }
+      iteration++;
+    }
+    // If all n iterations are done and there are still unrankedNodes, it means that
+    // they should be rank 0
+    for (const node of unrankedNodes) {
+      node.data("rank", 0);
+      for (const anc of node.ancestors()) {
+        if (!anc.data("rank")) {
+          anc.data("rank", 0);
+        }
+      }
+    }
+    return maxRank;
+  };
+  
   instance.placeHiddenNodes = function (mainEles) {
     mainEles.forEach(function (mainEle) {
       var hiddenEles = mainEle.neighborhood().nodes(":hidden");
