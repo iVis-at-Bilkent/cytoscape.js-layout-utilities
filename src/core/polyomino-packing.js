@@ -279,10 +279,41 @@ class Grid {
      * @param { Polyomino } polyomino 
      * @param { number } i 
      * @param { number } j 
+     * @param {boolean} considerAsPolygons Consider whether count the grid cells inside the face for calculating fullness or not 
      */
-    placePolyomino(polyomino, i, j) {
+    placePolyomino(polyomino, i, j, considerAsPolygons = true) {
         polyomino.location.x = i;
         polyomino.location.y = j;
+
+        var horizontal = new Array(polyomino.stepHeight);
+
+        for(var k = 0; k < polyomino.stepHeight; k++){
+            horizontal[k] = new Array(2);
+            horizontal[k][0] = -1;
+            horizontal[k][1] = -1;
+        }
+
+        //Horizontal coordinates
+        for (let k = 0; k < polyomino.stepWidth; k++) {
+            for (let l = 0; l < polyomino.stepHeight; l++) {
+                if(polyomino.grid[k][l]){
+                    if(horizontal[l][0] == -1)
+                        horizontal[l][0] = k;
+                    else
+                        horizontal[l][1] = k;
+                }
+            }
+        }
+
+        // fill the horizontal line
+        for(let k = 0; k < polyomino.stepHeight;k++){
+            for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
+                if(considerAsPolygons && !polyomino.grid[l][k])
+                    polyomino.numberOfOccupiredCells++;
+                polyomino.grid[l][k] = true;
+            }
+        }
+
         for (let k = 0; k < polyomino.stepWidth; k++) {
             for (let l = 0; l < polyomino.stepHeight; l++) {
                 if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino

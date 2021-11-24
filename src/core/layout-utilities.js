@@ -569,9 +569,10 @@ var layoutUtilities = function (cy, options) {
 
   /**
    * @param { any[] } components 
+   * @param {boolean} considerAsPolygons include the empty cells inside the components to calculate how well the algorithm perform
+   * considerAsPolygons is false by default so the algorithm looks how well the free cells (outside the polyomino) is used
    */
-  instance.packComponents = function (components, randomize = true) {
-    
+  instance.packComponents = function (components, randomize = true, considerAsPolygons = false) {
     var spacingAmount = options.componentSpacing;
     
     if(spacingAmount !== undefined) { // is spacingAmount is undefined, we expect it to be an incremental packing
@@ -658,7 +659,17 @@ var layoutUtilities = function (cy, options) {
           //bottom right cell of a node
           var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
           var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
+          
+          for(var i = topLeftX; i <= bottomRightX; i++) {
+            componentPolyomino.grid[i][topLeftY] = true;
+            componentPolyomino.grid[i][bottomRightY] = true;
+          }
 
+          for(var i = topLeftY; i <= bottomRightY; i++) {
+            componentPolyomino.grid[topLeftX][i] = true;
+            componentPolyomino.grid[bottomRightX][i] = true;
+          }
+          // sweep line will fill inside the node but right now we need to fill it to find the numberOfoccupired Cells
           //all cells between topleft cell and bottom right cell should be occupied
           for (var i = topLeftX; i <= bottomRightX; i++) {
             for (var j = topLeftY; j <= bottomRightY; j++) {
@@ -689,9 +700,39 @@ var layoutUtilities = function (cy, options) {
         for (var i = 0; i < componentPolyomino.stepWidth; i++) {
           for (var j = 0; j < componentPolyomino.stepHeight; j++) {
             if (componentPolyomino.grid[i][j]) componentPolyomino.numberOfOccupiredCells++;
-
           }
         }
+        
+        // these edges will not count as occupied
+        var i1 = 0; //node1 index
+        component.nodes.forEach(function(node1){
+           // To find the smallest close face for the component let's draw all the diagonals
+           var i2 = 0; // node2 index
+           component.nodes.forEach(function (node2){
+             // if i2  < i1 => node2-node1 edge is already drawn
+             if(i1 <= i2 && node1.x != node2.x && node1.y != node2.y){
+               // draw the line
+               var p0 = {}, p1 = {};
+               p0.x = (node1.x - x1) / gridStep;
+               p0.y = (node1.y - y1) / gridStep;
+               p1.x = (node2.x - x1) / gridStep;
+               p1.y = (node2.y - y1) / gridStep;
+               //for every edge calculate the super cover
+               var points = generalUtils.LineSuperCover(p0, p1);
+               points.forEach(function (point) {
+                 var indexX = Math.floor(point.x);
+                 var indexY = Math.floor(point.y);
+                 if (indexX >= 0 && indexX < componentPolyomino.stepWidth && indexY >= 0 && indexY < componentPolyomino.stepHeight){
+                  if(considerAsPolygons && !componentPolyomino.grid[indexX][indexY])
+                    componentPolyomino.numberOfOccupiredCells++;
+                  componentPolyomino.grid[indexX][indexY] = true;
+                 }
+               });
+             }
+             i2++;     
+           });
+           i1++;
+        });
         polyominos.push(componentPolyomino);
       });
 
@@ -716,7 +757,7 @@ var layoutUtilities = function (cy, options) {
       mainGrid = new polyominoPacking.Grid((gridWidth * 2) + gridStep, (gridHeight * 2) + gridStep, gridStep);
 
       //place first (biggest) polyomino in the center
-      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y);
+      mainGrid.placePolyomino(polyominos[0], mainGrid.center.x, mainGrid.center.y, considerAsPolygons);
 
       //for every polyomino try placeing it in first neighbors and calculate utility if none then second neighbor and so on..
       for (var i = 1; i < polyominos.length; i++) {
@@ -769,7 +810,7 @@ var layoutUtilities = function (cy, options) {
           });
         }
 
-        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y);
+        mainGrid.placePolyomino(polyominos[i], resultLocation.x, resultLocation.y, considerAsPolygons);
       }
 
       //sort polyominos according to index of input to return correct output order
