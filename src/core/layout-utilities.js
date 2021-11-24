@@ -130,6 +130,7 @@ var layoutUtilities = function (cy, options) {
     for (const node of postponedCompounds) {
       this.placeCompoundNode(node, getOptimumPos(node, coordinate, offset), offset / 2);
     }
+    placedNode.data('calculated', true);
   };
 
   /** Sort given nodes so that most inner compound will come first in the sorted list */
