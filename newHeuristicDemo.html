@@ -24,6 +24,10 @@
       font-size: 14px;
     }
 
+    .container {
+      display: flex;
+    }
+
     .button {
       height: 35px;
       font-size: 16;
@@ -66,18 +70,13 @@
     }
 
     #cy {
-      width: 80%;
-      height: 95%;
-      left: 21%;
-      top: 0%;
-      float: left;
+      flex: 0.8;
       overflow: hidden;
-      position: fixed;
 
     }
 
     .topnav {
-      width: 20%;
+      flex: 0.2;
       background-color: #e9e9e9;
       /* font-weight: bold;*/
       border-color: black;
@@ -228,13 +227,6 @@
               'border-width': '5px'
             }
           },
-          {
-            selector: 'node[existing]',
-            style: {
-              'border-color': '#6E44FF',
-              'border-width': '5px'
-            }
-          },
         ],
 
         elements: {
@@ -259,6 +251,7 @@
         randomize: false,
         fit: false,
         packComponents: false,
+        nodeDimensionsIncludeLabels: true
       };
 
       cy.layout(layoutOptions).run();
@@ -371,10 +364,13 @@
           newNodes.merge(newNode);
 
           let neighborCount;
+          let selectedNodes = cy.nodes(":selected");
           switch (Math.ceil(Math.random() * 3)) {
             case 1:
-              neighborCount = 0;
-              break;
+              if (selectedNodes.length === 0) {
+                neighborCount = 0;
+                break;
+              }
             case 2:
               neighborCount = 1;
               break;
@@ -391,30 +387,33 @@
             forbiddenNodes.merge(newNode.ancestors());
             forbiddenNodes.merge(newNode.descendants());
             const availableNewNodes = newNodes.difference(forbiddenNodes)
-            const availableCurrentNodes = currentNodes.difference(forbiddenNodes)
+            const availableCurrentNodes = selectedNodes.length > 0 ? selectedNodes : currentNodes.difference(forbiddenNodes)
             const selectedNeighbors = [];
             switch (Math.ceil(Math.random() * 3)) {
               case 1: { // All new neighbors
-                const dummyNodeCount = neighborCount - availableNewNodes.length;
-                for (let i = 0; i < dummyNodeCount; i++) {
-                  // Add necessary dummy nodes
-                  const dummyID = `${id}-d${i}`;
-                  const dummyNode = cy.add({ group: 'nodes', data: { id: dummyID, name: dummyID}});
-                  newNodes.merge(dummyNode)
-                  availableNewNodes.merge(dummyNode)
+                if (selectedNodes.length === 0) {
+                  const dummyNodeCount = neighborCount - availableNewNodes.length;
+                  for (let i = 0; i < dummyNodeCount; i++) {
+                    // Add necessary dummy nodes
+                    const dummyID = `${id}-d${i}`;
+                    const dummyNode = cy.add({ group: 'nodes', data: { id: dummyID, name: dummyID}});
+                    newNodes.merge(dummyNode)
+                    availableNewNodes.merge(dummyNode)
+                  }
+                  for (let i = 0; i < neighborCount; i++) {
+                    let randomNeighbor;
+                    do {
+                      randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
+                    } while (selectedNeighbors.includes(randomNeighbor.id()));
+                    selectedNeighbors.push(randomNeighbor.id());
+                    cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+                  }
+                  break;
                 }
-                for (let i = 0; i < neighborCount; i++) {
-                  let randomNeighbor;
-                  do {
-                    randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
-                  } while (selectedNeighbors.includes(randomNeighbor.id()));
-                  selectedNeighbors.push(randomNeighbor.id());
-                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
-                }
-                break;
               }
               case 2: { // All existing neighbors
-                for (let i = 0; i < neighborCount; i++) {
+                const availableCount = Math.min(neighborCount, availableCurrentNodes.length);
+                for (let i = 0; i < availableCount; i++) {
                   let randomNeighbor;
                   do {
                     randomNeighbor = availableCurrentNodes[Math.floor(Math.random() * availableCurrentNodes.length)];
@@ -437,10 +436,10 @@
                   let randomNeighbor;
                   do {
                     let tempNodes;
-                    if (i < neighborCount / 2) {
-                      tempNodes = availableNewNodes;
-                    } else {
+                    if (i < Math.min(neighborCount / 2, availableCurrentNodes.length)) {
                       tempNodes = availableCurrentNodes;
+                    } else {
+                      tempNodes = availableNewNodes;
                     }
                     randomNeighbor = tempNodes[Math.floor(Math.random() * tempNodes.length)];
                   } while (selectedNeighbors.includes(randomNeighbor.id()));
@@ -477,6 +476,10 @@
       document.getElementById('siblingWeight').addEventListener('change', function(e) {
         api.setOption("siblingWeight", parseFloat(e.target.value));
       });
+
+      $('#rearrange').click(function() {
+        cy.layout(layoutOptions).run();
+      })
 
       $("#undo").click(function() {
         const els = window.addedElsHistory.shift();
@@ -515,87 +518,81 @@
 
 <body>
   <h1>New Heuristic Random Demo</h1>
-  <div class="topnav">
-    <button id="reset" class="button">Restart</button>
-    <br /> <br />
-    <button id="newHeuristic" class="button">New Heuristic</button>
-    <br /> <br />                
-    <button id="undo" class="button">Undo</button>
-    <button id="redo" class="button">Redo</button>
-
-    <form>
-      <p style="position: relative;">
-        <label for="layout" style="vertical-align:middle;">
-          Rearrange on changes
-        </label>
-        <input type="checkbox" class="input" id="layout" name="layout" style="vertical-align:middle; margin-bottom: 10px;">
-      </p>
-      <p>
-        <label for="siblingWeight">Sibling Weight</label>
-        <input id="siblingWeight" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25"
-          min=".25" value="0.7">
-      </p>
-      <p>
-        <label for="initialNodeCount">Initial Node Count</label>
-        <input id="initialNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="5"
-          min="5" value="10">
-      </p>
-      <p>
-        <label for="averageDegree">Average Degree</label>
-        <input id="averageDegree" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
-          min="0" max="10" value="2">
-      </p>
-      <p>
-        <label for="compoundNodeRatio">Compound Node Ratio</label>
-        <input id="compoundNodeRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.1"
-          min="0" max="0.5" value="0.1">
-      </p>
-      <p>
-        <label for="averageChildrenCount">Average Children Count</label>
-        <input id="averageChildrenCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
-          min="0" max="10" value="2">
-      </p>
+  <div class='container'>
+    <div class="topnav">
+      <button id="reset" class="button">Restart</button>
+      <br /> <br />
+      <button id="newHeuristic" class="button">New Heuristic</button>
+      <br /> <br />   
+      <button id="rearrange" class="button">Rearrange</button>
+      <br /> <br />              
+      <button id="undo" class="button">Undo</button>
+      <button id="redo" class="button">Redo</button>
+      <br /> <br />
+      <form>
+        <p>
+          <label for="siblingWeight">Sibling Weight</label>
+          <input id="siblingWeight" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25"
+            min=".25" value="0.7">
+        </p>
+        <p>
+          <label for="initialNodeCount">Initial Node Count</label>
+          <input id="initialNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="5"
+            min="5" value="10">
+        </p>
+        <p>
+          <label for="averageDegree">Average Degree</label>
+          <input id="averageDegree" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+            min="0" max="10" value="2">
+        </p>
+        <p>
+          <label for="compoundNodeRatio">Compound Node Ratio</label>
+          <input id="compoundNodeRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.1"
+            min="0" max="0.5" value="0.1">
+        </p>
+        <p>
+          <label for="averageChildrenCount">Average Children Count</label>
+          <input id="averageChildrenCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+            min="0" max="10" value="2">
+        </p>
+        <br/>
+        <p>
+          <label for="newNodeCount">New Node Count</label>
+          <input id="newNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+            min="0" max="10" value="2">
+        </p>
+      </form>
+      <div style="display: flex;">
+        <span style="background-color: #8FE388; width: 16px; height: 16px; margin-right: 10px;"></span>
+        <span>Rank 0</span>
+      </div>
+      <div style="display: flex;">
+        <span style="background-color: #D36135; width: 16px; height: 16px; margin-right: 10px;"></span>
+        <span>Rank 1</span>
+      </div>
+      <div style="display: flex;">
+        <span style="background-color: #279AF1; width: 16px; height: 16px; margin-right: 10px;"></span>
+        <span>Rank 2</span>
+      </div>
+      <div style="display: flex;">
+        <span style="background-color: #89043D; width: 16px; height: 16px; margin-right: 10px;"></span>
+        <span>Rank 3</span>
+      </div>
       <br/>
-      <p>
-        <label for="newNodeCount">New Node Count</label>
-        <input id="newNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
-          min="0" max="10" value="2">
-      </p>
-    </form>
-    <div style="display: flex;">
-      <span style="background-color: #8FE388; width: 16px; height: 16px; margin-right: 10px;"></span>
-      <span>Rank 0</span>
+      <div>
+        Node name convention: <b>{a}{b}-{c}[-{d}]</b>
+        <br/>
+        <b>a:</b> "n" for new nodes, "c" for initial nodes
+        <br/>
+        <b>b:</b> # of iteration where this node is placed
+        <br/>
+        <b>c:</b> # of node in the iteration
+        <br/>
+        <b>d:</b> (Optional) indicates auxiliary node
+      </div>
     </div>
-    <div style="display: flex;">
-      <span style="background-color: #D36135; width: 16px; height: 16px; margin-right: 10px;"></span>
-      <span>Rank 1</span>
-    </div>
-    <div style="display: flex;">
-      <span style="background-color: #279AF1; width: 16px; height: 16px; margin-right: 10px;"></span>
-      <span>Rank 2</span>
-    </div>
-    <div style="display: flex;">
-      <span style="background-color: #89043D; width: 16px; height: 16px; margin-right: 10px;"></span>
-      <span>Rank 3</span>
-    </div>
-    <div style="display: flex;">
-      <span style="background-color: #6E44FF; width: 16px; height: 16px; margin-right: 10px;"></span>
-      <span>Existing Node</span>
-    </div>
-    <br/>
-    <div>
-      Node name convention: <b>{a}{b}-{c}[-{d}]</b>
-      <br/>
-      <b>a:</b> "n" for new nodes, "c" for initial nodes
-      <br/>
-      <b>b:</b> # of iteration where this node is placed
-      <br/>
-      <b>c:</b> # of node in the iteration
-      <br/>
-      <b>d:</b> (Optional) indicates auxiliary node
-    </div>
+    <div id="cy"></div>
   </div>
-  <div id="cy"></div>
 
 </body>
 
