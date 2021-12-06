@@ -726,6 +726,7 @@ var polyominoPacking = __webpack_require__(0);
 const { Point, Polyomino } = __webpack_require__(0);
 const { getCenter } = __webpack_require__(1);
 const pose = __webpack_require__(4);
+const extensionName = 'layout_utilities';
 
 var layoutUtilities = function (cy, options) {
   
@@ -737,21 +738,53 @@ var layoutUtilities = function (cy, options) {
     options[name] = val;
   };
 
+  instance.setScratchProp = function ({node, scratchName = extensionName, prop, value}) {
+    const scratch = node.scratch(scratchName);
+    if (scratch) {
+      scratch[prop] = value;
+      node.scratch(scratchName, scratch);
+    } else {
+      node.scratch(scratchName, { [prop]: value} );
+    }
+  };
+
+  instance.getScratchProp = function ({node, scratchName = extensionName, prop, defaultValue}) {
+    const { [prop]: result = defaultValue } = node.scratch(scratchName) || {};
+    return result;
+  };
+
+  instance.filterByScratchProp = function ({nodes, scratchName = extensionName, prop, value}) {
+    return nodes.filter(node => {
+      const { [prop]: propValue } = node.scratch(scratchName) || {};
+      return propValue === value;
+    })
+  };
+
+  instance.getCalculatedNeighbors = function (node) {
+    return this.filterByScratchProp({nodes: node.neighborhood().nodes(), prop: 'calculated', value: true });
+  };
+
+  instance.getCalculatedSiblings = function (node) {
+    return this.filterByScratchProp({nodes: node.siblings(), prop: 'calculated', value: true });
+  };
+
   instance.placeNewNodesNewHeuristic = function (newNodes) {
+    // Remove temporary extension data remained from prior operations
+    cy.nodes().forEach(node => node.removeScratch(extensionName));
+    
     const currentNodes = cy.nodes(':visible').difference(newNodes);
-    currentNodes.forEach(node => node.data('calculated', true));
+    currentNodes.forEach(node => this.setScratchProp({node, prop: 'calculated', value: true}));
     const maxRank = this.rankNodes(newNodes, currentNodes);
     const postponedNodes = [];
     for (let i = 0; i <= maxRank; i++) {
       let compounds = [];
-      for (const node of newNodes.filter(`node[rank=${i}]`)) {
+      for (const node of this.filterByScratchProp({nodes: newNodes, prop: 'rank', value: i})) {
         if (node.isParent()) {
           compounds.push(node);
         } else if (node.isChild() && newNodes.contains(node.parent())) {
           // If it is inside a new node, escalate its neighbors to parent
-          const neighbors = node.neighborhood().nodes().filter('node[calculated]');
-          const escalatedNeighbors = node.parent().data('escalatedNeighbors');
-          node.parent().data('escalatedNeighbors', [...(escalatedNeighbors || []), ...neighbors]);
+          const escalatedNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
+          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...escalatedNeighbors, ...this.getCalculatedNeighbors(node)]})
         } else if (i === 0 && node.neighborhood().nodes().length !== 0 && node.isOrphan()) {
           // Postpone this type of nodes since their neighbors will be placed after
           postponedNodes.push(node);
@@ -761,20 +794,18 @@ var layoutUtilities = function (cy, options) {
       }
       compounds = this.sortByHierarchy(compounds);
       for (const node of compounds) {
+        const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
         if (node.isChild() && newNodes.contains(node.parent())) {
           // If this compound node is inside another new node, escalete the neighbors to parent
-          const escalatedNeighbors = node.parent().data('escalatedNeighbors');
-          const nodesNeighbors = node.neighborhood().filter('node[calculated]');
-          node.parent().data('escalatedNeighbors', [...(escalatedNeighbors || []), 
-                                                    ...nodesNeighbors,
-                                                    ...(node.data('escalatedNeighbors') || [])]);
+          const parentNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
+          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...parentNeighbors, ...this.getCalculatedNeighbors(node), ...escalatedNeighbors]})
         } else {
           // Calculate optimum position of the compound node with respect to siblings and neighbors
-          const siblingPositions = node.siblings().filter('node[calculated]').map(e => e.position());
+          const siblings = this.getCalculatedSiblings(node)
+          const siblingPositions = siblings.map(e => e.position());
           const siblingAvg = this.getAvgPos(siblingPositions);
 
-          const neighbors = [...node.data('escalatedNeighbors'), ...node.neighborhood().filter('node[calculated]')];
-          const uniqueNeighbors = [...new Set(neighbors)];
+          const uniqueNeighbors = [...new Set([...escalatedNeighbors, ...this.getCalculatedNeighbors(node)])];
           const neighborsAvg = this.getAvgPos(uniqueNeighbors.map(e => e.position()));
           
           const calculatedAvgPos = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
@@ -834,7 +865,8 @@ var layoutUtilities = function (cy, options) {
   instance.placeCompoundNode = function (placedNode, coordinate, offset) {
     const getOptimumPos = function (node, coordinate, offset) {
       // Calculate the optimum position according to the average point of the neighbors and suggested coordinate
-      const allNeighbors = [...node.neighborhood().filter('node[calculated]'), ...(node.data('escalatedNeighbors') || [])];
+      const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
+      const allNeighbors = [...this.getCalculatedNeighbors(node), ...escalatedNeighbors];
       const neighborsAvg = this.getAvgPos(allNeighbors.map(e => e.position()));
       const weightedMiddlePoint = this.getWeightedMiddlePoint(coordinate, neighborsAvg, offset);
       return this.getPositionWithOffset(weightedMiddlePoint, offset);
@@ -846,13 +878,13 @@ var layoutUtilities = function (cy, options) {
         postponedCompounds.push(node);
       } else {
         node.position(getOptimumPos(node, coordinate, offset));
-        node.data('calculated', true);
+        this.setScratchProp({node, prop: 'calculated', value: true});
       }
     }
     for (const node of postponedCompounds) {
       this.placeCompoundNode(node, getOptimumPos(node, coordinate, offset), offset / 2);
     }
-    placedNode.data('calculated', true);
+    this.setScratchProp({node: placedNode, prop: 'calculated', value: true});
   };
 
   /** Sort given nodes so that most inner compound will come first in the sorted list */
@@ -897,9 +929,9 @@ var layoutUtilities = function (cy, options) {
   };
 
   instance.setOptimumPosition = function (node) {
-    const siblings = node.siblings().filter('node[calculated]');
-    const neighbors = node.neighborhood().filter('node[calculated]');
-
+    const neighbors = this.getCalculatedNeighbors(node);
+    const siblings = this.getCalculatedSiblings(node);
+  
     const siblingAvg = this.getAvgPos(siblings.map(e => e.position()));
     const neighborsAvg = this.getAvgPos(neighbors.map(e => e.position()));
 
@@ -911,7 +943,7 @@ var layoutUtilities = function (cy, options) {
       const newPosition = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
       node.position(this.getPositionWithOffset(newPosition));
     }
-    node.data('calculated', true);
+    this.setScratchProp({node, prop: 'calculated', value: true});
   };
 
   instance.rankNodes = function (newNodes, currentNodes) {
@@ -925,7 +957,7 @@ var layoutUtilities = function (cy, options) {
         let calculatedRank = -1;
 
         const neighborNodes = node.neighborhood().nodes();
-        const ranksOfNeighbors = neighborNodes.filter('node[rank]').map(e => e.data('rank'));
+        const ranksOfNeighbors = neighborNodes.map(node => this.getScratchProp({node, prop: 'rank'})).filter(e => e);
         if (neighborNodes.intersection(currentNodes).length > 0) {
           calculatedRank = 1;
         } else if (ranksOfNeighbors.length > 0) {
@@ -933,10 +965,11 @@ var layoutUtilities = function (cy, options) {
         }
 
         if (calculatedRank !== -1) {
-          node.data("rank", calculatedRank);
+          this.setScratchProp({node, prop: 'rank', value: calculatedRank});
           maxRank = Math.max(maxRank, calculatedRank);
           for (const anc of node.ancestors()) {
-            anc.data("rank", Math.max(anc.data("rank") || 0, calculatedRank));
+            const ancRank = this.getScratchProp({node: anc, prop: 'rank', defaultValue: 0 });
+            this.setScratchProp({node: anc, prop: 'rank', value: Math.max(ancRank, calculatedRank)});
           }
           unrankedNodes.splice(j, 1);
         }
@@ -946,10 +979,10 @@ var layoutUtilities = function (cy, options) {
     // If all n iterations are done and there are still unrankedNodes, it means that
     // they should be rank 0
     for (const node of unrankedNodes) {
-      node.data("rank", 0);
+      this.setScratchProp({node, prop: 'rank', value: 0});
       for (const anc of node.ancestors()) {
         if (!anc.data("rank")) {
-          anc.data("rank", 0);
+          this.setScratchProp({node: anc, prop: 'rank', value: 0});
         }
       }
     }
