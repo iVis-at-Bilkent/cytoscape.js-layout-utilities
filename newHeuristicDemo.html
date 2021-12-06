@@ -165,8 +165,10 @@
             style: {
               'content': 'data(name)',
               'border-color': function(ele) {
-                const { rank } = ele.scratch('layout_utilities') || {};
+                const { rank = -1 } = ele.scratch('layout_utilities') || {};
                 switch (rank) {
+                  case -1:
+                    return 'grey';
                   case 0:
                     return '#8FE388';
                   case 1:
@@ -176,7 +178,7 @@
                   case 3:
                     return '#89043D';
                   default:
-                    return 'grey';
+                    return 'black';
                 }
               },
               'border-width': 3,
@@ -347,7 +349,7 @@
 
           let neighborCount;
           let selectedNodes = cy.nodes(":selected");
-          switch (Math.ceil(Math.random() * 3)) {
+          switch (Math.ceil(Math.random() * 6)) {
             case 1:
               if (selectedNodes.length === 0) {
                 neighborCount = 0;
@@ -356,10 +358,8 @@
             case 2:
               neighborCount = 1;
               break;
-            case 3:
-              neighborCount = averageDegree;
-              break;
             default:
+              neighborCount = averageDegree;
               break;
           }
 
@@ -383,57 +383,56 @@
             const availableNewNodes = newNodes.difference(forbiddenNodes)
             const availableCurrentNodes = selectedNodes.length > 0 ? selectedNodes : currentNodes.difference(forbiddenNodes)
             const selectedNeighbors = [];
-            switch (Math.ceil(Math.random() * 5)) {
-              case 1:
-              case 2: { // All new neighbors
-                if (selectedNodes.length === 0) {
-                  const dummyNodeCount = neighborCount - availableNewNodes.length;
-                  addDummyNodes(dummyNodeCount, availableCurrentNodes);
-                  for (let i = 0; i < neighborCount; i++) {
-                    let randomNeighbor;
-                    do {
-                      randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
-                    } while (selectedNeighbors.includes(randomNeighbor.id()));
-                    selectedNeighbors.push(randomNeighbor.id());
-                    cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
-                  }
-                  break;
-                }
-              }
-              case 3: { // All existing neighbors
-                const availableCount = Math.min(neighborCount, availableCurrentNodes.length);
-                for (let i = 0; i < availableCount; i++) {
-                  let randomNeighbor;
+
+            const randomValue = Math.ceil(Math.random() * 10);
+            if (randomValue < 6 && selectedNodes.length === 0) {
+              const dummyNodeCount = neighborCount - availableNewNodes.length;
+              addDummyNodes(dummyNodeCount, availableCurrentNodes);
+              for (let i = 0; i < neighborCount; i++) {
+                let randomNeighbor;
+                if (i === 0) {
+                  // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                  randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                } else {
                   do {
-                    randomNeighbor = availableCurrentNodes[Math.floor(Math.random() * availableCurrentNodes.length)];
+                    randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
                   } while (selectedNeighbors.includes(randomNeighbor.id()));
-                  selectedNeighbors.push(randomNeighbor.id());
-                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
                 }
-                break;
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
               }
-              case 4:
-              case 5: { // Both
-                const dummyNodeCount = neighborCount / 2 - availableNewNodes.length;
-                addDummyNodes(dummyNodeCount, availableCurrentNodes);
-                for (let i = 0; i < neighborCount; i++) {
-                  let randomNeighbor;
+            } else if (randomValue < 8) {
+              const availableCount = Math.min(neighborCount, availableCurrentNodes.length);
+              for (let i = 0; i < availableCount; i++) {
+                let randomNeighbor;
+                do {
+                  randomNeighbor = availableCurrentNodes[Math.floor(Math.random() * availableCurrentNodes.length)];
+                } while (selectedNeighbors.includes(randomNeighbor.id()));
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+              }
+            } else {
+              const dummyNodeCount = neighborCount / 2 - availableNewNodes.length;
+              addDummyNodes(dummyNodeCount, availableCurrentNodes);
+              for (let i = 0; i < neighborCount; i++) {
+                let randomNeighbor;
+                if (i === 0) {
+                    // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                    randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                } else {
                   do {
                     let tempNodes;
                     if (i < Math.min(neighborCount / 2, availableCurrentNodes.length)) {
-                      tempNodes = availableCurrentNodes;
-                    } else {
                       tempNodes = availableNewNodes;
+                    } else {
+                      tempNodes = availableCurrentNodes;
                     }
                     randomNeighbor = tempNodes[Math.floor(Math.random() * tempNodes.length)];
                   } while (selectedNeighbors.includes(randomNeighbor.id()));
-                  selectedNeighbors.push(randomNeighbor.id());
-                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
                 }
-                break;
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
               }
-              default:
-                break;
             }
           }
         }
@@ -565,6 +564,10 @@
         <div style="display: flex;">
           <span style="background-color: #89043D; width: 16px; height: 16px; margin-right: 10px;"></span>
           <span>Rank 3</span>
+        </div>
+        <div style="display: flex;">
+          <span style="background-color: #000000; width: 16px; height: 16px; margin-right: 10px;"></span>
+          <span>Higher Ranks</span>
         </div>
         <br/>
         <div>
