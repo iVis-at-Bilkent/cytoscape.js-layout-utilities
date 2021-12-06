@@ -164,7 +164,21 @@
             selector: 'node',
             style: {
               'content': 'data(name)',
-              'border-color': 'grey',
+              'border-color': function(ele) {
+                const { rank } = ele.scratch('layout_utilities') || {};
+                switch (rank) {
+                  case 0:
+                    return '#8FE388';
+                  case 1:
+                    return '#D36135';
+                  case 2:
+                    return '#279AF1';
+                  case 3:
+                    return '#89043D';
+                  default:
+                    return 'grey';
+                }
+              },
               'border-width': 3,
               'background-color': 'lightgrey'
             }
@@ -185,34 +199,6 @@
             selector: 'node:parent',
             style: {
               'background-color': 'lightgrey'
-            }
-          },
-          {
-            selector: 'node[rank=0]',
-            style: {
-              'border-color': '#8FE388',
-              'border-width': '5px'
-            }
-          },
-          {
-            selector: 'node[rank=1]',
-            style: {
-              'border-color': '#D36135',
-              'border-width': '5px'
-            }
-          },
-          {
-            selector: 'node[rank=2]',
-            style: {
-              'border-color': '#279AF1',
-              'border-width': '5px'
-            }
-          },
-          {
-            selector: 'node[rank=3]',
-            style: {
-              'border-color': '#89043D',
-              'border-width': '5px'
             }
           },
           {
@@ -263,7 +249,7 @@
         });
         return eles;
       }
-
+    
       function generateRandomNodes() {
         const nodeCount = parseInt($('#initialNodeCount').val());
         const compoundNodeRatio = parseFloat($('#compoundNodeRatio').val());
@@ -275,7 +261,7 @@
         for (let i = 0; i < nodeCount; i++) {
           nodes.push({
             group: 'nodes',
-            data: { id: `c${i}`, name: `c${i}`, existing: true },
+            data: { id: `c${i}`, name: `c${i}`},
             position: {
               x: Math.floor(Math.random() * offset) - offset / 2,
               y: Math.floor(Math.random() * offset) - offset / 2,
@@ -456,8 +442,7 @@
 
       $("#newHeuristic").click(function() {
         window.iteration = (window.iteration || 0) + 1;
-        cy.nodes().removeData('calculated rank escalatedNeighbors');
-        cy.nodes().data('existing', true)
+        cy.nodes().forEach(node => node.removeScratch());
         const nodes = getNewNodes();
         if (!window.addedElsHistory) window.addedElsHistory = [];
         const els = cy.collection();
@@ -492,11 +477,10 @@
       });
 
       $("#redo").click(function() {
-        cy.nodes().removeData('calculated rank escalatedNeighbors');
-        cy.nodes().data('existing', true);
+        cy.nodes().forEach(node => node.removeScratch());
         const els = window.removedElsHistory.shift();
         if (els) {
-          els.nodes().removeData('calculated rank existing escalatedNeighbors');
+          els.nodes().forEach(node => node.removeScratch());
           if (!window.addedElsHistory) window.addedElsHistory = [];
           window.addedElsHistory.unshift(els);
           cy.add(els);
