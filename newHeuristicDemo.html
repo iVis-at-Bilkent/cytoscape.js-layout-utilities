@@ -322,9 +322,9 @@
         const currentNodes = cy.nodes();
         const compoundNodes = cy.nodes().filter(e => e.isParent());
         let newCompound;
-        for (let i = 0; i < nodeCount; i++) {
-          const id = `n${window.iteration}-${i}`;
-          const edgeId = `e${window.iteration}-${i}`;
+        for (let nodeId = 0; nodeId < nodeCount; nodeId++) {
+          const id = `n${window.iteration}-${nodeId}`;
+          const edgeId = `e${window.iteration}-${nodeId}`;
           let parentID;
           switch (Math.ceil(Math.random() * 3)) {
             case 1: // New parent
@@ -412,7 +412,7 @@
                 cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
               }
             } else {
-              const dummyNodeCount = neighborCount / 2 - availableNewNodes.length;
+              const dummyNodeCount = neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length) - availableNewNodes.length;
               addDummyNodes(dummyNodeCount, availableCurrentNodes);
               for (let i = 0; i < neighborCount; i++) {
                 let randomNeighbor;
@@ -422,7 +422,7 @@
                 } else {
                   do {
                     let tempNodes;
-                    if (i < Math.min(neighborCount / 2, availableCurrentNodes.length)) {
+                    if (i < neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length)) {
                       tempNodes = availableNewNodes;
                     } else {
                       tempNodes = availableCurrentNodes;
@@ -449,7 +449,7 @@
         els.merge(nodes.connectedEdges());
         window.addedElsHistory.unshift(els);
         window.removedElsHistory = [];
-        api.placeNewNodesNewHeuristic(nodes);
+        api.placeNewNodes(nodes);
         if (document.getElementById('layout').checked) {
           cy.layout(layoutOptions).run();
         }
@@ -459,8 +459,12 @@
         api.setOption("siblingWeight", parseFloat(e.target.value));
       });
 
-      $('#rearrange').click(function() {
+      $('#recalculateLayout').click(function() {
         cy.layout(layoutOptions).run();
+      })
+
+      $('#performLayout').click(function() {
+        cy.layout({...layoutOptions, randomize: true}).run();
       })
 
       $("#undo").click(function() {
@@ -483,7 +487,7 @@
           if (!window.addedElsHistory) window.addedElsHistory = [];
           window.addedElsHistory.unshift(els);
           cy.add(els);
-          api.placeNewNodesNewHeuristic(els.nodes());
+          api.placeNewNodes(els.nodes());
           if (document.getElementById('layout').checked) {
             cy.layout(layoutOptions).run();
           }
@@ -505,7 +509,8 @@
         <br /> <br />
         <button id="newHeuristic" class="button">New Heuristic</button>
         <br /> <br />   
-        <button id="rearrange" class="button">Rearrange</button>
+        <button id="recalculateLayout" class="button">Recalculate Layout</button>
+        <button id="performLayout" class="button">Perform Layout</button>
         <br /> <br />              
         <button id="undo" class="button">Undo</button>
         <button id="redo" class="button">Redo</button>
