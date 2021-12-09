@@ -221,26 +221,25 @@
         elements: {
           nodes: [
             { data: { id: 'n7', name: 'n7' } },
-            { data: { id: 'n6', name: 'n6', parent: 'n29' } },
+            { data: { id: 'n6', name: 'n6' } },
             { data: { id: 'n5', name: 'n5' } },
             { data: { id: 'n8', name: 'n8' } },
             { data: { id: 'n9', name: 'n9' } },
             { data: { id: 'n10', name: 'n10' } },
             { data: { id: 'n11', name: 'n11' } },
-            { data: { id: 'n12', name: 'n12' } },
+            { data: { id: 'n12', name: 'n12', parent: 'n29' } },
             { data: { id: 'n13', name: 'n13', parent: 'n29' } },
-            { data: { id: 'n14', name: 'n14' } },
-            { data: { id: 'n15', name: 'n15' } },
+            { data: { id: 'n14', name: 'n14', parent: 'n29' } },
+            { data: { id: 'n15', name: 'n15', parent: 'n29' } },
             { data: { id: 'n16', name: 'n16' } },
             { data: { id: 'n17', name: 'n17' } },
             { data: { id: 'n18', name: 'n18' } },
             { data: { id: 'n19', name: 'n19' } },
             { data: { id: 'n20', name: 'n20' } },
             { data: { id: 'n21', name: 'n21' } },
-
             { data: { id: 'n22', name: 'n22' } },
             { data: { id: 'n23', name: 'n23' } },
-            { data: { id: 'n24', name: 'n24', parent: 'n29' } },
+            { data: { id: 'n24', name: 'n24' } },
             { data: { id: 'n25', name: 'n25' } },
             { data: { id: 'n26', name: 'n26' } },
             { data: { id: 'n27', name: 'n27' } },
@@ -315,6 +314,102 @@
         return eles;
       }
 
+      function getTopMostNodes(nodes) {
+        let nodesMap = {};
+        for (let i = 0; i < nodes.length; i++) {
+            nodesMap[nodes[i].id()] = true;
+        }
+        let roots = nodes.filter(function (ele, i) {
+            if(typeof ele === "number") {
+              ele = i;
+            }
+            let parent = ele.parent()[0];
+            while(parent != null){
+              if(nodesMap[parent.id()]){
+                return false;
+              }
+              parent = parent.parent()[0];
+            }
+            return true;
+        });
+
+        return roots;
+      };
+
+      findComponents = function(topMostNodes){
+        let queue = [];
+        let visited = new Set();
+        let visitedTopMostNodes = [];
+        let currentNeighbor;
+
+        let allComponentsTraversed = false;
+        let components = [];
+
+        do {
+          let cmpt = cy.collection();
+          components.push(cmpt);
+
+          let currentNode = topMostNodes[0];
+          let childrenOfCurrentNode = cy.collection();
+          childrenOfCurrentNode.merge(currentNode).merge(currentNode.descendants());
+          visitedTopMostNodes.push(currentNode);
+
+          childrenOfCurrentNode.forEach(function(node) {
+            queue.push(node);
+            visited.add(node);
+            cmpt.merge(node);
+          });
+
+          while(queue.length != 0){
+            currentNode = queue.shift();
+
+            // Traverse all neighbors of this node
+            let neighborNodes = cy.collection();
+            currentNode.neighborhood().nodes().forEach(function(node){
+                neighborNodes.merge(node);
+            });
+
+            for(let i = 0; i < neighborNodes.length; i++){
+              let neighborNode = neighborNodes[i];
+              currentNeighbor = topMostNodes.intersection(neighborNode.union(neighborNode.ancestors()));
+              if(currentNeighbor != null && !visited.has(currentNeighbor[0])){
+                let childrenOfNeighbor = currentNeighbor.union(currentNeighbor.descendants());
+                childrenOfNeighbor.forEach(function(node){
+                  queue.push(node);
+                  visited.add(node);
+                  cmpt.merge(node);
+                  if(topMostNodes.has(node)){
+                    visitedTopMostNodes.push(node);
+                  }
+                });
+              }
+            }
+          }
+
+          cmpt.forEach(node => {
+            node.connectedEdges().forEach(e => { // connectedEdges() usually cached
+              if( cmpt.has(e.source()) && cmpt.has(e.target()) ){ // has() is cheap
+                cmpt.merge(e); // forEach() only considers nodes -- sets N at call time
+              }
+            });
+          });
+
+          if(visitedTopMostNodes.length == topMostNodes.length){
+            allComponentsTraversed = true;
+          }
+
+          let temp = cy.collection();
+          visitedTopMostNodes.forEach(function(node){
+            temp.merge(node);
+          });
+          visitedTopMostNodes = [];
+          topMostNodes = topMostNodes.difference(temp);
+        }
+        while(!allComponentsTraversed);
+
+        return components;
+      };
+
       $("#polyominoPack").click(function () {
         
         api.setOption("desiredAspectRatio", parseFloat($('#desiredAspectRatio').val()));
@@ -322,7 +417,8 @@
         api.setOption("utilityFunction", parseInt($('#utilityFunctionType').val()));
         api.setOption("componentSpacing", (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())));
         
-        var components = cy.elements(":visible").components();
+        var topMostNodes = getTopMostNodes(cy.nodes());
+        var components = findComponents(topMostNodes);
         var subgraphs = [];
         components.forEach(function (component) {
           var subgraph = {};
@@ -636,13 +732,14 @@
     <button id="addRandomNeighbors" class="button">Add random neighbors to selected</button>
     <br /> <br />      
 
-    <form>
+    <form style="margin-bottom: 0px;">
       <p style="position: relative;">
         <label for="layout" style="vertical-align:middle;">
           Rearrange on changes
         </label>
         <input type="checkbox" class="input" id="layout" name="layout" style="vertical-align:middle;" value="checked" checked>
       </p>
+      <br/>
       <p>
         <label for="siblingWeight">Sibling Weight</label>
         <input id="siblingWeight" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25"
@@ -668,14 +765,12 @@
         <input id="averageChildrenCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
           min="0" max="10" value="2">
       </p>
-      <br/>
       <p>
         <label for="newNodeCount">New Node Count</label>
         <input id="newNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
           min="0" max="10" value="2">
       </p>
     </form>
-
 
     <div style="display: flex;">
       <span style="background-color: #8FE388; width: 16px; height: 16px; margin-right: 10px;"></span>
