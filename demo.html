@@ -66,9 +66,9 @@
     }
 
     #cy {
-      width: 80%;
+      width: calc((4 * 100% - 154px) / 5);
       height: 95%;
-      left: 21%;
+      right: 0%;
       top: 0%;
       float: left;
       overflow: hidden;
@@ -169,7 +169,23 @@
             selector: 'node',
             style: {
               'content': 'data(name)',
-              'border-color': 'grey',
+              'border-color': function(ele) {
+                const { rank = -1 } = ele.scratch('layout_utilities') || {};
+                switch (rank) {
+                  case -1:
+                    return 'grey';
+                  case 0:
+                    return '#8FE388';
+                  case 1:
+                    return '#D36135';
+                  case 2:
+                    return '#279AF1';
+                  case 3:
+                    return '#89043D';
+                  default:
+                    return 'black';
+                }
+              },
               'border-width': 3,
               'background-color': 'lightgrey'
             }
@@ -211,17 +227,16 @@
             { data: { id: 'n9', name: 'n9' } },
             { data: { id: 'n10', name: 'n10' } },
             { data: { id: 'n11', name: 'n11' } },
-            { data: { id: 'n12', name: 'n12' } },
-            { data: { id: 'n13', name: 'n13' } },
-            { data: { id: 'n14', name: 'n14' } },
-            { data: { id: 'n15', name: 'n15' } },
+            { data: { id: 'n12', name: 'n12', parent: 'n29' } },
+            { data: { id: 'n13', name: 'n13', parent: 'n29' } },
+            { data: { id: 'n14', name: 'n14', parent: 'n29' } },
+            { data: { id: 'n15', name: 'n15', parent: 'n29' } },
             { data: { id: 'n16', name: 'n16' } },
             { data: { id: 'n17', name: 'n17' } },
             { data: { id: 'n18', name: 'n18' } },
             { data: { id: 'n19', name: 'n19' } },
             { data: { id: 'n20', name: 'n20' } },
             { data: { id: 'n21', name: 'n21' } },
-
             { data: { id: 'n22', name: 'n22' } },
             { data: { id: 'n23', name: 'n23' } },
             { data: { id: 'n24', name: 'n24' } },
@@ -229,6 +244,7 @@
             { data: { id: 'n26', name: 'n26' } },
             { data: { id: 'n27', name: 'n27' } },
             { data: { id: 'n28', name: 'n28' } },
+            { data: { id: 'n29', name: 'n29' } },
 
           ],
           edges: [
@@ -271,7 +287,8 @@
           desiredAspectRatio: parseFloat($('#desiredAspectRatio').val()),
           polyominoGridSizeFactor: parseFloat($('#gridSizeFactor').val()),
           utilityFunction: parseInt($('#utilityFunctionType').val()),
-          componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val()))
+          componentSpacing: (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())),
+          siblingWeight: parseFloat($('#siblingWeight').val())
         }
       );
       var api2 = cy.viewUtilities();
@@ -280,7 +297,8 @@
         name: 'fcose',
         randomize: false,
         fit: false,
-        packComponents: false
+        packComponents: false,
+        nodeDimensionsIncludeLabels: true
       };
 
       function changeBorder(eles) {
@@ -296,6 +314,102 @@
         return eles;
       }
 
+      function getTopMostNodes(nodes) {
+        let nodesMap = {};
+        for (let i = 0; i < nodes.length; i++) {
+            nodesMap[nodes[i].id()] = true;
+        }
+        let roots = nodes.filter(function (ele, i) {
+            if(typeof ele === "number") {
+              ele = i;
+            }
+            let parent = ele.parent()[0];
+            while(parent != null){
+              if(nodesMap[parent.id()]){
+                return false;
+              }
+              parent = parent.parent()[0];
+            }
+            return true;
+        });
+
+        return roots;
+      };
+
+      findComponents = function(topMostNodes){
+        let queue = [];
+        let visited = new Set();
+        let visitedTopMostNodes = [];
+        let currentNeighbor;
+
+        let allComponentsTraversed = false;
+        let components = [];
+
+        do {
+          let cmpt = cy.collection();
+          components.push(cmpt);
+
+          let currentNode = topMostNodes[0];
+          let childrenOfCurrentNode = cy.collection();
+          childrenOfCurrentNode.merge(currentNode).merge(currentNode.descendants());
+          visitedTopMostNodes.push(currentNode);
+
+          childrenOfCurrentNode.forEach(function(node) {
+            queue.push(node);
+            visited.add(node);
+            cmpt.merge(node);
+          });
+
+          while(queue.length != 0){
+            currentNode = queue.shift();
+
+            // Traverse all neighbors of this node
+            let neighborNodes = cy.collection();
+            currentNode.neighborhood().nodes().forEach(function(node){
+                neighborNodes.merge(node);
+            });
+
+            for(let i = 0; i < neighborNodes.length; i++){
+              let neighborNode = neighborNodes[i];
+              currentNeighbor = topMostNodes.intersection(neighborNode.union(neighborNode.ancestors()));
+              if(currentNeighbor != null && !visited.has(currentNeighbor[0])){
+                let childrenOfNeighbor = currentNeighbor.union(currentNeighbor.descendants());
+                childrenOfNeighbor.forEach(function(node){
+                  queue.push(node);
+                  visited.add(node);
+                  cmpt.merge(node);
+                  if(topMostNodes.has(node)){
+                    visitedTopMostNodes.push(node);
+                  }
+                });
+              }
+            }
+          }
+
+          cmpt.forEach(node => {
+            node.connectedEdges().forEach(e => { // connectedEdges() usually cached
+              if( cmpt.has(e.source()) && cmpt.has(e.target()) ){ // has() is cheap
+                cmpt.merge(e); // forEach() only considers nodes -- sets N at call time
+              }
+            });
+          });
+
+          if(visitedTopMostNodes.length == topMostNodes.length){
+            allComponentsTraversed = true;
+          }
+
+          let temp = cy.collection();
+          visitedTopMostNodes.forEach(function(node){
+            temp.merge(node);
+          });
+          visitedTopMostNodes = [];
+          topMostNodes = topMostNodes.difference(temp);
+        }
+        while(!allComponentsTraversed);
+
+        return components;
+      };
+
       $("#polyominoPack").click(function () {
         
         api.setOption("desiredAspectRatio", parseFloat($('#desiredAspectRatio').val()));
@@ -303,7 +417,8 @@
         api.setOption("utilityFunction", parseInt($('#utilityFunctionType').val()));
         api.setOption("componentSpacing", (document.getElementById('auto-spacing').checked ? undefined : parseInt($('#componentSpacing').val())));
         
-        var components = cy.elements(":visible").components();
+        var topMostNodes = getTopMostNodes(cy.nodes());
+        var components = findComponents(topMostNodes);
         var subgraphs = [];
         components.forEach(function (component) {
           var subgraph = {};
@@ -365,6 +480,18 @@
         }
       });
 
+      document.getElementById('siblingWeight').addEventListener('change', function(e) {
+        api.setOption("siblingWeight", parseFloat(e.target.value));
+      });
+
+      $('#recalculateLayout').click(function() {
+        cy.layout(layoutOptions).run();
+      })
+
+      $('#performLayout').click(function() {
+        cy.layout({...layoutOptions, randomize: true}).run();
+      })
+
       $("#showHiddenNeighbors").click(function () {
         var nodesWithHiddenNeighbor = cy.edges(":hidden").connectedNodes(':visible');
         revertBorder(nodesWithHiddenNeighbor);
@@ -395,61 +522,145 @@
       
       var newNodeCounter = 0;
 
-      $("#addRandomNeighbors").click(function () {
-        var selectedNodes = cy.nodes(":selected");
-        var newNodesAll = cy.collection();
-        
-        selectedNodes.forEach(function(node){
-          var newNodesForSelected = cy.collection();
-          var randomNeighborCount = Math.floor(1 + 5*Math.random());
-          // for each selected node, add random nodes and connect them to the selected node
-          for(var i=0; i < randomNeighborCount; i++) {
-            var nodeId = node.id() + "_n" + newNodeCounter;
-            var edgeId = node.id() + "_e" + newNodeCounter;
-            var newEles = cy.add([
-              { group: 'nodes', data: { id: nodeId, name: node.css("content")}},
-              { group: 'edges', data: { id: edgeId, source: node.id(), target: nodeId } }
-            ]);                       
-            newNodeCounter++;
-            newNodesAll.merge(newEles.nodes());
-            newNodesForSelected.merge(newEles.nodes());
+      function getNewNodes() {
+        const nodeCount = parseInt($('#newNodeCount').val());
+        const averageDegree = parseInt($('#averageDegree').val());
+        const newNodes = cy.collection();
+        const currentNodes = cy.nodes();
+        const compoundNodes = cy.nodes().filter(e => e.isParent());
+        let newCompound;
+        for (let nodeId = 0; nodeId < nodeCount; nodeId++) {
+          const id = `n${window.iteration}-${nodeId}`;
+          const edgeId = `e${window.iteration}-${nodeId}`;
+          let parentID;
+          switch (Math.ceil(Math.random() * 3)) {
+            case 1: // New parent
+              if (newNodes.length === 0) {
+                newNodes.merge(cy.add({group: 'nodes', data: {id: `${id}a`, name: `${id}a`}}));
+              }
+              if (!newCompound) {
+                const randomNewCompound = newNodes[Math.floor(Math.random() * newNodes.length)];
+                newCompound = randomNewCompound;
+              }
+              parentID = newCompound.id();
+              break;
+            case 2: // Existing parent
+              parentID = compoundNodes[Math.floor(Math.random() * compoundNodes.length)].id()
+              break;
+            case 3: // No parent
+            default:
+              break;
           }
-          
-          var currentColor = adjust(rgbToHex(node.numericStyle("background-color")), -50);
-          newNodesForSelected.css("background-color", currentColor);           
-          
-          // add random edges between newly added nodes
-          if(newNodesForSelected.length > 1) {
-            var randomEdgeCount = Math.floor(newNodesForSelected.length * Math.random());
-            var newEdgeIds = new Set();
-            for(var i=0; i < randomEdgeCount; i++) {
-              var index1 = Math.floor(newNodesForSelected.length * Math.random());
-              var index2 = Math.floor(newNodesForSelected.length * Math.random());
-              if(index1 == index2 && (index2 + 1 < newNodesForSelected.length)){
-                index2++;
+          const newNode = cy.add({ group: 'nodes', data: { id, name: id, parent: parentID }});
+          newNodes.merge(newNode);
+
+          let neighborCount;
+          let selectedNodes = cy.nodes(":selected");
+          switch (Math.ceil(Math.random() * 6)) {
+            case 1:
+              if (selectedNodes.length === 0) {
+                neighborCount = 0;
+                break;
               }
-              if(index1 == index2 && (index2 - 1 >= 0)){
-                index2--;
+            case 2:
+              neighborCount = 1;
+              break;
+            default:
+              neighborCount = averageDegree;
+              break;
+          }
+
+          if (neighborCount) {
+            const addDummyNodes = function(dummyNodeCount, currentNodes) {
+              let nodeToConnect = currentNodes[Math.floor(Math.random() * currentNodes.length)];
+              for (let i = 0; i < dummyNodeCount; i++) {
+                    // Add necessary dummy nodes
+                    const dummyID = `${id}-d${i}`;
+                    const dummyNode = cy.add({ group: 'nodes', data: { id: dummyID, name: dummyID}});
+                    cy.add({ group: 'edges', data: { id: `${dummyID}-e`, source: nodeToConnect.id(), target: dummyID }})
+                    nodeToConnect = dummyNode;
+                    newNodes.merge(dummyNode)
+                    availableNewNodes.merge(dummyNode)
+                  }
+            }
+            const forbiddenNodes = cy.collection();
+            forbiddenNodes.merge(newNode);
+            forbiddenNodes.merge(newNode.ancestors());
+            forbiddenNodes.merge(newNode.descendants());
+            const availableNewNodes = newNodes.difference(forbiddenNodes)
+            const availableCurrentNodes = selectedNodes.length > 0 ? selectedNodes : currentNodes.difference(forbiddenNodes)
+            const selectedNeighbors = [];
+
+            const randomValue = Math.ceil(Math.random() * 10);
+            if (randomValue < 6 && selectedNodes.length === 0) {
+              const dummyNodeCount = neighborCount - availableNewNodes.length;
+              addDummyNodes(dummyNodeCount, availableCurrentNodes);
+              for (let i = 0; i < neighborCount; i++) {
+                let randomNeighbor;
+                if (i === 0) {
+                  // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                  randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                } else {
+                  do {
+                    randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
+                  } while (selectedNeighbors.includes(randomNeighbor.id()));
+                }
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
               }
-                     
-              var newEdgeId = newNodesForSelected[index1].id() + "_" + newNodesForSelected[index2].id();             
-              if(!newEdgeIds.has(newEdgeId)) {
-                cy.add([
-                  { group: 'edges', data: { id: newEdgeId, source: newNodesForSelected[index1].id(), target: newNodesForSelected[index2].id() } }
-                ]);
-                newEdgeIds.add(newEdgeId);
-              }              
+            } else if (randomValue < 8) {
+              const availableCount = Math.min(neighborCount, availableCurrentNodes.length);
+              for (let i = 0; i < availableCount; i++) {
+                let randomNeighbor;
+                do {
+                  randomNeighbor = availableCurrentNodes[Math.floor(Math.random() * availableCurrentNodes.length)];
+                } while (selectedNeighbors.includes(randomNeighbor.id()));
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+              }
+            } else {
+              const dummyNodeCount = neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length) - availableNewNodes.length;
+              addDummyNodes(dummyNodeCount, availableCurrentNodes);
+              for (let i = 0; i < neighborCount; i++) {
+                let randomNeighbor;
+                if (i === 0) {
+                    // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                    randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                } else {
+                  do {
+                    let tempNodes;
+                    if (i < neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length)) {
+                      tempNodes = availableNewNodes;
+                    } else {
+                      tempNodes = availableCurrentNodes;
+                    }
+                    randomNeighbor = tempNodes[Math.floor(Math.random() * tempNodes.length)];
+                  } while (selectedNeighbors.includes(randomNeighbor.id()));
+                }
+                selectedNeighbors.push(randomNeighbor.id());
+                cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+              }
             }
           }
-        });
-        
-        // place all newly added nodes to appropriate positions by using extension functionality
-        api.placeNewNodes(newNodesAll);
-        
+        }
+        return newNodes;
+      };
+      
+      $("#addRandomNeighbors").click(function() {
+        window.iteration = (window.iteration || 0) + 1;
+        cy.nodes().forEach(node => node.removeScratch());
+        const nodes = getNewNodes();
+        if (!window.addedElsHistory) window.addedElsHistory = [];
+        const els = cy.collection();
+        els.merge(nodes);
+        els.merge(nodes.connectedEdges());
+        window.addedElsHistory.unshift(els);
+        window.removedElsHistory = [];
+        api.placeNewNodes(nodes);
         if (document.getElementById('layout').checked) {
           cy.layout(layoutOptions).run();
         }
-      });      
+      });
 
       document.getElementById('load-button')
         .addEventListener('click', () =>{
@@ -511,24 +722,77 @@
 
 
     <button id="hide" class="button">Hide selected</button>
-    <br /> <br />
     <button id="showAll" class="button">Show all</button>
+    <br /> <br />
+    <button id="recalculateLayout" class="button">Recalculate Layout</button>
+    <button id="performLayout" class="button">Perform Layout</button>
     <br /> <br />
     <button id="showHiddenNeighbors" class="button">Show hidden neighbors of selected</button>
     <br /> <br />
     <button id="addRandomNeighbors" class="button">Add random neighbors to selected</button>
-    <br /> <br />    
+    <br /> <br />      
 
-    <form>
+    <form style="margin-bottom: 0px;">
       <p style="position: relative;">
         <label for="layout" style="vertical-align:middle;">
           Rearrange on changes
         </label>
         <input type="checkbox" class="input" id="layout" name="layout" style="vertical-align:middle;" value="checked" checked>
       </p>
+      <br/>
+      <p>
+        <label for="siblingWeight">Sibling Weight</label>
+        <input id="siblingWeight" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.25"
+          min=".25" value="0.7">
+      </p>
+      <p>
+        <label for="initialNodeCount">Initial Node Count</label>
+        <input id="initialNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="5"
+          min="5" value="10">
+      </p>
+      <p>
+        <label for="averageDegree">Average Degree</label>
+        <input id="averageDegree" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+          min="0" max="10" value="2">
+      </p>
+      <p>
+        <label for="compoundNodeRatio">Compound Node Ratio</label>
+        <input id="compoundNodeRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.1"
+          min="0" max="0.5" value="0.1">
+      </p>
+      <p>
+        <label for="averageChildrenCount">Average Children Count</label>
+        <input id="averageChildrenCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+          min="0" max="10" value="2">
+      </p>
+      <p>
+        <label for="newNodeCount">New Node Count</label>
+        <input id="newNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="1"
+          min="0" max="10" value="2">
+      </p>
     </form>
 
-
+    <div style="display: flex;">
+      <span style="background-color: #8FE388; width: 16px; height: 16px; margin-right: 10px;"></span>
+      <span>Rank 0</span>
+    </div>
+    <div style="display: flex;">
+      <span style="background-color: #D36135; width: 16px; height: 16px; margin-right: 10px;"></span>
+      <span>Rank 1</span>
+    </div>
+    <div style="display: flex;">
+      <span style="background-color: #279AF1; width: 16px; height: 16px; margin-right: 10px;"></span>
+      <span>Rank 2</span>
+    </div>
+    <div style="display: flex;">
+      <span style="background-color: #89043D; width: 16px; height: 16px; margin-right: 10px;"></span>
+      <span>Rank 3</span>
+    </div>
+    <div style="display: flex;">
+      <span style="background-color: #000000; width: 16px; height: 16px; margin-right: 10px;"></span>
+      <span>Higher Ranks</span>
+    </div>
+  </div>
   </div>
   <div class="topnav">
 
