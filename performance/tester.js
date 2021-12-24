@@ -24,15 +24,19 @@ async function run () {
     ]);
   };
   
-  // Get result of a single placement into result variable
   let result;
+  await page.exposeFunction('onCustomEvent', e => {
+    result = e;
+  });
+
+  // Get result of a single placement into result variable
   await page.evaluateOnNewDocument((type) => {
-      document.addEventListener(type, (e) => {
-        result = e.detail;
+      document.addEventListener(type, ({detail}) => {
+        window.onCustomEvent(detail);
       });
     }, 'result');
 
-  await page.goto(__dirname + '/demo.html');
+  await page.goto('file:///' + __dirname + '/demo.html');
 
   const averageDegreeVals = [3, 6, 10, 20, 50, 100];
   const nodeCountVals = [10, 50, 100, 200, 500, 1000];
@@ -67,7 +71,7 @@ async function run () {
             await page.click('#calculateTime');
             await page.waitForEvent('result');
             
-            const newLine = [averageDegree, nodeCount, compoundNodeRatio, childrenRatio, newNodeRatio].join(',') + `,${temp.averageTime.toFixed(3)}\n`;
+            const newLine = [averageDegree, nodeCount, compoundNodeRatio, childrenRatio, newNodeRatio].join(',') + `,${result.averageTime.toFixed(3)}\n`;
             stream.write(newLine);
           }
         }
