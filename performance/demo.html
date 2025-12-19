@@ -1,0 +1,560 @@
+<!DOCTYPE>
+<html>
+
+<head>
+  <title>cytoscape-layout-utilities.js demo</title>
+
+  <!--- <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1"> -->
+
+  <script src="https://code.jquery.com/jquery-3.0.0.min.js"></script>
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+
+  <!-- for testing with local version of cytoscape.js -->
+  <!--<script src="../cytoscape.js/build/cytoscape.js"></script>-->
+  <script src="https://raw.githack.com/iVis-at-Bilkent/layout-base/unstable/layout-base.js"></script>
+  <script src="https://raw.githack.com/iVis-at-Bilkent/cose-base/unstable/cose-base.js"></script>
+  <script src="https://raw.githack.com/iVis-at-Bilkent/cytoscape.js-fcose/unstable/cytoscape-fcose.js"></script>
+  <script src="https://unpkg.com/cytoscape-graphml/cytoscape-graphml.js"></script>
+  <script src="../cytoscape-layout-utilities.js"></script>
+
+  <script src="https://unpkg.com/cytoscape-view-utilities/cytoscape-view-utilities.js"></script>
+  <style>
+    body {
+      font-family: helvetica neue, helvetica, liberation sans, arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .button {
+      height: 35px;
+      font-size: 16;
+      color: brown;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .custom-file-upload {
+      border: 1px solid #ccc;
+      display: inline-block;
+      padding: 6px 12px;
+      cursor: pointer;
+    } 
+
+    form {
+      display: table;
+    }
+
+    p {
+      display: table-row;
+    }
+
+    label {
+      display: table-cell;
+      font-size: 14;
+    }
+
+    select {
+      display: table-cell;
+    }
+
+    input {
+      display: table-cell;
+      margin-left: 5px;
+    }
+
+    #cy {
+      width: calc((4 * 100% - 154px) / 5);
+      height: 100%;
+      right: 0%;
+      top: 0%;
+      float: left;
+      overflow: hidden;
+      position: fixed;
+
+    }
+
+    .topnav {
+      width: 20%;
+      background-color: #e9e9e9;
+      /* font-weight: bold;*/
+      border-color: black;
+      border-style: solid;
+      font-size: 16;
+      padding: 10;
+    }
+
+    .topnav b:hover {
+      background-color: white;
+    }
+
+    /* Customize the label (the container) */
+    .topnav .container {
+
+      position: relative;
+      padding: 14px;
+      cursor: pointer;
+      font-size: 15px;
+      left: 5px;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Hide the browser's default radio button */
+    .topnav .container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    /* Create a custom radio button */
+    .topnav .checkmark {
+      position: absolute;
+      top: 17px;
+      left: 0;
+      right: 0px;
+      height: 12px;
+      width: 12px;
+      margin-right: 20px;
+      background-color: #000000;
+      border-radius: 50%;
+    }
+
+    /* On mouse-over, add a grey background color */
+    .container:hover input~.checkmark {
+      background-color: #000000;
+    }
+
+    /* When the radio button is checked, add a blue background */
+    .container input:checked~.checkmark {
+      background-color: #000
+    }
+
+    /* Create the indicator (the dot/circle - hidden when not checked) */
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+    }
+
+    /* Show the indicator (dot/circle) when checked */
+    .container input:checked~.checkmark:after {
+      display: block;
+    }
+
+    /* Style the indicator (dot/circle) */
+    .container .checkmark:after {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: white;
+    }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var cy = window.cy = cytoscape({
+        container: document.getElementById('cy'),
+        layout: { name: "fcose" },
+        style: [
+          {
+            selector: 'node',
+            style: {
+              'content': 'data(name)',
+              'border-color': function(ele) {
+                const { rank = -1 } = ele.scratch('layout_utilities') || {};
+                switch (rank) {
+                  case -1:
+                    return 'grey';
+                  case 0:
+                    return '#8FE388';
+                  case 1:
+                    return '#D36135';
+                  case 2:
+                    return '#279AF1';
+                  case 3:
+                    return '#89043D';
+                  default:
+                    return 'black';
+                }
+              },
+              'border-width': 3,
+              'background-color': 'lightgrey'
+            }
+          },
+          {
+            selector: 'edge',
+            style: {
+              'target-arrow-shape': 'triangle'
+            }
+          },
+          {
+            selector: 'edge:selected',
+            style: {
+              'line-color': 'orange'
+            }
+          },
+          {
+            selector: 'node:parent',
+            style: {
+              'background-color': 'lightgrey'
+            }
+          },
+          {
+            selector: 'node:selected',
+            style: {
+              'border-color': 'orange',
+              'border-width': '3px',
+              'background-color': 'lightgrey'
+            }
+          },
+        ],
+
+        elements: {
+          nodes: []
+        },
+        wheelSensitivity: 0.2
+      });
+
+      var api = cy.layoutUtilities(
+        {
+          desiredAspectRatio: 1,
+          polyominoGridSizeFactor: 1,
+          utilityFunction: 1,
+          componentSpacing: 80,
+          siblingWeight: 0.7
+        }
+      );
+      var api2 = cy.viewUtilities();
+
+      var layoutOptions = {
+        name: 'fcose',
+        randomize: false,
+        fit: false,
+        packComponents: false,
+        nodeDimensionsIncludeLabels: true
+      };
+
+      cy.layout(layoutOptions).run();
+      function changeBorder(eles) {
+        eles.forEach(function (ele) {
+          ele.css("background-color", 'purple');
+        });
+        return eles;
+      }
+      function revertBorder(eles) {
+        eles.forEach(function (ele) {
+          ele.css("background-color", 'lightgrey');
+        });
+        return eles;
+      }
+    
+      function generateRandomNodes() {
+        const nodeCount = parseInt($('#initialNodeCount').val());
+        const compoundNodeRatio = parseFloat($('#compoundNodeRatio').val());
+        const compoundNodeCount = Math.floor(nodeCount * compoundNodeRatio);
+        const averageDegree = parseInt($('#averageDegree').val());
+        const childrenRatio = parseFloat($('#childrenRatio').val());
+        const offset = 50;
+
+        const nodes = [];
+        for (let i = 0; i < nodeCount; i++) {
+          nodes.push({
+            group: 'nodes',
+            data: { id: `c${i}`, name: `c${i}`},
+            position: {
+              x: Math.floor(Math.random() * offset) - offset / 2,
+              y: Math.floor(Math.random() * offset) - offset / 2,
+            }
+          })
+        }
+
+        let totalChildrenCount = Math.floor(nodeCount * childrenRatio);
+        if (totalChildrenCount + compoundNodeCount > nodeCount) {
+          return [];
+        }
+        for (let i = 0; i < compoundNodeCount; i++) {
+          const randomIndex = Math.floor(Math.random() * nodeCount);
+          let childrenCount = Math.ceil(Math.random() * 2 * (totalChildrenCount / compoundNodeCount));
+          while (totalChildrenCount > 0 && (i === compoundNodeCount - 1 || childrenCount > 0)) {
+            let childIndex;
+            do {
+              childIndex = Math.floor(Math.random() * nodeCount);
+            } while (nodes[childIndex].data.parent || childIndex === randomIndex); 
+            nodes[childIndex].data.parent = `c${randomIndex}`;
+            childrenCount--;
+            totalChildrenCount--;
+          }
+        }
+
+        const edges = [];
+        let totalEdgeCount = Math.floor(averageDegree * nodeCount / 2);
+        for (let i = 0; i < totalEdgeCount; i++) {
+          const sourceIndex = Math.floor(Math.random() * nodeCount);
+          let targetIndex;
+          do {
+            targetIndex = Math.floor(Math.random() * nodeCount);
+          } while (targetIndex === sourceIndex
+                || nodes[targetIndex].data.parent === `c${sourceIndex}`
+                || nodes[sourceIndex].data.parent === `c${targetIndex}`);
+          edges.push({
+            group: 'edges',
+            data: { id: `e${i}`, name: `e${i}`, source: `c${sourceIndex}`, target: `c${targetIndex}`}
+          })
+        }
+        return [...nodes, ...edges];
+      }
+
+      function getNewNodes(scenarioID) {
+        const initialNodeCount = parseInt($('#initialNodeCount').val());
+        const newNodeRatio = parseFloat($('#newNodeRatio').val());
+        const nodeCount = Math.floor(newNodeRatio * initialNodeCount);
+        const averageDegree = parseInt($('#averageDegree').val());
+        const newNodes = cy.collection();
+        const currentNodes = cy.nodes();
+        const compoundNodes = cy.nodes().filter(e => e.isParent());
+        let newCompound;
+        for (let nodeId = 0; nodeId < nodeCount; nodeId++) {
+          // If parameter is defined, use it. Pick random scenario otherwise.
+          scenarioID = scenarioID || Math.ceil(Math.random() * 18);
+          const id = `n-${nodeId}`;
+          const edgeId = `e-${nodeId}`;
+          let parentID;
+          switch (scenarioID % 3) {
+            case 0: // New parent
+              if (newNodes.length === 0) {
+                newNodes.merge(cy.add({group: 'nodes', data: {id: `${id}a`, name: `${id}a`}}));
+              }
+              if (!newCompound) {
+                const randomNewCompound = newNodes[Math.floor(Math.random() * newNodes.length)];
+                newCompound = randomNewCompound;
+              }
+              parentID = newCompound.id();
+              break;
+            case 1: // No parent
+              break;
+            case 2: // Existing parent
+              parentID = compoundNodes[Math.floor(Math.random() * compoundNodes.length)].id()
+              break;
+            default:
+          }
+          const newNode = cy.add({ group: 'nodes', data: { id, name: id, parent: parentID }});
+          newNodes.merge(newNode);
+
+          let neighborCount;
+          if (scenarioID <= 3) {
+            neighborCount = 0;
+          } else if (scenarioID > 3 && scenarioID <= 9) {
+            neighborCount = 1;
+          } else {
+            neighborCount = averageDegree;
+          }
+
+          if (neighborCount) {
+            const addDummyNodes = function(dummyNodeCount, currentNodes) {
+              let nodeToConnect = currentNodes[Math.floor(Math.random() * currentNodes.length)];
+              for (let i = 0; i < dummyNodeCount; i++) {
+                    // Add necessary dummy nodes
+                    const dummyID = `${id}-d${i}`;
+                    const dummyNode = cy.add({ group: 'nodes', data: { id: dummyID, name: dummyID}});
+                    cy.add({ group: 'edges', data: { id: `${dummyID}-e`, source: nodeToConnect.id(), target: dummyID }})
+                    nodeToConnect = dummyNode;
+                    newNodes.merge(dummyNode)
+                    availableNewNodes.merge(dummyNode)
+                  }
+            }
+            const forbiddenNodes = cy.collection();
+            forbiddenNodes.merge(newNode);
+            forbiddenNodes.merge(newNode.ancestors());
+            forbiddenNodes.merge(newNode.descendants());
+            const availableNewNodes = newNodes.difference(forbiddenNodes)
+            const availableCurrentNodes = currentNodes.difference(forbiddenNodes)
+            const selectedNeighbors = [];
+
+            const randomValue = Math.ceil(Math.random() * 10);
+            let neighborType;
+            if (scenarioID > 15) {
+              neighborType = 'both';
+            } else {
+              if (Math.ceil(scenarioID / 3) % 2 === 1) {
+                neighborType = 'new';
+              } else {
+                neighborType = 'existing';
+              }
+            }
+            
+            switch (neighborType) {
+              case 'new': {
+                const dummyNodeCount = neighborCount - availableNewNodes.length;
+                addDummyNodes(dummyNodeCount, availableCurrentNodes);
+                for (let i = 0; i < neighborCount; i++) {
+                  let randomNeighbor;
+                  if (i === 0) {
+                    // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                    randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                  } else {
+                    do {
+                      randomNeighbor = availableNewNodes[Math.floor(Math.random() * availableNewNodes.length)];
+                    } while (selectedNeighbors.includes(randomNeighbor.id()));
+                  }
+                  selectedNeighbors.push(randomNeighbor.id());
+                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+                }
+                break;
+              }
+              case 'existing': {
+                const availableCount = Math.min(neighborCount, availableCurrentNodes.length);
+                for (let i = 0; i < availableCount; i++) {
+                  let randomNeighbor;
+                  do {
+                    randomNeighbor = availableCurrentNodes[Math.floor(Math.random() * availableCurrentNodes.length)];
+                  } while (selectedNeighbors.includes(randomNeighbor.id()));
+                  selectedNeighbors.push(randomNeighbor.id());
+                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+                }
+                break;
+              }
+              case 'both': {
+                const dummyNodeCount = neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length) - availableNewNodes.length;
+                addDummyNodes(dummyNodeCount, availableCurrentNodes);
+                for (let i = 0; i < neighborCount; i++) {
+                  let randomNeighbor;
+                  if (i === 0) {
+                      // Select the last new node in any case, in order to increase the probability of higher rank nodes
+                      randomNeighbor = availableNewNodes[availableNewNodes.length - 1];
+                  } else {
+                    do {
+                      let tempNodes;
+                      if (i < neighborCount - Math.min(neighborCount / 2, availableCurrentNodes.length)) {
+                        tempNodes = availableNewNodes;
+                      } else {
+                        tempNodes = availableCurrentNodes;
+                      }
+                      randomNeighbor = tempNodes[Math.floor(Math.random() * tempNodes.length)];
+                    } while (selectedNeighbors.includes(randomNeighbor.id()));
+                  }
+                  selectedNeighbors.push(randomNeighbor.id());
+                  cy.add({ group: 'edges', data: { id: `${edgeId}-${i}`, source: id, target: randomNeighbor.id()}})
+                }
+                break;
+              }
+            }
+          }
+        }
+        return newNodes;
+      };
+
+      const scenarioCount = 18;
+      $("#calculateTime").click(function() {
+        cy.remove(cy.nodes());
+        // Initialize random nodes
+        cy.add(generateRandomNodes());
+        cy.center();
+        const layout = cy.layout(layoutOptions);
+        // Run layout algorithm
+        layout.run();
+
+        layout.one('layoutstop', async () => {
+          // Wait for layout to end
+          const scenarioTimes = []
+          for (let i = 0; i < scenarioCount; i++) {
+            // Get nodes with scenario i
+            const nodes = getNewNodes(i + 1);
+
+            // Calculate the elapsed time for placing algorithm
+            const start = Date.now();
+            api.placeNewNodes(nodes);
+            const end = Date.now();
+
+            scenarioTimes.push(end - start);
+
+            // If delay is set, wait for 'delay' seconds. This is for demonstration purposes
+            const delay = parseFloat($('#delay').val());
+            if (delay) {
+              await new Promise(resolve => setTimeout(resolve, delay * 1000));
+            }
+
+            // Remove all new nodes before next iteration
+            cy.remove(nodes); 
+          }
+
+          const averageTime = scenarioTimes.reduce((a, b) => a + b, 0) / scenarioTimes.length;
+          const max = Math.max(...scenarioTimes);
+          const min = Math.min(...scenarioTimes);
+          const worstScenario = scenarioTimes.findIndex(e => e === max) + 1;
+          const bestScenario = scenarioTimes.findIndex(e => e === min) + 1;
+          
+          const eventResult = {
+            scenarioTimes,
+            averageTime,
+            worstCase: {
+              scenario: worstScenario,
+              time: max,
+            },
+            bestCase: {
+              scenario: bestScenario,
+              time: min,
+            }
+          };
+
+          document.dispatchEvent(new CustomEvent('result', { detail: eventResult}));
+        });
+
+        document.addEventListener('result', result => {
+          console.log('Result:', result.detail);
+        })
+      });
+    });
+  </script>
+</head>
+
+<body>
+    <div>
+      <h1>Performance Calculation</h1>
+      <div class="topnav">
+        <br />
+        <form>
+          <p>
+            <label for="delay">Delay</label>
+            <input id="delay" style="width:60px; margin-bottom: 10px!important;" type="number" step="0.5" value="0"/>
+          </p>
+          <p>
+            <label for="initialAverageDegree">Average Degree</label>
+            <input id="averageDegree" style="width:60px; margin-bottom: 10px!important;" type="number" step="1" value="2"/>
+          </p>
+          <p><b>Initial Graph Properties</b></p>
+          <p>
+            <label for="initialNodeCount">Node Count</label>
+            <input id="initialNodeCount" style="width:60px; margin-bottom: 10px!important;" type="number" step="5" value="10"/>
+          </p>
+          <p>
+            <label for="compoundNodeRatio">Compound Node Ratio</label>
+            <input id="compoundNodeRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="1" value="0.1"/>
+          </p>
+          <p>
+            <label for="childrenRatio">Ratio of child nodes to total nodes</label>
+            <input id="childrenRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="1" value="0.2"/>
+          </p>
+          <br/>
+          <p><b>New Nodes' Properties</b></p>
+          <p>
+            <label for="newNodeRatio">Node Ratio</label>
+            <input id="newNodeRatio" style="width:60px; margin-bottom: 10px!important;" type="number" step="1" value="0.3"/>
+          </p>
+        </form>
+        <button id="calculateTime" class="button">Calculate Time</button>
+        <br/>
+      </div>
+    </div>
+    <div id="cy"></div>
+</body>
+
+</html>

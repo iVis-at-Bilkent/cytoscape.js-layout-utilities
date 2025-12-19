@@ -381,59 +381,59 @@ class Grid {
      * @param { number } j 
      * @param {boolean} considerAsPolygons Consider whether count the grid cells inside the face for calculating fullness or not 
      */
-     placePolyomino(polyomino, i, j, considerAsPolygons = true) {
-      polyomino.location.x = i;
-      polyomino.location.y = j;
+    placePolyomino(polyomino, i, j, considerAsPolygons = true) {
+        polyomino.location.x = i;
+        polyomino.location.y = j;
 
-      var horizontal = new Array(polyomino.stepHeight);
+        var horizontal = new Array(polyomino.stepHeight);
 
-      for(var k = 0; k < polyomino.stepHeight; k++){
-          horizontal[k] = new Array(2);
-          horizontal[k][0] = -1;
-          horizontal[k][1] = -1;
-      }
+        for(var k = 0; k < polyomino.stepHeight; k++){
+            horizontal[k] = new Array(2);
+            horizontal[k][0] = -1;
+            horizontal[k][1] = -1;
+        }
 
-      //vertical & horizontal coordinates
-      for (let k = 0; k < polyomino.stepWidth; k++) {
-          for (let l = 0; l < polyomino.stepHeight; l++) {
-              if(polyomino.grid[k][l]){
-                  if(horizontal[l][0] == -1)
-                      horizontal[l][0] = k;
-                  else
-                      horizontal[l][1] = k;
-              }
-          }
-      }
+        //Horizontal coordinates
+        for (let k = 0; k < polyomino.stepWidth; k++) {
+            for (let l = 0; l < polyomino.stepHeight; l++) {
+                if(polyomino.grid[k][l]){
+                    if(horizontal[l][0] == -1)
+                        horizontal[l][0] = k;
+                    else
+                        horizontal[l][1] = k;
+                }
+            }
+        }
 
-      // fill the horizontal line
-      for(let k = 0; k < polyomino.stepHeight;k++){
-          for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
-            if(considerAsPolygons && !polyomino.grid[l][k])
-              polyomino.numberOfOccupiredCells++;  
-            polyomino.grid[l][k] = true;
-          }
-      }
+        // fill the horizontal line
+        for(let k = 0; k < polyomino.stepHeight;k++){
+            for(let l = horizontal[k][0]; l <= horizontal[k][1] && horizontal[k][0] != -1; l++){
+                if(considerAsPolygons && !polyomino.grid[l][k])
+                    polyomino.numberOfOccupiredCells++;
+                polyomino.grid[l][k] = true;
+            }
+        }
 
-      for (let k = 0; k < polyomino.stepWidth; k++) {
-          for (let l = 0; l < polyomino.stepHeight; l++) {
-              if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino
-                  this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
-              }
-          }
-      }
+        for (let k = 0; k < polyomino.stepWidth; k++) {
+            for (let l = 0; l < polyomino.stepHeight; l++) {
+                if (polyomino.grid[k][l]) { //if [k] [l] cell is occupied in polyomino
+                    this.grid[k - polyomino.center.x + i][l - polyomino.center.y + j].occupied = true;
+                }
+            }
+        }
 
-      //update number of occupired cells
-      this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
-      
-      this.updateBounds(polyomino);
-      
-      // reset visited cells to none
-      for (let x = 0; x < this.stepWidth; x++) {
-          for (let y = 0; y < this.stepHeight; y++) {
-              this.grid[x][y].visited = false;
-          }
-      }
-  }
+        //update number of occupired cells
+        this.numberOfOccupiredCells += polyomino.numberOfOccupiredCells;
+        
+        this.updateBounds(polyomino);
+        
+        // reset visited cells to none
+        for (let x = 0; x < this.stepWidth; x++) {
+            for (let y = 0; y < this.stepHeight; y++) {
+                this.grid[x][y].visited = false;
+            }
+        }
+    }
 
     /**
      * Updates step rectangle bounds so that the `polyomino` fits
@@ -726,6 +726,7 @@ var polyominoPacking = __webpack_require__(0);
 const { Point, Polyomino } = __webpack_require__(0);
 const { getCenter } = __webpack_require__(1);
 const pose = __webpack_require__(4);
+const extensionName = 'layout_utilities';
 
 var layoutUtilities = function (cy, options) {
   
@@ -737,210 +738,261 @@ var layoutUtilities = function (cy, options) {
     options[name] = val;
   };
 
+  instance.setScratchProp = function ({node, scratchName = extensionName, prop, value}) {
+    const scratch = node.scratch(scratchName);
+    if (scratch) {
+      scratch[prop] = value;
+      node.scratch(scratchName, scratch);
+    } else {
+      node.scratch(scratchName, { [prop]: value} );
+    }
+  };
+
+  instance.getScratchProp = function ({node, scratchName = extensionName, prop, defaultValue}) {
+    const { [prop]: result = defaultValue } = node.scratch(scratchName) || {};
+    return result;
+  };
+
+  instance.filterByScratchProp = function ({nodes, scratchName = extensionName, prop, value}) {
+    return nodes.filter(node => {
+      const { [prop]: propValue } = node.scratch(scratchName) || {};
+      return propValue === value;
+    })
+  };
+
+  instance.getCalculatedNeighbors = function (node) {
+    return this.filterByScratchProp({nodes: node.neighborhood().nodes(), prop: 'calculated', value: true });
+  };
+
+  instance.getCalculatedSiblings = function (node) {
+    return this.filterByScratchProp({nodes: node.siblings(), prop: 'calculated', value: true });
+  };
+
+  /** Get an average point between siblings average and neighbors average, with respect to siblingWeight */
+  instance.getSiblingNeighborAverage = function (siblingAvg, neighborsAvg) {
+    switch (true) {
+      case !!siblingAvg && !!neighborsAvg:
+        return {
+          x: siblingAvg.x * options.siblingWeight + neighborsAvg.x * (1 - options.siblingWeight),
+          y: siblingAvg.y * options.siblingWeight + neighborsAvg.y * (1 - options.siblingWeight)
+        };
+      case !!siblingAvg:
+        return siblingAvg;
+      case !!neighborsAvg:
+        return neighborsAvg;
+      default:
+        return {
+          x: cy.width() * -0.4,
+          y: cy.height() * -0.4
+        };
+    }
+  };
+
+  /** 
+   * Get the coordinates of a point between source and target, 
+   * where distance between point and source is offset 
+   */
+  instance.getWeightedMiddlePoint = function (source, target, offset) {
+    const calculateDistance = function (a, b) {
+      return Math.sqrt(Math.pow(Math.abs(a.x - b.x), 2) + Math.pow(Math.abs(a.y - b.y), 2));
+    };
+    if (target) {
+      const distance = calculateDistance(source, target);
+      if (distance) {
+        const ratio = offset / distance;
+        const highX = source.x > target.x ? -1 : 1;
+        const highY = source.y > target.y ? -1 : 1;
+        return {
+          x: source.x + highX * ratio * Math.abs(target.x - source.x),
+          y: source.y + highY * ratio * Math.abs(target.y - source.y)
+        }
+      }
+    }
+    return source;
+  };
+
+  /** Recursive function for placing the elements of a new node */
+  instance.placeCompoundNode = function (placedNode, coordinate, offset) {
+    const getOptimumPos = function (node, coordinate, offset) {
+      // Calculate the optimum position according to the average point of the neighbors and suggested coordinate
+      const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
+      const allNeighbors = [...this.getCalculatedNeighbors(node), ...escalatedNeighbors];
+      const neighborsAvg = this.getAvgPos(allNeighbors.map(e => e.position()));
+      const weightedMiddlePoint = this.getWeightedMiddlePoint(coordinate, neighborsAvg, offset);
+      return this.getPositionWithOffset(weightedMiddlePoint, offset);
+    }.bind(this);
+    const postponedCompounds = [];
+    for (const node of placedNode.children()) {
+      if (node.isParent()) {
+        // Place compound nodes after placing all simple nodes
+        postponedCompounds.push(node);
+      } else {
+        node.position(getOptimumPos(node, coordinate, offset));
+        this.setScratchProp({node, prop: 'calculated', value: true});
+      }
+    }
+    for (const node of postponedCompounds) {
+      this.placeCompoundNode(node, getOptimumPos(node, coordinate, offset), offset / 2);
+    }
+    this.setScratchProp({node: placedNode, prop: 'calculated', value: true});
+  };
+
+  /** Sort given nodes so that most inner compound will come first in the sorted list */
+  instance.sortByHierarchy = function (nodes) {
+    let newNodes = [...nodes]; // deep copy
+    for (const node of nodes) {
+      const selfIndex = newNodes.findIndex(e => e.id() === node.id());
+      const parentIndex = newNodes.findIndex(e => e.id() === node.parent().id());
+      if (parentIndex !== -1 && parentIndex < selfIndex) {
+        const temp = newNodes[selfIndex];
+        newNodes[selfIndex] = newNodes[parentIndex];
+        newNodes[parentIndex] = temp;
+      }
+    }
+    return newNodes;
+  }
+
+  /** Get average position of given coordinates */
+  instance.getAvgPos = function (positions) {
+    if (positions.length === 0) return false;
+    const {xTotal, yTotal} = positions.reduce((acc, position) => {
+      const {x, y} = position;
+      acc.xTotal += x;
+      acc.yTotal += y;
+      return acc;
+    }, {xTotal: 0, yTotal: 0});
+    return {x: xTotal / positions.length, y: yTotal / positions.length};
+  }
+
+  /** Get new position whose distance to original one is offset */
+  instance.getPositionWithOffset = function(position, offset = options.offset) {
+    if (!position) {
+      position = {
+        x: cy.width() * -0.4,
+        y: cy.height() * -0.4
+      };
+    }
+    return {
+      x: position.x + this.generateRandom(0, offset / 2, 0),
+      y: position.y + this.generateRandom(0, offset / 2, 0),
+    }
+  };
+
+  instance.setOptimumPosition = function (node) {
+    const neighbors = this.getCalculatedNeighbors(node);
+    const siblings = this.getCalculatedSiblings(node);
+  
+    const siblingAvg = this.getAvgPos(siblings.map(e => e.position()));
+    const neighborsAvg = this.getAvgPos(neighbors.map(e => e.position()));
+
+    if (siblingAvg && !neighborsAvg && siblings.length === 1) {
+      this.nodeWithOneNeighbor(siblings[0], node);
+    } else if (neighborsAvg && !siblingAvg && neighbors.length === 1) {
+      this.nodeWithOneNeighbor(neighbors[0], node);
+    } else {
+      const newPosition = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
+      node.position(this.getPositionWithOffset(newPosition));
+    }
+    this.setScratchProp({node, prop: 'calculated', value: true});
+  };
+
+  instance.rankNodes = function (newNodes, currentNodes) {
+    const unrankedNodes = newNodes.filter(node => !node.isParent());
+    const n = unrankedNodes.length;
+    let maxRank = 0;
+    let iteration = 0;
+    while (unrankedNodes.length > 0 && iteration < n) {
+      for (let j = unrankedNodes.length - 1; j >= 0; j--) {
+        const node = unrankedNodes[j];
+        let calculatedRank = -1;
+
+        const neighborNodes = node.neighborhood().nodes();
+        const ranksOfNeighbors = neighborNodes.map(node => this.getScratchProp({node, prop: 'rank'})).filter(e => e);
+        if (neighborNodes.intersection(currentNodes).length > 0) {
+          calculatedRank = 1;
+        } else if (ranksOfNeighbors.length > 0) {
+          calculatedRank = Math.min(...ranksOfNeighbors) + 1;
+        }
+
+        if (calculatedRank !== -1) {
+          this.setScratchProp({node, prop: 'rank', value: calculatedRank});
+          maxRank = Math.max(maxRank, calculatedRank);
+          for (const anc of node.ancestors()) {
+            const ancRank = this.getScratchProp({node: anc, prop: 'rank', defaultValue: 0 });
+            this.setScratchProp({node: anc, prop: 'rank', value: Math.max(ancRank, calculatedRank)});
+          }
+          unrankedNodes.splice(j, 1);
+        }
+      }
+      iteration++;
+    }
+    // If all n iterations are done and there are still unrankedNodes, it means that
+    // they should be rank 0
+    for (const node of unrankedNodes) {
+      this.setScratchProp({node, prop: 'rank', value: 0});
+      for (const anc of node.ancestors()) {
+        if (!anc.data("rank")) {
+          this.setScratchProp({node: anc, prop: 'rank', value: 0});
+        }
+      }
+    }
+    return maxRank;
+  };
+
   instance.placeHiddenNodes = function (mainEles) {
     mainEles.forEach(function (mainEle) {
       var hiddenEles = mainEle.neighborhood().nodes(":hidden");
-      hiddenEles.forEach(function (hiddenEle) {
-        var neighbors = hiddenEle.neighborhood().nodes(":visible");
-        if (neighbors.length > 1) {
-          instance.nodeWithMultipleNeighbors(hiddenEle);
-        } else instance.nodeWithOneNeighbor(mainEle, hiddenEle);
-      });
+      instance.placeNewNodes(hiddenEles);
     });
   };
 
-  instance.placeNewNodes = function (eles) {
-    var components = this.findComponents(eles);
-    var disconnectedComp = [];
-    for (var i = 0; i < components.length; i++) {
-      var oneNeig = false;
-      var multNeig = false;
-      var mainEle;
-      var multneighbors = [];
-      var positioned = [];
-      var x = 0;
-      var y = 0;
-      var isPositioned = false;
-      for (var j = 0; j < components[i].length; j++) {
-        var neighbors = components[i][j].neighborhood().nodes().difference(eles);
-        positioned.push(false);
-        if (neighbors.length > 1 && !isPositioned) {
-          multNeig = true;
-          positioned[j] = true;
-          multneighbors = neighbors;
-          instance.nodeWithMultipleNeighbors(components[i][j], multneighbors);
-          x = components[i][j].position("x");
-          y = components[i][j].position("y");
-          isPositioned = true;
-        }
-        else if (neighbors.length == 1 && !isPositioned) {
-          oneNeig = true;
-          mainEle = neighbors[0];
-          positioned[j] = true;
-          instance.nodeWithOneNeighbor(mainEle, components[i][j], eles);
-          x = components[i][j].position("x");
-          y = components[i][j].position("y");
-          isPositioned = true;
+  instance.placeNewNodes = function (newNodes) {
+    // Remove temporary extension data remained from prior operations
+    cy.nodes().forEach(node => node.removeScratch(extensionName));
+    
+    const currentNodes = cy.nodes(':visible').difference(newNodes);
+    currentNodes.forEach(node => this.setScratchProp({node, prop: 'calculated', value: true}));
+    const maxRank = this.rankNodes(newNodes, currentNodes);
+    const postponedNodes = [];
+    for (let i = 0; i <= maxRank; i++) {
+      let compounds = [];
+      for (const node of this.filterByScratchProp({nodes: newNodes, prop: 'rank', value: i})) {
+        if (node.isParent()) {
+          compounds.push(node);
+        } else if (node.isChild() && newNodes.contains(node.parent())) {
+          // If it is inside a new node, escalate its neighbors to parent
+          const escalatedNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
+          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...escalatedNeighbors, ...this.getCalculatedNeighbors(node)]})
+        } else if (i === 0 && node.neighborhood().nodes().length !== 0 && node.isOrphan()) {
+          // Postpone this type of nodes since their neighbors will be placed after
+          postponedNodes.push(node);
+        } else {
+          this.setOptimumPosition(node);
         }
       }
+      compounds = this.sortByHierarchy(compounds);
+      for (const node of compounds) {
+        const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
+        if (node.isChild() && newNodes.contains(node.parent())) {
+          // If this compound node is inside another new node, escalete the neighbors to parent
+          const parentNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
+          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...parentNeighbors, ...this.getCalculatedNeighbors(node), ...escalatedNeighbors]})
+        } else {
+          // Calculate optimum position of the compound node with respect to siblings and neighbors
+          const siblings = this.getCalculatedSiblings(node)
+          const siblingPositions = siblings.map(e => e.position());
+          const siblingAvg = this.getAvgPos(siblingPositions);
 
-      if (oneNeig || multNeig) {
-        for (var j = 0; j < components[i].length; j++) {
-          if (positioned[j] == false) {
-            var neighbors = components[i][j].neighborhood().nodes();
-            var positionedNeigbors = [];
-            var curr = components[i][j].neighborhood().nodes().difference(eles);
-            curr.forEach(function (ele) {
-              positionedNeigbors.push(ele);
-            })
-
-            for (var k = 0; k < neighbors.length; k++) {
-              if (positioned[components[i].indexOf(neighbors[k])]) {
-                positionedNeigbors.push(neighbors[k]);
-              }
-            }
-            if (positionedNeigbors.length > 1) {
-              instance.nodeWithMultipleNeighbors(components[i][j], positionedNeigbors);
-            } else if (positionedNeigbors.length == 1) instance.nodeWithOneNeighbor(positionedNeigbors[0], components[i][j]);
-            else {
-              var horizontalP = instance.generateRandom(options.offset, options.offset * 2, 0);
-              var verticalP = instance.generateRandom(options.offset, options.offset * 2, 0);
-              components[i][j].position("x", x + horizontalP);
-              components[i][j].position("y", y + verticalP);
-            }
-            positioned[j] = true;
-          }
+          const uniqueNeighbors = [...new Set([...escalatedNeighbors, ...this.getCalculatedNeighbors(node)])];
+          const neighborsAvg = this.getAvgPos(uniqueNeighbors.map(e => e.position()));
+          
+          const calculatedAvgPos = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
+          this.placeCompoundNode(node, calculatedAvgPos, options.idealEdgeLength);
         }
-      }
-      else {
-        disconnectedComp.push(components[i]);
       }
     }
-
-    if (disconnectedComp.length >= 1) {
-      instance.disconnectedNodes(disconnectedComp);
-    }
-  };
-
-  instance.disconnectedNodes = function (components) {
-    var leftX = Number.MAX_VALUE;
-    var rightX = -Number.MAX_VALUE;
-    var topY = Number.MAX_VALUE;
-    var bottomY = -Number.MAX_VALUE;
-    // Check the x and y limits of all hidden elements and store them in the variables above
-    cy.nodes(':visible').forEach(function (node) {
-      var halfWidth = node.outerWidth() / 2;
-      var halfHeight = node.outerHeight() / 2;
-      if (node.position("x") - halfWidth < leftX)
-        leftX = node.position("x") - halfWidth;
-      if (node.position("x") + halfWidth > rightX)
-        rightX = node.position("x") + halfWidth;
-      if (node.position("y") - halfHeight < topY)
-        topY = node.position("y") - halfHeight;
-      if (node.position("y") + halfHeight > bottomY)
-        bottomY = node.position("y") + halfHeight;
-    });
-
-    var radiusy = topY - bottomY;
-    var radiusx = rightX - leftX;
-    var innerRadius = (Math.sqrt(radiusx * radiusx + radiusy * radiusy)) / 2;
-    var centerX = (leftX + rightX) / 2;
-    var centerY = (topY + bottomY) / 2;
-    //var components = this.findComponents(newEles);
-    var numOfComponents = components.length;
-    var angle = 360 / numOfComponents;
-    var count = 1;
-
-    components.forEach(function (component) {
-
-      var distFromCenter = instance.generateRandom(innerRadius + options.offset * 6, innerRadius + options.offset * 8, 1);
-      var curAngle = angle * count;
-      var angleInRadians = curAngle * Math.PI / 180;
-      var x = centerX + distFromCenter * Math.cos(angleInRadians);
-      var y = centerY + distFromCenter * Math.sin(angleInRadians);
-
-      if (component.length == 1) {
-        component[0].position("x", x);
-        component[0].position("y", y);
-      }
-      else {
-        var positioned = [];
-        for (var i = 0; i < component.length; i++) {
-          positioned.push(false);
-        }
-
-        positioned[0] = true;
-        component[0].position("x", x);
-        component[0].position("y", y);
-
-        for (var i = 1; i < component.length; i++) {
-          var neighbors = component[i].neighborhood().nodes();
-          var positionedNeigbors = [];
-          for (var j = 0; j < neighbors.length; j++) {
-            if (positioned[component.indexOf(neighbors[j])]) {
-              positionedNeigbors.push(neighbors[j]);
-            }
-          }
-          if (positionedNeigbors.length > 1) {
-            instance.nodeWithMultipleNeighbors(component[i], positionedNeigbors);
-          } else if (positionedNeigbors.length == 1) instance.nodeWithOneNeighbor(positionedNeigbors[0], component[i]);
-          else {
-            var horizontalP = instance.generateRandom(options.offset, options.offset * 2, 0);
-            var verticalP = instance.generateRandom(options.offset, options.offset * 2, 0);
-            component[i].position("x", x + horizontalP);
-            component[i].position("y", y + verticalP);
-          }
-          positioned[i] = true;
-        }
-      }
-      count++;
-    });
-  };
-
-  instance.findComponents = function (newEles) {
-
-    var adjListArray = [];
-    var current = cy.nodes().difference(newEles);
-    newEles.forEach(function (ele) {
-      var neighbors = ele.neighborhood().nodes().difference(current);
-      var listOfIndexes = [];
-      neighbors.forEach(function (neigbor) {
-        var index = newEles.indexOf(neigbor);
-        listOfIndexes.push(index);
-      });
-      adjListArray.push(listOfIndexes);
-    });
-
-    // Mark all the vertices as not visited 
-    var visited = [];
-    for (var v = 0; v < newEles.length; v++) {
-      visited.push(false);
-    }
-
-    var listOfComponents = [];
-
-
-    for (var v = 0; v < newEles.length; v++) {
-      var elesOfComponent = [];
-      if (visited[v] == false) {
-        // print all reachable vertices 
-        // from v 
-        this.DFSUtil(v, visited, adjListArray, newEles, elesOfComponent);
-        listOfComponents.push(elesOfComponent);
-      }
-    }
-
-    return listOfComponents;
-  };
-
-  instance.DFSUtil = function (v, visited, adjListArray, newEles, elesOfComponent) {
-    // Mark the current node as visited and print it 
-    visited[v] = true;
-    elesOfComponent.push(newEles[v]);
-    // Recur for all the vertices 
-    // adjacent to this vertex 
-    for (var i = 0; i < adjListArray[v].length; i++) {
-      if (!visited[adjListArray[v][i]]) this.DFSUtil(adjListArray[v][i], visited, adjListArray, newEles, elesOfComponent);
+    for (const node of postponedNodes) {
+      this.setOptimumPosition(node);
     }
   };
 
@@ -1009,26 +1061,6 @@ var layoutUtilities = function (cy, options) {
     unplacedEle.position("y", newCenterY);
   };
 
-  instance.nodeWithMultipleNeighbors = function (ele, neighbors) {
-    if (neighbors == null) {
-      var neighbors = ele.neighborhood().nodes(":visible");
-    }
-    var x = 0;
-    var y = 0;
-    var count = 0;
-    neighbors.forEach(function (ele1) {
-      x += ele1.position("x");
-      y += ele1.position("y");
-      count++;
-    });
-    x = x / count;
-    y = y / count;
-    var diffx = instance.generateRandom(0, options.offset / 2, 0);
-    var diffy = instance.generateRandom(0, options.offset / 2, 0);
-    ele.position("x", x + diffx);
-    ele.position("y", y + diffy);
-  };
-
   instance.generateRandom = function (min, max, mult) {
     var val = [-1, 1];
     if (mult === 0)
@@ -1073,10 +1105,9 @@ var layoutUtilities = function (cy, options) {
   /**
    * @param { any[] } components 
    * @param {boolean} considerAsPolygons include the empty cells inside the components to calculate how well the algorithm perform
-   * considerAsPolygons is false by default so the algorithm looks nonempty area/total area
+   * considerAsPolygons is false by default so the algorithm looks how well the free cells (outside the polyomino) is used
    */
   instance.packComponents = function (components, randomize = true, considerAsPolygons = false) {
-    
     var spacingAmount = options.componentSpacing;
     
     if(spacingAmount !== undefined) { // is spacingAmount is undefined, we expect it to be an incremental packing
@@ -1163,6 +1194,7 @@ var layoutUtilities = function (cy, options) {
           //bottom right cell of a node
           var bottomRightX = Math.floor((node.x + node.width - x1) / gridStep);
           var bottomRightY = Math.floor((node.y + node.height - y1) / gridStep);
+          
           for(var i = topLeftX; i <= bottomRightX; i++) {
             componentPolyomino.grid[i][topLeftY] = true;
             componentPolyomino.grid[i][bottomRightY] = true;
@@ -1180,6 +1212,7 @@ var layoutUtilities = function (cy, options) {
             }
           }
         });
+
         //fill cells where edges pass
         component.edges.forEach(function (edge) {
           var p0 = {}, p1 = {};
