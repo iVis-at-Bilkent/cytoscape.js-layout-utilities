@@ -897,7 +897,7 @@ var layoutUtilities = function (cy, options) {
   };
 
   instance.rankNodes = function (newNodes, currentNodes) {
-    const unrankedNodes = newNodes.filter(node => !node.isParent());
+    const unrankedNodes = newNodes.filter(node => !node.isParent()).toArray();
     const n = unrankedNodes.length;
     let maxRank = 0;
     let iteration = 0;
