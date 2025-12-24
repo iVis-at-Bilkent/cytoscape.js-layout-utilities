@@ -16,6 +16,22 @@ var layoutUtilities = function (cy, options) {
     options[name] = val;
   };
 
+  instance.asArray = function (eles) {
+    if (!eles) return [];
+    if (Array.isArray(eles)) return eles;
+    if (typeof eles.toArray === 'function') return eles.toArray();      // Cytoscape collection
+    if (typeof eles.length === 'number') return Array.from(eles);       // array-like
+    return [eles];                                                      // single element
+  };
+
+  instance.asCollection = function (eles) {
+    if (!eles) return cy.collection();
+    // Cytoscape collection has .collection() method
+    if (eles && typeof eles.collection === 'function' && typeof eles.toArray === 'function') return eles;
+    return cy.collection(this.asArray(eles));
+  };
+
+
   instance.setScratchProp = function ({node, scratchName = extensionName, prop, value}) {
     const scratch = node.scratch(scratchName);
     if (scratch) {
@@ -31,19 +47,24 @@ var layoutUtilities = function (cy, options) {
     return result;
   };
 
-  instance.filterByScratchProp = function ({nodes, scratchName = extensionName, prop, value}) {
-    return nodes.filter(node => {
-      const { [prop]: propValue } = node.scratch(scratchName) || {};
-      return propValue === value;
-    })
+  instance.filterByScratchProp = function ({ nodes, scratchName = extensionName, prop, value }) {
+    const arr = this.asArray(nodes);
+    const filtered = arr.filter(ele => {
+      const s = ele.scratch(scratchName) || {};
+      return s[prop] === value;
+    });
+    // Keep returning a collection because rest of code expects collection ops
+    return cy.collection(filtered);
   };
 
   instance.getCalculatedNeighbors = function (node) {
-    return this.filterByScratchProp({nodes: node.neighborhood().nodes(), prop: 'calculated', value: true });
+    // returns collection
+    return this.filterByScratchProp({ nodes: node.neighborhood().nodes(), prop: 'calculated', value: true });
   };
 
   instance.getCalculatedSiblings = function (node) {
-    return this.filterByScratchProp({nodes: node.siblings(), prop: 'calculated', value: true });
+    // returns collection
+    return this.filterByScratchProp({ nodes: node.siblings(), prop: 'calculated', value: true });
   };
 
   /** Get an average point between siblings average and neighbors average, with respect to siblingWeight */
@@ -92,27 +113,36 @@ var layoutUtilities = function (cy, options) {
   /** Recursive function for placing the elements of a new node */
   instance.placeCompoundNode = function (placedNode, coordinate, offset) {
     const getOptimumPos = function (node, coordinate, offset) {
-      // Calculate the optimum position according to the average point of the neighbors and suggested coordinate
-      const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
-      const allNeighbors = [...this.getCalculatedNeighbors(node), ...escalatedNeighbors];
+      const escalatedNeighbors = this.getScratchProp({ node, prop: 'escalatedNeighbors', defaultValue: [] });
+
+      // FIX: never spread a collection
+      const allNeighbors = [
+        ...this.getCalculatedNeighbors(node).toArray(),
+        ...this.asArray(escalatedNeighbors)
+      ];
+
       const neighborsAvg = this.getAvgPos(allNeighbors.map(e => e.position()));
       const weightedMiddlePoint = this.getWeightedMiddlePoint(coordinate, neighborsAvg, offset);
       return this.getPositionWithOffset(weightedMiddlePoint, offset);
     }.bind(this);
+
     const postponedCompounds = [];
-    for (const node of placedNode.children()) {
+
+    // children() is a collection; for..of may fail depending on build -> use toArray()
+    for (const node of placedNode.children().toArray()) {
       if (node.isParent()) {
-        // Place compound nodes after placing all simple nodes
         postponedCompounds.push(node);
       } else {
         node.position(getOptimumPos(node, coordinate, offset));
-        this.setScratchProp({node, prop: 'calculated', value: true});
+        this.setScratchProp({ node, prop: 'calculated', value: true });
       }
     }
+
     for (const node of postponedCompounds) {
       this.placeCompoundNode(node, getOptimumPos(node, coordinate, offset), offset / 2);
     }
-    this.setScratchProp({node: placedNode, prop: 'calculated', value: true});
+
+    this.setScratchProp({ node: placedNode, prop: 'calculated', value: true });
   };
 
   /** Sort given nodes so that most inner compound will come first in the sorted list */
@@ -175,17 +205,24 @@ var layoutUtilities = function (cy, options) {
   };
 
   instance.rankNodes = function (newNodes, currentNodes) {
-    const unrankedNodes = newNodes.filter(node => !node.isParent()).toArray();
+    // Convert to a real Array (so splice + for..of works)
+    const unrankedNodes = newNodes.filter(n => !n.isParent()).toArray();
     const n = unrankedNodes.length;
     let maxRank = 0;
     let iteration = 0;
+
     while (unrankedNodes.length > 0 && iteration < n) {
       for (let j = unrankedNodes.length - 1; j >= 0; j--) {
         const node = unrankedNodes[j];
         let calculatedRank = -1;
 
         const neighborNodes = node.neighborhood().nodes();
-        const ranksOfNeighbors = neighborNodes.map(node => this.getScratchProp({node, prop: 'rank'})).filter(e => e);
+
+        // Important: don't drop rank=0 by accident
+        const ranksOfNeighbors = neighborNodes
+          .map(nei => this.getScratchProp({ node: nei, prop: 'rank' }))
+          .filter(e => e !== undefined && e !== null);
+
         if (neighborNodes.intersection(currentNodes).length > 0) {
           calculatedRank = 1;
         } else if (ranksOfNeighbors.length > 0) {
@@ -193,29 +230,35 @@ var layoutUtilities = function (cy, options) {
         }
 
         if (calculatedRank !== -1) {
-          this.setScratchProp({node, prop: 'rank', value: calculatedRank});
+          this.setScratchProp({ node, prop: 'rank', value: calculatedRank });
           maxRank = Math.max(maxRank, calculatedRank);
-          for (const anc of node.ancestors()) {
-            const ancRank = this.getScratchProp({node: anc, prop: 'rank', defaultValue: 0 });
-            this.setScratchProp({node: anc, prop: 'rank', value: Math.max(ancRank, calculatedRank)});
+
+          // ✅ FIX: ancestors() returns a Cytoscape collection (not iterable here)
+          for (const anc of node.ancestors().toArray()) {
+            const ancRank = this.getScratchProp({ node: anc, prop: 'rank', defaultValue: 0 });
+            this.setScratchProp({ node: anc, prop: 'rank', value: Math.max(ancRank, calculatedRank) });
           }
+
           unrankedNodes.splice(j, 1);
         }
       }
       iteration++;
     }
-    // If all n iterations are done and there are still unrankedNodes, it means that
-    // they should be rank 0
+
+    // If all n iterations are done and there are still unrankedNodes, rank them 0
     for (const node of unrankedNodes) {
-      this.setScratchProp({node, prop: 'rank', value: 0});
-      for (const anc of node.ancestors()) {
+      this.setScratchProp({ node, prop: 'rank', value: 0 });
+      for (const anc of node.ancestors().toArray()) {
         if (!anc.data("rank")) {
-          this.setScratchProp({node: anc, prop: 'rank', value: 0});
+          this.setScratchProp({ node: anc, prop: 'rank', value: 0 });
         }
       }
     }
+
     return maxRank;
   };
+
+
 
   instance.placeHiddenNodes = function (mainEles) {
     mainEles.forEach(function (mainEle) {
@@ -225,22 +268,42 @@ var layoutUtilities = function (cy, options) {
   };
 
   instance.placeNewNodes = function (newNodes) {
+    // Normalize just once
+    const newNodesCol = this.asCollection(newNodes);
+
     // Remove temporary extension data remained from prior operations
     cy.nodes().forEach(node => node.removeScratch(extensionName));
-    
-    const currentNodes = cy.nodes(':visible').difference(newNodes);
-    currentNodes.forEach(node => this.setScratchProp({node, prop: 'calculated', value: true}));
-    const maxRank = this.rankNodes(newNodes, currentNodes);
+
+    const currentNodes = cy.nodes(':visible').difference(newNodesCol);
+    currentNodes.forEach(node => this.setScratchProp({ node, prop: 'calculated', value: true }));
+
+    const maxRank = this.rankNodes(newNodesCol, currentNodes);
+
     const postponedNodes = [];
+
     for (let i = 0; i <= maxRank; i++) {
       let compounds = [];
-      for (const node of this.filterByScratchProp({nodes: newNodes, prop: 'rank', value: i})) {
+
+      const nodesAtRank = this.filterByScratchProp({ nodes: newNodesCol, prop: 'rank', value: i });
+
+      // FIX: iterate via toArray()
+      for (const node of nodesAtRank.toArray()) {
         if (node.isParent()) {
           compounds.push(node);
-        } else if (node.isChild() && newNodes.contains(node.parent())) {
+        } else if (node.isChild() && newNodesCol.contains(node.parent())) {
           // If it is inside a new node, escalate its neighbors to parent
-          const escalatedNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
-          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...escalatedNeighbors, ...this.getCalculatedNeighbors(node)]})
+
+          const parent = node.parent();
+          const escalatedNeighbors = this.getScratchProp({ node: parent, prop: 'escalatedNeighbors', defaultValue: [] });
+
+          // FIX: ensure stored as plain array
+          const addThese = this.getCalculatedNeighbors(node).toArray();
+          this.setScratchProp({
+            node: parent,
+            prop: 'escalatedNeighbors',
+            value: [...this.asArray(escalatedNeighbors), ...addThese]
+          });
+
         } else if (i === 0 && node.neighborhood().nodes().length !== 0 && node.isOrphan()) {
           // Postpone this type of nodes since their neighbors will be placed after
           postponedNodes.push(node);
@@ -248,27 +311,53 @@ var layoutUtilities = function (cy, options) {
           this.setOptimumPosition(node);
         }
       }
+
+      // compounds is a JS array of nodes (good)
       compounds = this.sortByHierarchy(compounds);
+
       for (const node of compounds) {
-        const escalatedNeighbors = this.getScratchProp({node, prop: 'escalatedNeighbors', defaultValue: [] });
-        if (node.isChild() && newNodes.contains(node.parent())) {
-          // If this compound node is inside another new node, escalete the neighbors to parent
-          const parentNeighbors = this.getScratchProp({node: node.parent(), prop: 'escalatedNeighbors', defaultValue: [] });
-          this.setScratchProp({node: node.parent(), prop: 'escalatedNeighbors', value: [...parentNeighbors, ...this.getCalculatedNeighbors(node), ...escalatedNeighbors]})
+        const escalatedNeighbors = this.getScratchProp({ node, prop: 'escalatedNeighbors', defaultValue: [] });
+
+        if (node.isChild() && newNodesCol.contains(node.parent())) {
+          // If this compound node is inside another new node, escalate the neighbors to parent
+          const parent = node.parent();
+          const parentNeighbors = this.getScratchProp({ node: parent, prop: 'escalatedNeighbors', defaultValue: [] });
+
+          this.setScratchProp({
+            node: parent,
+            prop: 'escalatedNeighbors',
+            value: [
+              ...this.asArray(parentNeighbors),
+              ...this.getCalculatedNeighbors(node).toArray(),
+              ...this.asArray(escalatedNeighbors)
+            ]
+          });
+
         } else {
           // Calculate optimum position of the compound node with respect to siblings and neighbors
-          const siblings = this.getCalculatedSiblings(node)
-          const siblingPositions = siblings.map(e => e.position());
+          const siblings = this.getCalculatedSiblings(node); // collection
+
+          // safer: convert to array before map
+          const siblingPositions = siblings.toArray().map(e => e.position());
           const siblingAvg = this.getAvgPos(siblingPositions);
 
-          const uniqueNeighbors = [...new Set([...escalatedNeighbors, ...this.getCalculatedNeighbors(node)])];
+          // FIX: never spread a collection in Set()
+          const uniqueNeighbors = [
+            ...new Set([
+              ...this.asArray(escalatedNeighbors),
+              ...this.getCalculatedNeighbors(node).toArray()
+            ])
+          ];
+
           const neighborsAvg = this.getAvgPos(uniqueNeighbors.map(e => e.position()));
-          
+
           const calculatedAvgPos = this.getSiblingNeighborAverage(siblingAvg, neighborsAvg);
           this.placeCompoundNode(node, calculatedAvgPos, options.idealEdgeLength);
         }
       }
     }
+
+    // postponedNodes is a plain array already
     for (const node of postponedNodes) {
       this.setOptimumPosition(node);
     }
